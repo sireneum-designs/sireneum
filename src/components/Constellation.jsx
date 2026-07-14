@@ -1,16 +1,49 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { nodes, edges } from '../data.js'
 
 const VB = 100  // viewBox units (percentage-based)
 
+/* ── The field that lightens as you attend ─────────────────────
+   The visitor enters at dusk. Every node they actually visit adds
+   light to the world — attend to everything and you are standing
+   in daylight. Release is not given; it accumulates.            */
+
+// palette endpoints: dusk → warm paper daylight
+const DUSK = {
+  bg:      [13, 11, 8],
+  accent:  [181, 160, 140],
+  text:    [240, 236, 228],
+  frost:   [181, 160, 140],
+}
+const DAY = {
+  bg:      [239, 236, 231],
+  accent:  [110, 88, 64],
+  text:    [28, 26, 22],
+  frost:   [122, 98, 72],
+}
+
+const mix = (a, b, p) => a.map((v, i) => Math.round(v + (b[i] - v) * p))
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`
+
 export default function Constellation({ activeNode, onSelectNode, compressed }) {
   const [hovered, setHovered] = useState(null)
   const [revealed, setRevealed] = useState(new Set(['sireneum']))
+  const [visited, setVisited] = useState(new Set())
+  const [missingImg, setMissingImg] = useState(new Set())
   const bgRef = useRef(null)
   const rafRef = useRef(null)
-  const stateRef = useRef({ tips: [], trail: [], frame: 0, mx: 0, my: 0, dropTimer: 0, W: 1, H: 1, dpr: 1 })
+  const stateRef = useRef({ tips: [], trail: [], frame: 0, mx: 0, my: 0, dropTimer: 0, W: 1, H: 1, dpr: 1, progress: 0 })
 
-  // Reveal child nodes when a parent is activated
+  // light accumulates with attention: entry is dusk, each visited
+  // node adds a step of daylight
+  const progress = Math.min(1, 0.10 + visited.size * 0.105)
+  stateRef.current.progress = progress
+
+  const accent = mix(DUSK.accent, DAY.accent, progress)
+  const text   = mix(DUSK.text, DAY.text, progress)
+  const bg     = mix(DUSK.bg, DAY.bg, progress)
+
+  // Reveal child nodes + record the visit when a node is activated
   useEffect(() => {
     if (!activeNode) return
     const children = nodes.filter(n => n.parent === activeNode).map(n => n.id)
@@ -21,9 +54,15 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
         return next
       })
     }
+    setVisited(prev => {
+      if (prev.has(activeNode)) return prev
+      const next = new Set(prev)
+      next.add(activeNode)
+      return next
+    })
   }, [activeNode])
 
-  // Frost background
+  // Frost background — new growth takes on the color of the hour
   useEffect(() => {
     const canvas = bgRef.current
     if (!canvas) return
@@ -31,11 +70,11 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
     const s = stateRef.current
 
     const GEN = [
-      { maxAge: 600, forkP: 0.002,  alpha: 0.18, lw: 0.45, wobble: 0.06,  guided: false },
-      { maxAge: 360, forkP: 0.007,  alpha: 0.11, lw: 0.32, wobble: 0.08,  guided: false },
-      { maxAge: 200, forkP: 0.02,   alpha: 0.065,lw: 0.22, wobble: 0.11,  guided: false },
-      { maxAge: 100, forkP: 0.05,   alpha: 0.036,lw: 0.15, wobble: 0.15,  guided: false },
-      { maxAge: 50,  forkP: 0,      alpha: 0.018,lw: 0.09, wobble: 0.20,  guided: false },
+      { maxAge: 600, forkP: 0.002,  alpha: 0.18, lw: 0.45, wobble: 0.06 },
+      { maxAge: 360, forkP: 0.007,  alpha: 0.11, lw: 0.32, wobble: 0.08 },
+      { maxAge: 200, forkP: 0.02,   alpha: 0.065,lw: 0.22, wobble: 0.11 },
+      { maxAge: 100, forkP: 0.05,   alpha: 0.036,lw: 0.15, wobble: 0.15 },
+      { maxAge: 50,  forkP: 0,      alpha: 0.018,lw: 0.09, wobble: 0.20 },
     ]
     const STEP = 0.34, MAX_TIPS = 1200
 
@@ -57,6 +96,10 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
       rafRef.current = requestAnimationFrame(tick)
       s.frame++
 
+      const p = s.progress
+      const frost = mix(DUSK.frost, DAY.frost, p)
+      const vis = 1 + p * 0.9      // frost needs more presence on paper
+
       // Update tips (draw to persistent frost canvas)
       const segs = [[], [], [], [], []]
       const forks = []
@@ -77,7 +120,7 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
       for (let g = 0; g < 5; g++) {
         const sg = segs[g]; if (!sg.length) continue
         ctx.beginPath(); ctx.lineWidth = GEN[g].lw
-        ctx.strokeStyle = `rgba(181,160,140,${GEN[g].alpha})`
+        ctx.strokeStyle = rgba(frost, Math.min(0.5, GEN[g].alpha * vis))
         for (let i = 0; i < sg.length; i += 4) { ctx.moveTo(sg[i], sg[i+1]); ctx.lineTo(sg[i+2], sg[i+3]) }
         ctx.stroke()
       }
@@ -94,9 +137,9 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
           s.my - (s.trail[s.trail.length - 2]?.y || s.my),
           s.mx - (s.trail[s.trail.length - 2]?.x || s.mx)
         )
-        const p = a + Math.PI / 2
-        spawnTip(s.mx, s.my, p + (Math.random() - .5) * .35, 0)
-        spawnTip(s.mx, s.my, p + Math.PI + (Math.random() - .5) * .35, 0)
+        const pAng = a + Math.PI / 2
+        spawnTip(s.mx, s.my, pAng + (Math.random() - .5) * .35, 0)
+        spawnTip(s.mx, s.my, pAng + Math.PI + (Math.random() - .5) * .35, 0)
         s.dropTimer = 0
       }
 
@@ -139,12 +182,16 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
   const nodeR = { center: 9, active: 8, hovered: 7, connected: 6, idle: 5, dimmed: 4 }
   const nodeAlpha = { center: 0.85, active: 0.95, hovered: 0.80, connected: 0.65, idle: 0.50, dimmed: 0.18 }
 
+  const hoveredNode = hovered ? nodes.find(x => x.id === hovered) : null
+  const showImageCard = hoveredNode && !missingImg.has(hoveredNode.id)
+
   return (
     <div style={{
       position: 'fixed', inset: 0,
-      transition: 'width 0.45s cubic-bezier(0.16,1,0.3,1)',
+      transition: 'width 0.45s cubic-bezier(0.16,1,0.3,1), background 2.4s ease',
       width: compressed ? '40%' : '100%',
       overflow: 'hidden',
+      background: rgba(bg, 1),
     }}>
       {/* Frost canvas */}
       <canvas ref={bgRef} style={{
@@ -157,7 +204,8 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
         <div style={{
           position: 'absolute', top: '1.5rem', left: '1.8rem',
           fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase',
-          color: 'rgba(181,160,140,0.35)', fontFamily: 'var(--font-body)',
+          color: rgba(accent, 0.45), fontFamily: 'var(--font-body)',
+          transition: 'color 2.4s ease',
         }}>
           Sireneum — Rachel Dudley
         </div>
@@ -182,7 +230,7 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
           return (
             <line key={`${aId}-${bId}`}
               x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-              stroke={isActive ? 'rgba(181,160,140,0.7)' : 'rgba(181,160,140,0.10)'}
+              stroke={rgba(accent, isActive ? 0.75 : 0.10 + 0.12 * progress)}
               strokeWidth={isActive ? 0.22 : 0.12}
               style={{ transition: 'stroke 0.3s, stroke-width 0.3s' }}
             />
@@ -196,6 +244,7 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
           const alpha = nodeAlpha[st]
           const isCenter = node.id === 'sireneum'
           const isActive = st === 'active'
+          const wasVisited = visited.has(node.id)
 
           return (
             <g key={node.id}
@@ -208,15 +257,24 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
               {(isActive || isCenter || st === 'hovered') && (
                 <circle cx={node.x} cy={node.y} r={r + 3.5}
                   fill="none"
-                  stroke={`rgba(181,160,140,${isActive ? 0.22 : 0.10})`}
+                  stroke={rgba(accent, isActive ? 0.28 : 0.12)}
                   strokeWidth="0.3"
+                />
+              )}
+
+              {/* Visited mark — a quiet second ring: light already given */}
+              {wasVisited && !isActive && (
+                <circle cx={node.x} cy={node.y} r={r + 1.6}
+                  fill="none"
+                  stroke={rgba(accent, 0.30)}
+                  strokeWidth="0.14"
                 />
               )}
 
               {/* Node dot */}
               <circle
                 cx={node.x} cy={node.y} r={r * 0.8}
-                fill={`rgba(181,160,140,${alpha})`}
+                fill={rgba(accent, alpha)}
                 style={{ transition: 'r 0.25s, fill 0.25s' }}
               />
 
@@ -231,7 +289,7 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
                   fontWeight: 500,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  fill: `rgba(240,236,228,${alpha})`,
+                  fill: rgba(text, alpha),
                   transition: 'fill 0.25s',
                   userSelect: 'none',
                 }}
@@ -248,7 +306,7 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
                     fontFamily: 'var(--font-display)',
                     fontStyle: 'italic',
                     fontSize: '1.6px',
-                    fill: 'rgba(181,160,140,0.65)',
+                    fill: rgba(accent, 0.75),
                     userSelect: 'none',
                   }}
                 >
@@ -260,6 +318,43 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
         })}
       </svg>
 
+      {/* Image card on hover — drop images into public/images/nodes/<id>.jpg */}
+      {showImageCard && (
+        <div style={{
+          position: 'absolute',
+          left: `${hoveredNode.x}%`,
+          top: `${hoveredNode.y}%`,
+          transform: `translate(${hoveredNode.x > 55 ? '-108%' : '8%'}, -50%)`,
+          pointerEvents: 'none', zIndex: 4,
+          animation: 'cardIn 0.28s cubic-bezier(0.16,1,0.3,1) both',
+        }}>
+          <style>{`@keyframes cardIn{from{opacity:0;transform:translate(${hoveredNode.x > 55 ? '-108%' : '8%'},-46%)}to{opacity:1}}`}</style>
+          <div style={{
+            background: rgba(mix(DUSK.bg, DAY.bg, Math.min(1, progress + 0.15)), 0.96),
+            border: `1px solid ${rgba(accent, 0.25)}`,
+            borderRadius: '3px',
+            padding: '0.45rem 0.45rem 0.55rem',
+            boxShadow: `0 10px 40px ${rgba(mix(DUSK.bg, [60,50,40], progress), 0.35)}`,
+            maxWidth: '240px',
+          }}>
+            <img
+              src={`/images/nodes/${hoveredNode.id}.jpg`}
+              alt={hoveredNode.label}
+              onError={() => setMissingImg(prev => new Set(prev).add(hoveredNode.id))}
+              style={{ display: 'block', width: '230px', height: '150px', objectFit: 'cover', borderRadius: '2px' }}
+            />
+            <div style={{
+              marginTop: '0.45rem',
+              fontFamily: 'var(--font-display)', fontStyle: 'italic',
+              fontSize: '0.78rem', color: rgba(accent, 0.9),
+              textAlign: 'center',
+            }}>
+              {hoveredNode.tagline}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tooltip on hover */}
       {hovered && !activeNode && (() => {
         const n = nodes.find(x => x.id === hovered)
@@ -268,18 +363,18 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
           <div style={{
             position: 'absolute', bottom: '2rem', left: '50%',
             transform: 'translateX(-50%)',
-            background: 'rgba(10,9,6,0.88)',
-            border: '1px solid rgba(181,160,140,0.15)',
+            background: rgba(bg, 0.9),
+            border: `1px solid ${rgba(accent, 0.2)}`,
             borderRadius: '3px', padding: '0.7rem 1.1rem',
             maxWidth: '300px', textAlign: 'center',
             pointerEvents: 'none', zIndex: 5,
             animation: 'fadeUp 0.18s ease both',
           }}>
             <style>{`@keyframes fadeUp{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}`}</style>
-            <div style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(181,160,140,0.65)', marginBottom: '0.3rem', fontFamily: 'var(--font-body)' }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: rgba(accent, 0.8), marginBottom: '0.3rem', fontFamily: 'var(--font-body)' }}>
               {n.tagline}
             </div>
-            <div style={{ fontSize: '0.82rem', color: 'rgba(240,236,228,0.65)', lineHeight: 1.5, fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+            <div style={{ fontSize: '0.82rem', color: rgba(text, 0.75), lineHeight: 1.5, fontFamily: 'var(--font-body)', fontWeight: 300 }}>
               {n.desc}
             </div>
           </div>
@@ -291,9 +386,10 @@ export default function Constellation({ activeNode, onSelectNode, compressed }) 
         <div style={{
           position: 'absolute', bottom: '1.2rem', left: '1.8rem',
           fontSize: '0.58rem', letterSpacing: '0.16em', textTransform: 'uppercase',
-          color: 'rgba(181,160,140,0.25)', fontFamily: 'var(--font-body)',
+          color: rgba(accent, 0.35), fontFamily: 'var(--font-body)',
+          transition: 'color 2.4s ease',
         }}>
-          click any node to explore
+          {progress < 0.95 ? 'each visit brings a little more light' : 'daylight'}
         </div>
       )}
     </div>

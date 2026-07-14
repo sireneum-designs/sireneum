@@ -14,9 +14,9 @@
   --cream-full:   rgba(240,236,228,0.92);
   --white:        #faf9f7;
 
-  /* Typography */
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body:    'Karla', system-ui, sans-serif;
+  /* Typography — matched to Out of Phase landing standard */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Inter', system-ui, sans-serif;
 
   /* Type scale */
   --text-xs:   0.68rem;

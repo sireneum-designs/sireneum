@@ -5,12 +5,17 @@ import StoryPanel from './components/StoryPanel.jsx'
 
 const YEAR = new Date().getFullYear()
 
+// HOLDING MODE — true: public placeholder ("propagating soon", no enter).
+// Set to false when the full site is ready to launch.
+const HOLDING = true
+
 export default function App() {
   const [view, setView] = useState('landing') // 'landing' | 'map' | 'story'
   const [activeNode, setActiveNode] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
 
   function enterMap() {
+    if (HOLDING) return
     setView('map')
   }
 
@@ -29,7 +34,7 @@ export default function App() {
 
       {/* Landing screen */}
       {view === 'landing' && (
-        <Landing onEnter={enterMap} />
+        <Landing onEnter={enterMap} holding={HOLDING} />
       )}
 
       {/* Constellation map + story panel */}
