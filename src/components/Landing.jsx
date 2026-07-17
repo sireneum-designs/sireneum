@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ContactForm from './ContactForm.jsx'
 
 // Logo file candidates — first one that loads wins.
 // Drop your logo into public/images/ as sireneum-logo.svg or sireneum-logo.png
@@ -276,30 +277,11 @@ export default function Landing({ onEnter, holding = false }) {
             borderRadius: '3px',
             padding: '0.9rem 1.2rem',
             display: 'flex', flexDirection: 'column', gap: '0.7rem',
-            textAlign: 'right',
+            textAlign: 'left',
             animation: 'contactIn 0.25s cubic-bezier(0.16,1,0.3,1) both',
           }}>
             <style>{`@keyframes contactIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
-            <a href="mailto:design@sireneum.com" style={{
-              fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 300,
-              letterSpacing: '0.05em', textDecoration: 'none',
-              color: 'rgba(240,236,228,0.75)', transition: 'color 0.2s',
-            }}
-              onMouseEnter={e => e.currentTarget.style.color = 'rgba(240,236,228,1)'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,236,228,0.75)'}
-            >
-              design@sireneum.com
-            </a>
-            <a href="tel:+16232520061" style={{
-              fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 300,
-              letterSpacing: '0.05em', textDecoration: 'none',
-              color: 'rgba(240,236,228,0.75)', transition: 'color 0.2s',
-            }}
-              onMouseEnter={e => e.currentTarget.style.color = 'rgba(240,236,228,1)'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,236,228,0.75)'}
-            >
-              623-252-0061
-            </a>
+            <ContactForm compact />
           </div>
         )}
       </div>
