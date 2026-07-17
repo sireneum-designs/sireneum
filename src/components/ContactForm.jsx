@@ -149,15 +149,6 @@ export default function ContactForm({ compact = true }) {
         </div>
       )}
 
-      {/* Quiet human-facing note; full machine-facing policy lives at /llms.txt */}
-      <div style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: '0.62rem', fontStyle: 'italic',
-        color: 'rgba(181,160,140,0.35)',
-        lineHeight: 1.5, textAlign: 'left',
-      }}>
-        Genuine inquiries welcome. Automated commercial solicitation is declined — see /llms.txt.
-      </div>
     </form>
   )
 }
