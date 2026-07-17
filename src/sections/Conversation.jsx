@@ -1,3 +1,5 @@
+import ContactForm from '../components/ContactForm.jsx'
+
 export default function ConversationSection({ node }) {
   if (!node) return null
   return (
@@ -28,17 +30,8 @@ export default function ConversationSection({ node }) {
       }}>
         {node.desc}
       </p>
-      <div style={{
-        marginTop: '3rem',
-        padding: '1.2rem 1.4rem',
-        border: '1px solid rgba(181,160,140,0.12)',
-        borderRadius: '3px',
-        fontSize: '0.8rem',
-        color: 'rgba(181,160,140,0.35)',
-        fontStyle: 'italic',
-        fontFamily: 'var(--font-display)',
-      }}>
-        This story is still being written.
+      <div style={{ marginTop: '3rem' }}>
+        <ContactForm compact={false} />
       </div>
     </div>
   )
