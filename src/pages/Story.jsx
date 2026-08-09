@@ -134,6 +134,9 @@ function CVSection({ item }) {
                 <div className="cv-entry" key={i}>
                   <div className="cv-when">{e.when}</div>
                   <div className="cv-what">
+                    {e.badge && (
+                      <img className="cv-badge" src={e.badge} alt="" aria-hidden="true" />
+                    )}
                     <div className="cv-title">
                       {e.href
                         ? <a href={e.href}>{e.title}</a>

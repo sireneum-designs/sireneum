@@ -1917,3 +1917,13 @@
   .shuttle { padding: 0.7rem 0.35rem; }
   .shuttle-name { display: none; }
 }
+
+/* an earned badge, sitting with the entry it belongs to */
+.cv-badge {
+  float: right;
+  width: clamp(3.4rem, 6vw, 4.6rem);
+  height: auto;
+  margin: 0 0 0.6rem 1.2rem;
+  opacity: 0.9;
+}
+@media (max-width: 700px) { .cv-badge { width: 3rem; } }

@@ -231,6 +231,22 @@ export const story = {
     },
 
     {
+      label: `community`,
+      entries: [
+        { when: `2018 — now`, title: `City of Litchfield Park`,
+          org: `Board of Adjustment · Design Review Board`,
+          note: `Chair of the Board of Adjustment; Vice Chair of the Design
+                 Review Board.` },
+        { when: `2026`, title: `Community Science for Global Futures`,
+          org: `Arizona State University · micro-credential`,
+          badge: `/images/credentials/asu-community-science-badge.png`,
+          href: `https://api.badgr.io/public/assertions/_G0FpftcS8agPoWPRCfNOw`,
+          note: `Designing Sustainable Solutions with Communities — the
+                 certificate program behind Rim Country Learning Landscape.` },
+      ],
+    },
+
+    {
       label: `references`,
       note: `Contact information available on request.`,
       entries: [
