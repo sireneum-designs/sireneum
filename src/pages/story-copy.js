@@ -101,7 +101,7 @@ export const story = {
       title: `design as resonance`,
       // the other half of that same line — see `the name` above
       resolveLine: 0,
-      resolve: `safety =`,
+      resolve: `resonance =`,
       body: `Every site sings its own song.
 
              > Every client.
@@ -109,7 +109,7 @@ export const story = {
              > Every landscape.
 
              **Architecture emerges when the songs within each of us find
-             harmony and reveal our path through the rocks to safety**.`,
+             resonance and reveal our path through the rocks to safety**.`,
     },
 
     // ── the top of the climb ────────────────────────────────
@@ -121,10 +121,10 @@ export const story = {
     {
       label: `central question`,
       feature: true,
-      resolve: `shared path`,
+      resolve: `path :: safety`,
       body: `How do we create the conditions that allow us to hear our siren
-             songs, hold them all together in safety, and turn them into a
-             **shared path** ahead?`,
+             songs, hold them all together in **safety**, and turn them into
+             a shared **path** ahead?`,
     },
   ],
 
