@@ -49,7 +49,7 @@ export const story = {
   sireneum: [
     {
       label: `the name`,
-      title: `A place for the siren`,
+      title: `a place for resonant voices`,
       body: `Sireneum is a neologism.
 
              *Siren* — from the Greek mythology.
@@ -60,7 +60,7 @@ export const story = {
     },
     {
       label: `resonance`,
-      title: `Sirens don't compel by force`,
+      title: `sirens don't compel by force`,
       body: `We are drawn toward what already resonates within us. The Siren's
              song is irresistible because it reveals something true.
 
@@ -69,17 +69,17 @@ export const story = {
     },
     {
       label: `committed to hearing`,
-      title: `Every song carries some truth`,
+      title: `every song carries some truth`,
       body: `In Homer's *Odyssey*, Odysseus did not close his ears to the
-             Sirens' song. He knew he needed to listen, even though that meant
-             taking a risk.
+             Sirens' song. He knew he needed to listen, even though that
+             required taking a risk.
 
              Sireneum is committed to hearing what a site, a client, or a
-             community is trying to say, even when the message is
+             community is trying to say, even if the message is
              uncomfortable.
 
-             Only then can we navigate the rocky coast and make it safely to
-             shore.`,
+             Like Odysseus, I believe this is the only way to navigate the
+             rocky coast and make it safely to shore as a group.`,
     },
   ],
 
@@ -239,10 +239,10 @@ export const story = {
         { when: `2026`,
           title: `Designing Sustainable Solutions with Communities:
                   Rim Country Learning Landscape`,
-          org: `Arizona State University Professional Learning Hub`,
+          org: `Arizona State University Professional Learning Hub Certificate`,
           badge: `/images/credentials/asu-community-science-badge.png`,
           href: `https://api.badgr.io/public/assertions/_G0FpftcS8agPoWPRCfNOw`,
-          note: `Community-engaged research practiced with reciprocity, respect
+          note: `Earning Criteria: Community-engaged research practiced with reciprocity, respect
                  and humility; relationships built with the people who live
                  there; concrete, doable projects co-designed around community
                  priorities and carried through to outcomes partners can use.` },

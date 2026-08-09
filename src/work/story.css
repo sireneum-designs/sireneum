@@ -1926,12 +1926,21 @@
   .shuttle-name { display: none; }
 }
 
-/* an earned badge, under the year it was earned in */
+/* an earned badge, under the year it was earned in — click to read it */
+.cv-badge-link {
+  display: block;
+  width: fit-content;
+  margin-left: auto;
+  cursor: zoom-in;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.cv-badge-link:hover { opacity: 0.75; }
+@media (max-width: 700px) { .cv-badge-link { margin-left: 0; } }
 .cv-badge {
   display: block;
   width: clamp(3rem, 5vw, 4rem);
   height: auto;
-  margin: 0.7rem 0 0 auto;      /* right-aligned, like the year above it */
+  margin: 0.7rem 0 0;
   opacity: 0.9;
 }
 @media (max-width: 700px) {

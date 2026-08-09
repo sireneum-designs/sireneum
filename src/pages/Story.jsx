@@ -135,7 +135,13 @@ function CVSection({ item }) {
                   <div className="cv-when">
                     {e.when}
                     {e.badge && (
-                      <img className="cv-badge" src={e.badge} alt="" aria-hidden="true" />
+                      /* 400px of dense type at thumbnail size is
+                         unreadable, so it opens at full size */
+                      <a className="cv-badge-link" href={e.badge}
+                         target="_blank" rel="noopener noreferrer"
+                         aria-label="View the certificate">
+                        <img className="cv-badge" src={e.badge} alt="" />
+                      </a>
                     )}
                   </div>
                   <div className="cv-what">
