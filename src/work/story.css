@@ -1926,23 +1926,30 @@
   .shuttle-name { display: none; }
 }
 
-/* an earned badge, under the year it was earned in — click to read it */
+/* ── an earned badge ─────────────────────────────────────────
+   Sits under the year, in the date column. Constrained on the
+   container as well as the image: a 400px graphic in a 7rem column
+   will otherwise overflow across the entry beside it.
+   ─────────────────────────────────────────────────────────── */
+.cv-when { display: flex; flex-direction: column; align-items: flex-end; }
 .cv-badge-link {
   display: block;
-  width: fit-content;
-  margin-left: auto;
+  width: clamp(3rem, 5vw, 4rem);
+  max-width: 100%;
+  margin-top: 0.7rem;
   cursor: zoom-in;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 .cv-badge-link:hover { opacity: 0.75; }
-@media (max-width: 700px) { .cv-badge-link { margin-left: 0; } }
 .cv-badge {
   display: block;
-  width: clamp(3rem, 5vw, 4rem);
+  width: 100%;
+  max-width: 100%;
   height: auto;
-  margin: 0.7rem 0 0;
   opacity: 0.9;
 }
 @media (max-width: 700px) {
-  .cv-badge { margin-left: 0; width: 2.8rem; }
+  .cv-when { align-items: flex-start; }
+  .cv-badge-link { width: 2.8rem; }
+}
 }
