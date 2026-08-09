@@ -957,6 +957,30 @@
   color: var(--taupe-mid);
 }
 
+/* ── a backing behind the verse ──────────────────────────────
+   Only under the poem itself, not the whole section — a soft panel
+   so the words stay legible over a drawing or moving water, while
+   the image either side of them is left alone.
+   ─────────────────────────────────────────────────────────── */
+.sec-poem.over-video .poem {
+  position: relative;
+  padding: clamp(1.6rem, 4vh, 2.6rem) clamp(1.6rem, 4vw, 3rem);
+  border-radius: 2px;
+}
+.sec-poem.over-video .poem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(8, 7, 5, 0.62);
+  backdrop-filter: blur(3px);
+  border-radius: 2px;
+  /* eased at the edges so it reads as a shadow gathering behind the
+     words rather than a card laid on top of the drawing */
+  -webkit-mask-image: radial-gradient(120% 130% at 50% 50%, #000 55%, transparent 100%);
+  mask-image: radial-gradient(120% 130% at 50% 50%, #000 55%, transparent 100%);
+}
+
 /* the poem and the introduction, first thing on the way down */
 .sec-intro .sec-inner {
   grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
@@ -1217,7 +1241,15 @@
   padding: clamp(3rem, 8vh, 5rem) 0 clamp(2rem, 5vh, 3.5rem);
   overflow: hidden;
 }
-.sec-poem.over-video { padding: clamp(3rem, 7vh, 5rem) 0 clamp(6rem, 13vh, 9.5rem); }
+.sec-poem.over-video {
+  padding: clamp(3rem, 7vh, 5rem) 0 clamp(6rem, 13vh, 9.5rem);
+  /* tall enough to carry a 2.2:1 drawing at full width, capped so it
+     never takes more than a screen on a wide monitor */
+  min-height: min(calc(100vw / 2.2), 88vh);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .poem-bed {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -1513,7 +1545,10 @@
    rising behind it — object-position alone cannot do this, since it
    only chooses which slice of the file is shown, not where the box
    sits. No z-index either: see the note above. */
-.wavebed { position: absolute; top: 22%; left: 0; right: 0; bottom: 0; }
+/* The bed fills the section. The section is given the drawing's own
+   proportion below, so the two agree and the image needs neither
+   cropping nor bars — it simply runs edge to edge. */
+.wavebed { position: absolute; inset: 0; }
 .wavebed-still,
 .wavebed-canvas {
   position: absolute; inset: 0;
@@ -1522,31 +1557,17 @@
 }
 .wavebed-still {
   /* Over the scrim, not under it. Beneath an 86%-black panel the
-     drawing was being erased — which is why it kept looking absent
-     however far its opacity was raised. */
+     drawing was being erased. */
   z-index: 2;
-  /* `contain`, not `cover`. The band is far wider than the drawing's
-     own 2.2:1, so covering it scaled the sheet up to fill the width
-     and cropped the building off the bottom. Contained, the whole
-     drawing shows — and since it is inverted its ground is already
-     black, so the space either side of it is invisible rather than
-     letterboxed. Anchored low, where the ridge sits. */
-  object-fit: contain;
-  object-position: 50% 100%;
+  /* `cover` with the section matched to the drawing's 2.2:1 — so it
+     fills the width completely and crops almost nothing. Contain left
+     bars, cover in a mismatched band cropped the building off, and
+     feathering the edges only hid the symptom. The shapes had to
+     agree. */
+  object-fit: cover;
+  object-position: 50% 70%;
   filter: invert(1) contrast(1.12);
   opacity: 0.75;
-  /* Contained, the drawing is a hard-edged rectangle sitting on the
-     page, and its inverted ground never quite matches the page black
-     — so the box shows. Feathering all four edges dissolves it into
-     the section instead of ending at a line. */
-  -webkit-mask-image:
-    linear-gradient(to right,  transparent 0%, #000 10%, #000 90%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 14%, #000 82%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to right,  transparent 0%, #000 10%, #000 90%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 14%, #000 82%, transparent 100%);
-  mask-composite: intersect;
 }
 .wavebed-canvas { z-index: 3; }                  /* over the drawing, under the verse */
 

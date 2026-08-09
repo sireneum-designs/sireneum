@@ -79,6 +79,8 @@ export default {
     // the verse sits over moving water, darkened enough to read on
     video: IMG + 'here-water.mp4',
     poster: IMG + 'here-water-poster.jpg',
+    audio: IMG + 'here.mp3',
+    credit: `Lyrics by Rachel Dudley · music by [Suno AI](https://suno.com/@sireneum)`,
     stanzas: [
       [`I am water. I am memory.`,
        `Zeitgeber — time-giver.`,
