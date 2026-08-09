@@ -1525,13 +1525,14 @@
      drawing was being erased — which is why it kept looking absent
      however far its opacity was raised. */
   z-index: 2;
-  object-fit: cover;
-  /* The drawing is black ink on white, inverted to sit on the page.
-     The sheet's lower ink field has been cropped out of the file
-     itself — inverted it came back as a slab of white across the
-     bottom, which no amount of positioning could hide at every
-     window height. */
-  object-position: 50% 18%;
+  /* `contain`, not `cover`. The band is far wider than the drawing's
+     own 2.2:1, so covering it scaled the sheet up to fill the width
+     and cropped the building off the bottom. Contained, the whole
+     drawing shows — and since it is inverted its ground is already
+     black, so the space either side of it is invisible rather than
+     letterboxed. Anchored low, where the ridge sits. */
+  object-fit: contain;
+  object-position: 50% 100%;
   filter: invert(1) contrast(1.12);
   opacity: 0.75;
 }
