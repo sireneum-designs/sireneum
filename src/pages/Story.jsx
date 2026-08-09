@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useLayoutEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 import '../work/work.css'
 import '../work/story.css'
 import Menu from '../components/Menu.jsx'
 import { story } from './story-copy.js'
 // the question → response device, shared with the work pages
 import { morph, Response, responseFor, useResolveMotion } from '../work/resolve.jsx'
+import { useLandOn } from '../work/land.js'
 
 /* ── Story ────────────────────────────────────────────────────
    The same shape as a project page, because it is the same idea.
@@ -194,11 +195,7 @@ export default function Story() {
   useEffect(() => { document.title = 'Story — Sireneum' }, [])
 
   /* land on the portrait, with sireneum sitting above it */
-  useLayoutEffect(() => {
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
-    const el = heroRef.current
-    if (el) window.scrollTo(0, el.offsetTop)
-  }, [])
+  useLandOn(heroRef, story)
 
   useResolveMotion(story)
 

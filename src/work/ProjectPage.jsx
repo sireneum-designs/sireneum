@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import './work.css'
 import './story.css'
 import { projects, getProject, projectIndex } from './projects.js'
@@ -9,6 +9,7 @@ import WaveBed from './WaveBed.jsx'
 import { SoundProvider } from './Sound.jsx'
 // the question → response device, shared with the story page
 import { morph, Response, responseFor, useResolveMotion } from './resolve.jsx'
+import { useLandOn } from './land.js'
 
 /* ── Project page ─────────────────────────────────────────────
    A ladder of abstraction, told as a page that actually scrolls.
@@ -457,12 +458,7 @@ export default function ProjectPage({ slug }) {
   }, [project])
 
   /* open at the project, with the *why* sitting above it */
-  useLayoutEffect(() => {
-    if (!project) return
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
-    const el = heroRef.current
-    if (el) window.scrollTo(0, el.offsetTop)
-  }, [project])
+  useLandOn(heroRef, project)
 
   useResolveMotion(project)
 
