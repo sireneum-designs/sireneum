@@ -234,7 +234,7 @@ export const story = {
     },
 
     {
-      label: `community`,
+      label: `community engagement`,
       entries: [
         { when: `2026`,
           title: `Designing Sustainable Solutions with Communities:

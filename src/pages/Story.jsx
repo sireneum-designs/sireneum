@@ -135,11 +135,11 @@ function CVSection({ item }) {
                   <div className="cv-when">
                     {e.when}
                     {e.badge && (
-                      /* 400px of dense type at thumbnail size is
-                         unreadable, so it opens at full size */
-                      <a className="cv-badge-link" href={e.badge}
+                      /* the badge goes where the title goes — to the
+                         verification record, not to the image file */
+                      <a className="cv-badge-link" href={e.href || e.badge}
                          target="_blank" rel="noopener noreferrer"
-                         aria-label="View the certificate">
+                         aria-label={`Verify: ${e.title.replace(/\s+/g, ' ')}`}>
                         <img className="cv-badge" src={e.badge} alt="" />
                       </a>
                     )}
