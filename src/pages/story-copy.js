@@ -224,8 +224,8 @@ export const story = {
       label: `technical skills`,
       entries: [
         { title: `Computational design`,
-          note: `Revit · Rhino · Grasshopper · ClimateStudio · Adobe Creative
-                 Suite` },
+          note: `Revit · Rhino · Grasshopper · ClimateStudio · QGIS · Adobe
+                 Creative Suite` },
         { title: `Human–AI collaborative design`,
           note: `Iterative concept development, research synthesis, design
                  critique, visualization, and technical communication feedback
