@@ -284,8 +284,24 @@ export default function Landing({ onEnter, holding = false }) {
 
       </div>
 
-      {/* Enter prompt — only when the full site is live. While holding,
-          the bottom stays empty; the menu is the way through. */}
+      {/* Enter prompt. The whole landing is also clickable — see the
+          layer below — so the prompt says where you are going rather
+          than being the only thing that can take you there. */}
+      {/* A click anywhere on the landing goes through. Sits under the
+          logo and the prompt, and above nothing else, so it never
+          swallows a click meant for the menu or the wordmark. */}
+      {!holding && (
+        <button
+          aria-label="Enter the site"
+          onClick={handleEnter}
+          style={{
+            position: 'absolute', inset: 0, zIndex: 1,
+            background: 'none', border: 'none', padding: 0,
+            cursor: 'pointer',
+          }}
+        />
+      )}
+
       {!holding && (
         <div style={{
           position: 'absolute', bottom: '2.2rem', left: 0, right: 0,

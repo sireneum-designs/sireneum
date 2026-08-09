@@ -10,8 +10,9 @@ import Process from './pages/Process.jsx'
 const YEAR = new Date().getFullYear()
 
 // HOLDING MODE — true: the landing stays a placeholder and the constellation
-// map is closed. Set false when the full site is ready to launch.
-const HOLDING = true
+// map is closed. False since the work section went live: the landing now
+// shows its own way through.
+const HOLDING = false
 
 // ── Routes ──────────────────────────────────────────────────
 // Deliberately OUTSIDE the holding gate: these pages are reachable from the
@@ -33,9 +34,11 @@ export default function App() {
   const [activeNode, setActiveNode] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
 
+  // The landing leads to the work — that is what most visitors came for,
+  // and it is the strongest thing here. The constellation map is still
+  // reachable in code but is no longer the front door.
   function enterMap() {
-    if (HOLDING) return
-    setView('map')
+    window.location.href = '/work'
   }
 
   function openNode(id) {

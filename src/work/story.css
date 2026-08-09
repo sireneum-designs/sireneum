@@ -1535,6 +1535,18 @@
   object-position: 50% 100%;
   filter: invert(1) contrast(1.12);
   opacity: 0.75;
+  /* Contained, the drawing is a hard-edged rectangle sitting on the
+     page, and its inverted ground never quite matches the page black
+     — so the box shows. Feathering all four edges dissolves it into
+     the section instead of ending at a line. */
+  -webkit-mask-image:
+    linear-gradient(to right,  transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 82%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right,  transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 82%, transparent 100%);
+  mask-composite: intersect;
 }
 .wavebed-canvas { z-index: 3; }                  /* over the drawing, under the verse */
 
