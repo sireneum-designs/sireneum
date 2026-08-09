@@ -148,13 +148,20 @@ function morph(rung) {
     <p className="q" key={pi}>
       {chunks.map((chunk, ci) => {
         if (!isB(chunk)) {
-          return norm(chunk).split(' ').filter(Boolean).map((word) => {
-            const i = w++
-            return (
-              <span className="w" key={`${ci}-${i}`} style={vec(i)}>
-                {word}{' '}
-              </span>
-            )
+          // *italics* survive the split too — each word keeps its own
+          // span so it can still scatter, and an italic run simply
+          // wraps every word inside it
+          return norm(chunk).split(/(\*[^*]+\*)/).map((run, ri) => {
+            const it = run.startsWith('*') && run.endsWith('*') && run.length > 2
+            const text = it ? run.slice(1, -1) : run
+            return text.split(' ').filter(Boolean).map((word) => {
+              const i = w++
+              return (
+                <span className="w" key={`${ci}-${ri}-${i}`} style={vec(i)}>
+                  {it ? <em>{word}</em> : word}{' '}
+                </span>
+              )
+            })
           })
         }
         const k = run++
@@ -592,6 +599,31 @@ function Route({ dir, word }) {
   )
 }
 
+/* ── project shuttle ─────────────────────────────────────────
+   Previous and next, fixed at the edges and vertically centred, so a
+   visitor can move between projects from anywhere on the page rather
+   than scrolling to the foot to find the link. Deliberately quiet:
+   a chevron that only names its destination on hover.
+   ─────────────────────────────────────────────────────────── */
+function Shuttle({ prev, next }) {
+  return (
+    <>
+      {prev && (
+        <a className="shuttle left" href={`/work/${prev.slug}`} aria-label={`Previous: ${prev.title}`}>
+          <span className="shuttle-chev" aria-hidden="true">‹</span>
+          <span className="shuttle-name">{prev.title}</span>
+        </a>
+      )}
+      {next && (
+        <a className="shuttle right" href={`/work/${next.slug}`} aria-label={`Next: ${next.title}`}>
+          <span className="shuttle-name">{next.title}</span>
+          <span className="shuttle-chev" aria-hidden="true">›</span>
+        </a>
+      )}
+    </>
+  )
+}
+
 function Arrow({ dir }) {
   const up = dir === 'up'
   return (
@@ -781,6 +813,7 @@ export default function ProjectPage({ slug }) {
     <SoundProvider src={project.poem?.audio} credit={project.poem?.credit}>
     <div className={`work-root story-doc${project.hero?.light ? ' on-light' : ''}`}>
       <Menu delay={0} />
+      <Shuttle prev={prev} next={next} />
 
       {/* ── climbing: why ── */}
       {project.poem && <Poem poem={project.poem} />}
