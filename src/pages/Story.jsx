@@ -132,11 +132,13 @@ function CVSection({ item }) {
             <div className="cv-entries">
               {item.entries.map((e, i) => (
                 <div className="cv-entry" key={i}>
-                  <div className="cv-when">{e.when}</div>
-                  <div className="cv-what">
+                  <div className="cv-when">
+                    {e.when}
                     {e.badge && (
                       <img className="cv-badge" src={e.badge} alt="" aria-hidden="true" />
                     )}
+                  </div>
+                  <div className="cv-what">
                     <div className="cv-title">
                       {e.href
                         ? <a href={e.href}>{e.title}</a>
@@ -242,7 +244,7 @@ export default function Story() {
           No marker here: the landing already names this direction on the
           image itself, and repeating it read as a second heading. */}
       <Intro intro={story.intro} />
-      {story.cv.map((c, n) => <CVSection item={c} key={`cv-${n}`} />)}
+      {story.cv.filter(c => !c.hidden).map((c, n) => <CVSection item={c} key={`cv-${n}`} />)}
 
       <div className="work-shell" style={{ paddingTop: 0 }}>
         <nav className="work-nav">

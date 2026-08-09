@@ -166,6 +166,9 @@ export const story = {
     },
 
     {
+      // Hidden, not deleted — /work does this job, and listing the
+      // projects twice weakened both. Remove `hidden` to bring it back.
+      hidden: true,
       label: `selected projects`,
       entries: [
         { title: `Outside-In House`, org: `Lead Designer · Project Manager`,
@@ -233,16 +236,19 @@ export const story = {
     {
       label: `community`,
       entries: [
-        { when: `2018 — now`, title: `City of Litchfield Park`,
-          org: `Board of Adjustment · Design Review Board`,
-          note: `Chair of the Board of Adjustment; Vice Chair of the Design
-                 Review Board.` },
-        { when: `2026`, title: `Community Science for Global Futures`,
-          org: `Arizona State University · micro-credential`,
+        { when: `2026`,
+          title: `Designing Sustainable Solutions with Communities:
+                  Rim Country Learning Landscape`,
+          org: `Arizona State University Professional Learning Hub`,
           badge: `/images/credentials/asu-community-science-badge.png`,
           href: `https://api.badgr.io/public/assertions/_G0FpftcS8agPoWPRCfNOw`,
-          note: `Designing Sustainable Solutions with Communities — the
-                 certificate program behind Rim Country Learning Landscape.` },
+          note: `Community-engaged research practiced with reciprocity, respect
+                 and humility; relationships built with the people who live
+                 there; concrete, doable projects co-designed around community
+                 priorities and carried through to outcomes partners can use.` },
+
+        { when: `2018 — now`, title: `City of Litchfield Park`,
+          org: `Board of Adjustment (Chair) · Design Review Board (Vice Chair)` },
       ],
     },
 

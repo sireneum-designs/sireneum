@@ -904,8 +904,16 @@
    introduction right, and the headshot with the name above them
    both — small, because the words are the subject here.
    ─────────────────────────────────────────────────────────── */
+/* The landing owns the opening screen: a full viewport, its content
+   centred in it. Otherwise the next section starts showing before the
+   visitor has taken the first one in. */
 .landing {
   position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   padding: clamp(5rem, 12vh, 9rem) 0 clamp(6rem, 14vh, 10rem);
 }
 .landing-inner {
@@ -1918,12 +1926,14 @@
   .shuttle-name { display: none; }
 }
 
-/* an earned badge, sitting with the entry it belongs to */
+/* an earned badge, under the year it was earned in */
 .cv-badge {
-  float: right;
-  width: clamp(3.4rem, 6vw, 4.6rem);
+  display: block;
+  width: clamp(3rem, 5vw, 4rem);
   height: auto;
-  margin: 0 0 0.6rem 1.2rem;
+  margin: 0.7rem 0 0 auto;      /* right-aligned, like the year above it */
   opacity: 0.9;
 }
-@media (max-width: 700px) { .cv-badge { width: 3rem; } }
+@media (max-width: 700px) {
+  .cv-badge { margin-left: 0; width: 2.8rem; }
+}
