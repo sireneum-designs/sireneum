@@ -1,8 +1,10 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef } from 'react'
 import '../work/work.css'
 import '../work/story.css'
 import Menu from '../components/Menu.jsx'
 import { story } from './story-copy.js'
+// the question → response device, shared with the work pages
+import { morph, Response, responseFor, useResolveMotion } from '../work/resolve.jsx'
 
 /* ── Story ────────────────────────────────────────────────────
    The same shape as a project page, because it is the same idea.
@@ -36,6 +38,16 @@ function prose(text) {
     const lines = block.trim().split(/\n/).map(l => l.trim()).filter(Boolean)
     const ordered   = lines.length > 1 && lines.every(l => /^\d+\.\s/.test(l))
     const unordered = lines.length > 1 && lines.every(l => /^-\s/.test(l))
+    // a block whose lines all begin `> ` is a verse: the lines stack tight,
+    // so the group lands on the eye as one beat instead of separate thoughts
+    const verse     = lines.every(l => /^>\s/.test(l))
+    if (verse) {
+      return (
+        <div key={i} className="verse">
+          {lines.map((l, j) => <p key={j}>{inline(l.replace(/^>\s/, ''), `${i}-${j}`)}</p>)}
+        </div>
+      )
+    }
     if (ordered || unordered) {
       const List = ordered ? 'ol' : 'ul'
       return (
@@ -48,16 +60,19 @@ function prose(text) {
   })
 }
 
-function Section({ item }) {
+function Section({ item, id }) {
   const figs = item.media || []
+  // a section that names a `resolve` line hands its bold words to the
+  // response above it, so its body is split into movable pieces
+  const cls = `sec sec-say rise${item.resolve ? ' morph' : ''}${item.feature ? ' feature' : ''}`
   return (
     <>
-      <section className="sec sec-say rise">
+      <section className={cls} data-rung={id}>
         <div className="sec-inner">
           <div className="sec-label">{item.label}</div>
           <div>
-            <h2>{item.title}</h2>
-            {prose(item.body)}
+            {item.title && <h2>{item.title}</h2>}
+            {item.resolve ? morph(item) : prose(item.body)}
           </div>
         </div>
       </section>
@@ -185,6 +200,8 @@ export default function Story() {
     if (el) window.scrollTo(0, el.offsetTop)
   }, [])
 
+  useResolveMotion(story)
+
   useEffect(() => {
     const io = new IntersectionObserver((entries) => {
       entries.forEach(e => {
@@ -198,12 +215,22 @@ export default function Story() {
   // authored outward from the portrait, so it plays inward
   const up = [...story.sireneum].reverse()
 
+  // the central question sits at the far end of the climb and its words
+  // fly up into the response above it — same device as the work pages
+  const { before: responseBefore, lines: responseLines } =
+    responseFor(up, n => `up-${n}`)
+
   return (
     <div className="work-root story-doc">
       <Menu delay={0} />
 
       {/* ── climbing: sireneum ── */}
-      {up.map((s, n) => <Section item={s} key={`up-${n}`} />)}
+      {up.map((s, n) => (
+        <Fragment key={`up-${n}`}>
+          {n === responseBefore && <Response lines={responseLines} atTop={n === 0} />}
+          <Section item={s} id={`up-${n}`} />
+        </Fragment>
+      ))}
 
       {/* ── the landing ──────────────────────────────────────
           Not a portrait band any more. The poem sits left, the

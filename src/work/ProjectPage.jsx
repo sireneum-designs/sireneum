@@ -7,6 +7,8 @@ import PlanSpots, { PlanKey } from './PlanSpots.jsx'
 import { ViewerProvider, useViewer } from './Viewer.jsx'
 import WaveBed from './WaveBed.jsx'
 import { SoundProvider } from './Sound.jsx'
+// the question → response device, shared with the story page
+import { morph, Response, responseFor, useResolveMotion } from './resolve.jsx'
 
 /* ── Project page ─────────────────────────────────────────────
    A ladder of abstraction, told as a page that actually scrolls.
@@ -31,168 +33,6 @@ function inline(text, key) {
   })
 }
 
-/* A question set to come apart.
-
-   Each word is its own inline-block carrying a fixed direction and
-   distance. A single `--gone` value on the section, written by the
-   scroll handler below, drives all of them at once — so the whole
-   line disperses as you climb away from it and draws back together
-   on the way down. Nothing is remembered; it is purely positional.  */
-function hash(i) {
-  const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453
-  return x - Math.floor(x)
-}
-
-/* ── the response ─────────────────────────────────────────────
-   Two paragraphs on this page each hand a phrase to a third thing
-   sitting between them: the precedent gives `past + present =`, the
-   central question gives `modern :: original`.
-
-   Neither paragraph is consumed. The response lines are separate
-   copies that *rise out of* their source words — starting exactly on
-   top of them, at their size, and travelling into place as you climb
-   past. The originals stay where they are and stay readable.
-
-   `rung.resolve` names the line. Any word in it that also appears, in
-   order, inside a **bold** run of that rung's body is a survivor and
-   gets flown; everything else in the line is a connector that fades.
-   ─────────────────────────────────────────────────────────── */
-function parseResolve(rung) {
-  const isB   = c => c.startsWith('**') && c.endsWith('**') && c.length > 4
-  const norm  = t => t.replace(/\s+/g, ' ').trim()
-  // a rung built of paired rows carries its bold words in the closing
-  // line rather than in a body, so that is where the line comes from
-  const source = rung.closing || rung.body
-  const parts = source.trim().split(/\n\s*\n/).map(b => b.split(/(\*\*[^*]+\*\*)/))
-  const spec  = norm(rung.resolve).split(' ')
-
-  // Every bold run in the body, in reading order. A run is the atom we
-  // try to match first — that is what lets a resolved line carry a
-  // phrase like `change shape` and not just single words.
-  const runs = []
-  parts.forEach(chunks => chunks.forEach(c => {
-    if (isB(c)) runs.push(norm(c.slice(2, -2)))
-  }))
-
-  // Walk the resolved line, claiming runs as we go. A run matches
-  // either whole — its text equal to the next few tokens — or, failing
-  // that, by any single word inside it.
-  // Each flown piece carries a key naming the run it came from, and
-  // the copy in the resolved line carries the same key. Pairing on
-  // that rather than on position means the resolved line can put the
-  // words in a different order from the sentence they came out of.
-  const claimed = new Map()      // run index → { whole } | { words:Set }
-  const taken   = new Set()
-  const tokens  = []
-  let i = 0
-  while (i < spec.length) {
-    let hit = null
-    for (let k = 0; k < runs.length && !hit; k++) {
-      const words = runs[k].split(' ')
-      const key   = `${k}`
-      if (!taken.has(key) && words.every((w, n) => spec[i + n] === w)) {
-        hit = { k, len: words.length, whole: true, key }
-      }
-    }
-    for (let k = 0; k < runs.length && !hit; k++) {
-      const words = runs[k].split(' ')
-      const key   = `${k}:${spec[i]}`
-      if (taken.has(key)) continue
-      // Exact word, or a shared stem — so a resolved line can read
-      // `adapt` where the sentence says `adaptation`, or `preservation`
-      // where it says `preserving`. Five characters of agreement, and
-      // at least 60% of the shorter word, which is tight enough that
-      // two unrelated words will not be mistaken for each other.
-      const stem = (a, b) => {
-        let n = 0
-        while (n < a.length && n < b.length && a[n] === b[n]) n++
-        return n >= 5 && n >= Math.min(a.length, b.length) * 0.6
-      }
-      const word = words.find(w => w === spec[i] || stem(w, spec[i]))
-      if (word) hit = { k, len: 1, whole: false, word, key }
-    }
-    if (hit) {
-      const rec = claimed.get(hit.k) || { whole: false, words: new Set() }
-      if (hit.whole) rec.whole = true
-      else rec.words.add(hit.word)
-      claimed.set(hit.k, rec)
-      taken.add(hit.key)
-      tokens.push({ t: spec.slice(i, i + hit.len).join(' '), fly: true, key: hit.key })
-      i += hit.len
-    } else {
-      tokens.push({ t: spec[i], fly: false })
-      i += 1
-    }
-  }
-  return { tokens, claimed, parts, isB, norm }
-}
-
-/* a body split so each piece can be moved, and each survivor found
-   again by the measuring pass */
-function morph(rung) {
-  const { claimed, parts, isB, norm } = parseResolve(rung)
-  let run = 0   // index into the bold runs
-  let w = 0     // index over all pieces, for the scatter vectors
-  const vec = (i) => {
-    const angle = hash(i) * Math.PI * 2
-    const dist  = 70 + hash(i + 100) * 130
-    return {
-      '--dx':  (Math.cos(angle) * dist).toFixed(1),
-      '--dy':  (Math.sin(angle) * dist * 0.7 + 40).toFixed(1),
-      '--rot': ((hash(i + 200) - 0.5) * 40).toFixed(1),
-      '--lag': (hash(i + 300) * 0.28).toFixed(3),
-    }
-  }
-
-  return parts.map((chunks, pi) => (
-    <p className="q" key={pi}>
-      {chunks.map((chunk, ci) => {
-        if (!isB(chunk)) {
-          // *italics* survive the split too — each word keeps its own
-          // span so it can still scatter, and an italic run simply
-          // wraps every word inside it
-          return norm(chunk).split(/(\*[^*]+\*)/).map((run, ri) => {
-            const it = run.startsWith('*') && run.endsWith('*') && run.length > 2
-            const text = it ? run.slice(1, -1) : run
-            return text.split(' ').filter(Boolean).map((word) => {
-              const i = w++
-              return (
-                <span className="w" key={`${ci}-${ri}-${i}`} style={vec(i)}>
-                  {it ? <em>{word}</em> : word}{' '}
-                </span>
-              )
-            })
-          })
-        }
-        const k = run++
-        const rec = claimed.get(k)
-        const text = norm(chunk.slice(2, -2))
-
-        // a run claimed whole stays whole, and flies as one piece
-        if (rec?.whole) {
-          const i = w++
-          return (
-            <span className="w keep" data-k={`${k}`} key={`${ci}-${i}`} style={vec(i)}>
-              <strong>{text}</strong>{' '}
-            </span>
-          )
-        }
-        return text.split(' ').map((word) => {
-          const i = w++
-          const keep = rec?.words.has(word)
-          return (
-            <span className={`w${keep ? ' keep' : ''}`}
-                  data-k={keep ? `${k}:${word}` : undefined}
-                  key={`${ci}-${i}`} style={vec(i)}>
-              <strong>{word}</strong>{' '}
-            </span>
-          )
-        })
-      })}
-    </p>
-  ))
-}
-
 function Poem({ poem }) {
   return (
     <section className={`sec sec-poem rise${poem.video || poem.still ? ' over-video' : ''}`}>
@@ -213,32 +53,6 @@ function Poem({ poem }) {
             ))}
           </div>
         </aside>
-      </div>
-    </section>
-  )
-}
-
-function Response({ lines, atTop }) {
-  // Sitting at the head of the page it needs runway above it, or there
-  // is no scroll left for the lines to assemble in.
-  return (
-    <section className={`sec sec-response rise${atTop ? ' at-top' : ''}`}>
-      <div className="sec-inner">
-        <div className="sec-label">response</div>
-        <div className="response-stack">
-          {lines.map((ln, i) => (
-            <p
-              className={`response-line${ln.lead ? ' lead' : ''}`}
-              data-src={ln.src}
-              style={{ '--lag': ln.lag }}
-              key={i}
-            >
-              {ln.tokens.map((t, j) =>
-                <span className={t.fly ? 'rw' : 'sep'} data-k={t.key} key={j}>{t.t}</span>
-              )}
-            </p>
-          ))}
-        </div>
       </div>
     </section>
   )
@@ -650,117 +464,7 @@ export default function ProjectPage({ slug }) {
     if (el) window.scrollTo(0, el.offsetTop)
   }, [project])
 
-  /* Two scroll-linked things, on one loop.
-
-     The response lines rise out of the words that made them: each copy
-     is measured against its source word and the delta stored as
-     `--fx/--fy/--fs`, then run backwards — at progress 0 the copy sits
-     exactly on top of its original at the original's size, at 1 it has
-     arrived. The central question's words scatter on their own, later
-     progress.
-
-     All of it is positional, so scrolling back runs it in reverse and
-     there is no state to reset. */
-  useEffect(() => {
-    if (!project) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const lines  = [...document.querySelectorAll('.response-line')]
-    const morphs = [...document.querySelectorAll('.sec-say.morph')]
-    const block  = document.querySelector('.sec-response')
-
-    // where the response lines come to rest, once the page can climb
-    // no further — the whole assembly is timed against this
-    let restMid = 0
-    const findRest = () => {
-      const stack = block?.querySelector('.response-stack')
-      if (!stack) return
-      const r = stack.getBoundingClientRect()
-      restMid = r.top + window.scrollY + r.height / 2
-    }
-
-    const measure = () => {
-      // neutralise both transforms first, or we measure the animation
-      morphs.forEach(el => el.style.setProperty('--gone', '0'))
-      lines.forEach(l => l.style.setProperty('--t', '1'))
-      lines.forEach(line => {
-        const src = document.querySelector(`.sec-say[data-rung="${line.dataset.src}"]`)
-        if (!src) return
-        const to = [...line.querySelectorAll('.rw')]
-        to.forEach((t) => {
-          const f = src.querySelector(`.keep[data-k="${t.dataset.k}"] strong`)
-          if (!f) return
-          const a = t.getBoundingClientRect()
-          const b = f.getBoundingClientRect()
-          if (!a.width || !b.width) return
-          t.style.setProperty('--fx', (b.left - a.left).toFixed(1))
-          t.style.setProperty('--fy',
-            ((b.top + b.height / 2) - (a.top + a.height / 2)).toFixed(1))
-          t.style.setProperty('--fs', (b.width / a.width).toFixed(4))
-        })
-      })
-      lines.forEach(l => l.style.removeProperty('--t'))
-      findRest()
-    }
-
-    const clamp01 = v => Math.min(1, Math.max(0, v))
-
-    let queued = false
-    const paint = () => {
-      queued = false
-      const vh = window.innerHeight
-
-      let t = 0
-      if (block && restMid > 0) {
-        // Measured off the lines themselves, not the section — the
-        // section carries a tall pad above it for runway, and that pad
-        // is inside its box, so measuring the box measured the middle
-        // of the empty space.
-        //
-        // `rest` is where the lines finish: mid-screen normally, but no
-        // further than the page can actually scroll. On a page with
-        // something above the response — a poem, say — that is half the
-        // screen; on one where the response is the first thing, it is
-        // wherever the page runs out. Either way the words arrive
-        // somewhere you can see them, which the old fixed reading of
-        // scroll position could not guarantee.
-        const stack = block.querySelector('.response-stack')
-        const r = stack.getBoundingClientRect()
-        const mid = r.top + r.height / 2
-        // high enough that the question below it is still on screen and
-        // legible once it has reassembled — settling at mid-height left
-        // the answer stranded at the bottom edge
-        const rest = Math.min(restMid, vh * 0.3)
-        t = clamp01(1 - (rest - mid) / (vh * 0.85))
-        block.style.setProperty('--t', t.toFixed(3))
-      }
-
-      // The question comes apart while the response is assembling and
-      // settles back once it has. So it is read, then scattered, then
-      // returned — sitting legibly beneath the finished lines at the
-      // top of the climb rather than being left as a blur.
-      const swell = Math.sin(Math.PI * t)
-      morphs.forEach(el => {
-        if (!el.classList.contains('feature')) return   // only the question scatters
-        el.style.setProperty('--gone', swell.toFixed(3))
-      })
-    }
-    const onScroll = () => {
-      if (queued) return
-      queued = true
-      requestAnimationFrame(paint)
-    }
-    const onResize = () => { measure(); paint() }
-
-    measure()
-    paint()
-    document.fonts?.ready.then(onResize)   // webfonts change the metrics
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onResize)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onResize)
-    }
-  }, [project])
+  useResolveMotion(project)
 
   /* one gentle rise per section, once */
   useEffect(() => {
@@ -797,16 +501,8 @@ export default function ProjectPage({ slug }) {
   // Every rung that names a `resolve` line contributes one line to the
   // response, which sits at the far end of the climb — the last thing
   // reached, drawing its words up out of everything below it.
-  const sources = why.map((r, n) => ({ r, n })).filter(x => x.r.resolve)
-  const responseBefore = sources.length ? sources[0].n : -1
-  const responseLines = [...sources]
-    .sort((a, b) => b.n - a.n)          // back into authored order
-    .map(({ r, n }) => ({
-      src: `why-${n}`,
-      lead: !!r.feature,
-      lag: r.feature ? 0 : 0.22,
-      tokens: parseResolve(r).tokens,
-    }))
+  const { before: responseBefore, lines: responseLines } =
+    responseFor(why, n => `why-${n}`)
 
   return (
    <ViewerProvider>

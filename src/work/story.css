@@ -80,6 +80,17 @@
   line-height: 1;
   color: var(--cream-full);
 }
+/* verse — lines that must stack tight and land as one beat.
+   The gap between verses does the organizing; inside a verse there is none. */
+.sec-say .verse { margin: 0 0 1.6em; }
+.sec-say .verse:last-child { margin-bottom: 0; }
+.sec-say .verse p {
+  margin-bottom: 0;
+  line-height: 1.5;
+  text-indent: 0;
+}
+.sec-say .verse p strong { font-size: 1em; }
+
 .sec-say .rung-list { margin: 0 0 1.1em 1.1rem; }
 .sec-say .rung-list li { margin-bottom: 0.5em; }
 .sec-say .rung-list li::marker { color: var(--taupe-mid); }
@@ -1951,5 +1962,4 @@
 @media (max-width: 700px) {
   .cv-when { align-items: flex-start; }
   .cv-badge-link { width: 5rem; }
-}
 }
