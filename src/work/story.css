@@ -1,0 +1,1830 @@
+/* ── PROJECT STORY ────────────────────────────────────────────
+   A flowing document, not a slideshow.
+
+   The previous version pinned a sticky stage and crossfaded between
+   full-screen beats. That is a slide deck — the page never actually
+   moved, only the contents blinked. Here the page really scrolls:
+   images travel up and off, text arrives beneath them, the next image
+   comes in from below. Motion is the scroll itself.
+
+   Everything else is restraint: very large images, a lot of air, and
+   text used sparingly — a rest between pictures rather than a wall.
+   ─────────────────────────────────────────────────────────── */
+
+.story-doc { position: relative; overflow-x: clip; }
+
+/* ── rhythm ──────────────────────────────────────────────── */
+.sec {
+  position: relative;
+  padding: clamp(5rem, 14vh, 11rem) 0;
+}
+/* Every band on the page — text, drawings, markers — is laid on the
+   same two-column grid: a label gutter, then the content column. So
+   a paragraph and the images that belong to it start on exactly the
+   same left edge and finish on the same right edge. */
+.sec-inner {
+  --gutter: minmax(110px, 13%);
+  --gap: clamp(1.4rem, 4vw, 4rem);
+  /* The body measure. Paragraphs stop here and so does every block of
+     images, so the whole page has exactly two vertical edges. */
+  --body: min(100%, 880px);
+  width: min(1440px, 92vw);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: var(--gutter) minmax(0, 1fr);
+  gap: var(--gap);
+  align-items: start;
+}
+.sec-inner > *:not(.sec-label) { grid-column: 2; }
+
+/* ── text sections ───────────────────────────────────────────
+   Small label left, large text right — the pattern that gives long
+   pages their calm: the eye always knows where the sentence starts.
+   ─────────────────────────────────────────────────────────── */
+
+.sec-label {
+  font-family: var(--font-body);
+  font-size: clamp(0.82rem, 1.1vw, 0.95rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--taupe-full);
+  /* Nudged so the label's baseline meets the paragraph's first line.
+     0.55rem was set against the old, larger body size; when the text
+     was reduced the label was left sitting low. */
+  padding-top: 0.3rem;
+}
+.sec-say h2 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.5rem, 3.1vw, 2.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.28;
+  color: var(--cream-full);
+  margin-bottom: var(--sp-8);
+}
+.sec-say p,
+.sec-say .rung-list li {
+  font-family: var(--font-body);
+  font-size: clamp(0.86rem, 1.12vw, 0.98rem);
+  max-width: var(--body);
+  font-weight: 300;
+  line-height: 1.68;
+  color: var(--cream-mid);
+}
+.sec-say p { margin-bottom: 1.1em; }
+.sec-say p:last-child { margin-bottom: 0; }
+.sec-say em { font-style: italic; color: var(--cream-full); }
+.sec-say:not(.feature) strong {
+  font-weight: 600;
+  font-size: 1.2em;
+  line-height: 1;
+  color: var(--cream-full);
+}
+.sec-say .rung-list { margin: 0 0 1.1em 1.1rem; }
+.sec-say .rung-list li { margin-bottom: 0.5em; }
+.sec-say .rung-list li::marker { color: var(--taupe-mid); }
+
+/* ── image sections ──────────────────────────────────────── */
+.sec-show { padding: clamp(2rem, 6vh, 4.5rem) 0; }
+
+/* ── what belongs to what ────────────────────────────────────
+   Pictures that illustrate a paragraph sit directly beneath it, with
+   only a breath between. The full section rhythm is kept for the gap
+   *after* them, where the next subject starts — so a block of images
+   always reads as belonging upward, never down.
+   ─────────────────────────────────────────────────────────── */
+.sec-say:has(+ .sec-show) { padding-bottom: clamp(0.8rem, 1.8vh, 1.4rem); }
+.sec-say + .sec-show      { padding-top: 0; }
+
+/* A strip leads its section instead: generous air above it, and the
+   paragraph tucked underneath as its caption. Without this the
+   caption inherits the full section rhythm and floats a screen away
+   from the drawings it belongs to. */
+.sec-show:has(.strip) {
+  padding-top: clamp(3.5rem, 9vh, 7rem);
+  padding-bottom: 0;
+}
+.sec-show:has(.strip) + .sec-say {
+  padding-top: 0;
+  padding-bottom: clamp(4rem, 10vh, 8rem);
+}
+
+/* precedent, response and question are one composition */
+.sec-say.morph   { padding-bottom: clamp(1.5rem, 3vh, 2.5rem); }
+ /* the question is given room to breathe beneath the response, so the
+    words have distance to travel and the change is not abrupt */
+.sec-say.feature { padding-top: clamp(5rem, 11vh, 9rem); }
+
+/* Images are held to the body measure and no wider. Nothing on this
+   page breaks the left or right edge that the text establishes; to
+   see a drawing larger you click it and it opens in the viewer. */
+.sec-show .sec-inner > * { width: var(--body); }
+.sec-show .sec-inner > .strip { width: var(--body); }
+
+
+
+
+.figs { display: grid; gap: clamp(1rem, 2.5vw, 2.5rem); }
+.figs.two { grid-template-columns: 1fr 1fr; }
+.figs figure { margin: 0; }
+.figs img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+/* drawings sit on white; photographs and renders stand alone */
+.figs .mat { background: #fff; padding: clamp(1rem, 2.5vw, 2.5rem); border-radius: 2px; }
+
+.fig-cap {
+  margin-top: var(--sp-3);
+  font-family: var(--font-body);
+  font-size: clamp(0.8rem, 1vw, 0.9rem);
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  color: rgba(240,236,228,0.68);
+}
+
+/* full-bleed — the palate cleansers */
+/* nothing runs to the page edge any more; the measure holds */
+
+/* ── the hero ────────────────────────────────────────────── */
+.story-hero {
+  position: relative;
+  height: 100vh; height: 100dvh;
+  overflow: hidden;
+}
+.story-hero > img,
+.story-hero > video {
+  position: absolute;
+  top: -16%; left: 0;
+  width: 100%;
+  height: 132%;
+  object-fit: cover;
+  display: block;
+}
+.story-hero.empty {
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: var(--sp-2);
+  background: var(--ink-mid);
+}
+.story-hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to right, rgba(10,9,6,0.78) 0%, rgba(10,9,6,0.35) 42%, transparent 70%
+  );
+  pointer-events: none;
+}
+
+.hero-card {
+  position: absolute;
+  left: clamp(1.5rem, 7vw, 7rem);
+  bottom: clamp(4rem, 12vh, 9rem);
+  z-index: 2;
+  max-width: 34ch;
+}
+.hero-card h1 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--white);
+  margin-bottom: var(--sp-8);
+}
+.hero-row { margin-bottom: var(--sp-6); }
+.hero-row:last-child { margin-bottom: 0; }
+.hero-row dt {
+  font-family: var(--font-body);
+  font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(181,160,140,0.85);
+  margin-bottom: 0.35rem;
+}
+.hero-row dd {
+  font-family: var(--font-body);
+  font-size: 1rem; font-weight: 300;
+  color: var(--white);
+  line-height: 1.4;
+}
+.hero-row .hero-scope {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: rgba(240,236,228,0.72);
+}
+
+/* the two directions */
+.hero-dir2 {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 0.55rem;
+  font-family: var(--font-body);
+  font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;          /* balance the trailing letterspace */
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+.hero-dir2.up   { top: clamp(1.5rem, 4vh, 3rem); }
+.hero-dir2.down { bottom: clamp(1.5rem, 4vh, 3rem); flex-direction: column-reverse; }
+
+.dir-arrow { color: currentColor; }
+.dir-arrow { width: 20px; height: 12px; }
+.dir-arrow.up   { animation: dirUp   3.2s ease-in-out infinite; }
+.dir-arrow.down { animation: dirDown 3.2s ease-in-out infinite; }
+@keyframes dirUp   { 0%,100%{transform:translateY(2px);opacity:.4} 50%{transform:translateY(-5px);opacity:1} }
+@keyframes dirDown { 0%,100%{transform:translateY(-2px);opacity:.4} 50%{transform:translateY(5px);opacity:1} }
+
+/* ── arrival ─────────────────────────────────────────────────
+   A single gentle rise as each section enters. Once only — a page
+   that keeps animating on every pass is exhausting to read.
+   ─────────────────────────────────────────────────────────── */
+.rise {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.rise.in { opacity: 1; transform: none; }
+
+/* A drawing that accompanies a paragraph is set on the same grid as
+   that paragraph — same left edge, same measure — so the two read as
+   one column rather than as an image and, separately, some text. */
+/* ── the ladder marker ───────────────────────────────────── */
+.turn {
+  display: flex; align-items: center; gap: var(--sp-6);
+  width: min(1440px, 92vw); margin: 0 auto;
+  font-family: var(--font-body);
+  font-size: clamp(0.78rem, 1vw, 0.9rem); font-weight: 500;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--taupe-full);
+}
+.turn::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+@media (max-width: 860px) {
+  .sec-inner { grid-template-columns: 1fr; gap: var(--sp-3); }
+  .sec-inner > *:not(.sec-label) { grid-column: 1; }
+  .sec-label { padding-top: 0; }
+  .figs.two { grid-template-columns: 1fr; }
+  .story-hero::after {
+    background: linear-gradient(to top, rgba(10,9,6,0.85) 0%, rgba(10,9,6,0.2) 55%, transparent 80%);
+  }
+  .hero-card { left: 1.25rem; right: 1.25rem; max-width: none; bottom: 5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { opacity: 1; transform: none; transition: none; }
+  .dir-arrow.up, .dir-arrow.down { animation: none; opacity: .7; }
+}
+
+/* ── scroll motion ───────────────────────────────────────────
+   Images breathe as they cross the middle. The crop frame hides
+   the scaling so no edge is ever visible.
+   ─────────────────────────────────────────────────────────── */
+.crop { overflow: hidden; border-radius: 2px; }
+.crop img { display: block; width: 100%; height: auto; will-change: transform; }
+.story-hero > img, .story-hero > video { will-change: transform; }
+
+/* a scan too small to enlarge is shown at its own size, not stretched */
+.figs figure.narrow { max-width: 720px; margin: 0 auto; }
+.figs figure.narrow .mat { padding: clamp(1rem, 2vw, 2rem); }
+.figs figure.narrow img { image-rendering: auto; }
+
+/* the credit line on the landing image */
+.hero-credit {
+  position: absolute;
+  right: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(1rem, 3vh, 2rem);
+  z-index: 2;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: rgba(240,236,228,0.45);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+/* ── plans side by side ──────────────────────────────────── */
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+  align-items: start;
+}
+.plans > figure { margin: 0; }
+.plans .planspots { display: block; }
+.plans .planspots-view { display: none; }   /* the view opens in the viewer instead */
+
+/* ── the matched pair ────────────────────────────────────────
+   Two views of one elevation. The sources are different shapes, so
+   both are cropped into an identical 16:10 frame — equal size is the
+   entire point of a before-and-after, and unequal frames destroy it.
+   Crop position is set per image in the project file.
+   ─────────────────────────────────────────────────────────── */
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+  align-items: start;
+}
+.pair figure { margin: 0; }
+.pair .frame {
+  display: block; width: 100%;
+  aspect-ratio: 16 / 10;
+  padding: 0; border: none;
+  background: var(--ink-mid);
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.pair .frame { position: relative; }
+.pair .frame img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.pair .frame:hover img { transform: scale(1.03); }
+
+/* the label sits on the picture as a title, over a soft scrim so it
+   stays legible whatever is behind it */
+.pair .frame::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 42%;
+  background: linear-gradient(to top, rgba(10,9,6,0.72) 0%, rgba(10,9,6,0.28) 45%, transparent 100%);
+  pointer-events: none;
+}
+.pair .on-image {
+  position: absolute;
+  left: clamp(0.7rem, 3cqw, 1.4rem);
+  bottom: clamp(0.6rem, 2.6cqw, 1.2rem);
+  z-index: 2;
+  font-family: var(--font-body);
+  /* sized against the frame it sits on, which is now half the body
+     measure — the old fixed size was set when these ran full width */
+  font-size: clamp(0.6rem, 1.5cqw, 0.78rem);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 14px rgba(0,0,0,0.7);
+  pointer-events: none;
+  text-align: left;
+}
+
+/* ── collage ─────────────────────────────────────────────────
+   Detail 1, the thermal envelope, is the argument — it gets the top
+   of the block on its own. The other three sit beneath it: the
+   envelope plan at left running the full depth, the two sections
+   stacked at right.
+
+   The proportions work out: the plan is 0.76:1, so at column width W
+   it stands 1.31W tall. Each section is 1.62:1, so two of them stand
+   1.23W plus the gap between. With the gap set to roughly 7% of the
+   column, the two columns finish level.
+   ─────────────────────────────────────────────────────────── */
+.collage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* One gap, used everywhere: the space between any two drawings is
+     the same as the margin around the whole set. */
+  --sheet-margin: clamp(1.4rem, 3vw, 2.6rem);
+  column-gap: var(--sheet-margin);
+  /* the two sections read as a pair, so they sit closer to each other
+     than the sheet's own margin */
+  row-gap: clamp(0.9rem, 1.9vw, 1.5rem);
+  align-items: start;
+  width: 100%;
+  /* This is one sheet of paper with several drawings laid on it, not
+     several cards each with its own border. Individual white mats
+     padded every drawing down to about 60% of its box and cost the
+     set its coherence. */
+  background: #fff;
+  padding: var(--sheet-margin);
+  border-radius: 2px;
+}
+.collage figure { margin: 0; }
+/* the drawings sit straight on the sheet — no mat, no card, no lift */
+.collage .plate {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+.collage .plate:hover {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.72;
+}
+
+/* The sheet, laid out the way it would be laid out on paper:
+
+     ┌─────────────────────────────────────┐
+     │  1  thermal envelope                │
+     ├──────────────────┬──────────────────┤
+     │                  │  legend          │
+     │  2 envelope plan ├──────────────────┤
+     │                  │  3  section EW   │
+     ├──────────────────┼──────────────────┤
+     │                  │  4  section NS   │
+     └──────────────────┴──────────────────┘
+
+   The plan runs down the left at full depth; the legend is a note,
+   not a drawing, so it takes a fraction of its column and carries
+   nothing like the weight of the sheets around it. */
+.collage figure:nth-child(1) { grid-column: 1 / -1; grid-row: 1; }
+.collage figure:nth-child(1) img { width: 100%; height: auto; }
+.collage figure:nth-child(2) { grid-column: 1; grid-row: 2 / span 2; }
+.collage figure:nth-child(3) { grid-column: 2; grid-row: 2; }
+/* Section EW is pulled to the foot of its row so it finishes level
+   with the envelope plan beside it. Otherwise the plan's extra height
+   lands as dead space underneath EW and strands section NS below. */
+.collage figure:nth-child(4) { grid-column: 2; grid-row: 3; align-self: end; }
+.collage figure:nth-child(5) { grid-column: 2; grid-row: 4; }
+
+.collage figure.legend .plate { width: 58%; }
+
+@media (max-width: 820px) {
+  .collage { grid-template-columns: 1fr; }
+  .collage figure { grid-column: 1 !important; grid-row: auto !important; }
+  .plans, .pair { grid-template-columns: 1fr; }
+}
+
+/* ── markers on a plan ───────────────────────────────────────
+   These styles lived in ladder.css and went with it when the ladder
+   was removed — which is why the markers were rendering as three
+   plain buttons in a row instead of sitting on the drawing.
+   ─────────────────────────────────────────────────────────── */
+.planspots-plan { margin: 0; }
+.planspots-plan .media-frame { position: relative; }
+.planspots-plan .media-frame img { display: block; width: 100%; height: auto; }
+
+.planspot {
+  position: absolute;
+  width: 28px; height: 28px;
+  margin: -14px 0 0 -14px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.92);
+  background: #1a1915;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: zoom-in;
+  z-index: 3;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+.planspot:hover, .planspot.on, .planspot:focus-visible {
+  background: var(--taupe);
+  color: #1a1915;
+  transform: scale(1.2);
+  outline: none;
+}
+
+/* ── ?spots — reading exact coordinates off the drawing ───── */
+.media-frame.calibrating { cursor: crosshair; }
+.probe {
+  position: absolute;
+  width: 11px; height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  border-radius: 50%;
+  background: #e2003c;
+  box-shadow: 0 0 0 2px #fff;
+  pointer-events: none;
+  z-index: 4;
+}
+.probe-read {
+  position: absolute;
+  transform: translate(14px, -50%);
+  padding: 0.2rem 0.45rem;
+  background: #e2003c;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  white-space: nowrap;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* a clickable drawing */
+/* Two things the sheet needs and had lost:
+   · a <button> centres its contents by default, which was quietly
+     overriding every alignment set inside it;
+   · `container-type` — without it the `cqw` units in the key measure
+     against the viewport instead of the sheet, which is why a 29cqw
+     column was running off the edge of the paper. */
+.plate,
+.pair .frame,
+.planspots-plan .media-frame { container-type: inline-size; }
+.plate {
+  text-align: left;
+  display: block; width: 100%;
+  padding: clamp(0.6rem, 1.4vw, 1.2rem);
+  border: none; background: #fff;
+  border-radius: 2px; cursor: zoom-in;
+  transition: transform var(--dur-mid) var(--ease-out),
+              box-shadow var(--dur-mid) var(--ease-out);
+}
+.plate img { display: block; width: 100%; height: auto; }
+.plate:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(0,0,0,0.45); }
+
+/* ── viewer ──────────────────────────────────────────────── */
+.viewer {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(6,5,4,0.95);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(2rem, 5vh, 4rem) clamp(3rem, 8vw, 7rem);
+  animation: viewIn 220ms var(--ease-out) both;
+}
+@keyframes viewIn { from { opacity: 0 } to { opacity: 1 } }
+
+.viewer-fig { margin: 0; display: flex; flex-direction: column; align-items: center; max-height: 100%; }
+.viewer-frame { position: relative; display: flex; max-height: 84vh; }
+/* small print on the image itself, as on the landing render */
+.viewer-credit {
+  position: absolute;
+  right: 1.6rem; bottom: 1.6rem;
+  font-family: var(--font-body);
+  font-size: 0.64rem; font-weight: 300;
+  letter-spacing: 0.02em;
+  color: rgba(26,25,21,0.5);
+  pointer-events: none;
+}
+.viewer-fig img {
+  display: block;
+  max-width: 100%; max-height: 84vh;
+  width: auto; height: auto;
+  background: #fff; padding: 1rem; border-radius: 2px;
+}
+.viewer-fig figcaption {
+  margin-top: var(--sp-4);
+  display: flex; gap: var(--sp-4); align-items: baseline;
+  font-family: var(--font-body);
+  font-size: 0.74rem; font-weight: 300;
+  color: var(--cream-mid);
+}
+.viewer-count { color: var(--taupe-mid); font-size: 0.66rem; letter-spacing: 0.14em; }
+
+.viewer-x, .viewer-arrow {
+  position: absolute; z-index: 1;
+  border: none; background: none; cursor: pointer;
+  color: rgba(240,236,228,0.55);
+  font-family: var(--font-body);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.viewer-x { top: 1.4rem; right: 1.6rem; font-size: 1.1rem; }
+.viewer-arrow { top: 50%; transform: translateY(-50%); font-size: 2.6rem; line-height: 1; padding: 1rem; }
+.viewer-arrow.left  { left: 0.5rem; }
+.viewer-arrow.right { right: 0.5rem; }
+.viewer-x:hover, .viewer-arrow:hover { color: var(--white); }
+
+@media (prefers-reduced-motion: reduce) {
+  .plate { transition: none; }
+  .viewer { animation: none; }
+}
+
+/* the drawing's own title, sitting on the sheet above the key */
+.plan-title {
+  display: block;
+  text-align: left;
+  margin-top: 1.1em;
+  font-family: var(--font-body);
+  font-size: clamp(10px, 2.8cqw, 15px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #1a1915;
+}
+.plan-title + .plan-key { margin-top: 0.5em; }
+
+/* ── room key ────────────────────────────────────────────────
+   Set the way a printed plan key is set: the number hard left in its
+   own narrow column, the room name immediately beside it, pairs
+   filling column by column rather than snaking across.
+
+   Column width is a fixed share of the sheet, so a 12-entry key and a
+   24-entry key have identically wide columns — the shorter one simply
+   leaves white to its right instead of stretching to fill.
+   ─────────────────────────────────────────────────────────── */
+.plan-key {
+  --col: 30cqw;
+  margin: 0.75em 0 0;
+  padding-top: 0.85em;
+  border-top: 1px solid #ded9d3;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, var(--col)));
+  grid-template-rows: repeat(var(--rows, 1), auto);
+  grid-auto-flow: column;
+  justify-content: start;
+  column-gap: 2cqw;
+  row-gap: 0.36em;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: clamp(8.5px, 2.2cqw, 12px);
+  line-height: 1.45;
+  color: #1a1915;
+}
+.plan-key-row { display: flex; align-items: baseline; gap: 0.7em; }
+.plan-key dt {
+  flex: none;
+  min-width: 1.4em;
+  text-align: left;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #1a1915;
+}
+.plan-key dd { margin: 0; }
+
+
+/* ── the central question ────────────────────────────────────
+   Set larger than body text and running the full measure, so it
+   breaks in two or three lines and reads in a glance.
+   ─────────────────────────────────────────────────────────── */
+
+.sec-say.feature .q {
+  font-size: clamp(1.25rem, 2.1vw, 1.75rem);
+  font-weight: 300;
+  line-height: 1.42;
+  letter-spacing: -0.008em;
+  color: var(--cream-full);
+  max-width: var(--body);
+  margin: 0;
+}
+.sec-say.feature strong { font-weight: 600; color: #fff; }
+
+/* Words are split so they can be moved individually. A morphing
+   paragraph leaves them alone — the precedent stays readable — while
+   the question's fly apart, each on its own vector, `--lag`
+   staggering them so the line comes apart raggedly. */
+.sec-say.morph .w { display: inline-block; white-space: pre; }
+.sec-say.feature .w {
+  --g: clamp(0, calc((var(--gone, 0) - var(--lag, 0)) / 0.72), 1);
+  transform:
+    translate3d(calc(var(--dx) * var(--g) * 1px), calc(var(--dy) * var(--g) * 1px), 0)
+    rotate(calc(var(--rot) * var(--g) * 1deg))
+    scale(calc(1 + var(--g) * 0.22));
+  opacity: calc(1 - var(--g));
+  filter: blur(calc(var(--g) * 7px));
+  will-change: transform, opacity, filter;
+}
+
+/* ── the response ────────────────────────────────────────────
+   Sits between the two paragraphs that feed it. Each line is a copy
+   that starts on top of its source words, at their size, and rises
+   into place — the originals are never consumed.
+   ─────────────────────────────────────────────────────────── */
+.sec-response { padding: clamp(1.2rem, 2.5vh, 2rem) 0; }
+/* headroom at the very top of the climb, and the runway the lines
+   need to travel through before they come to rest */
+.sec-response.at-top { padding-top: 22vh; }
+
+.response-stack { display: flex; flex-direction: column; align-items: flex-start; }
+
+.response-line {
+  --g: clamp(0, calc((var(--t, 0) - var(--lag, 0)) / 0.78), 1);
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.34em;
+  white-space: nowrap;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.5rem, 2.8vw, 2.3rem);
+  color: var(--cream-full);
+}
+.response-line.lead {
+  margin-left: 1.1em;
+  margin-top: 0.18em;
+  padding: 0.3em 0.62em;
+  font-size: clamp(2rem, 4.2vw, 3.6rem);
+  letter-spacing: -0.03em;
+  color: #fff;
+  background: rgba(255, 255, 255, calc(0.055 * var(--g)));
+  border-radius: 2px;
+}
+.response-line .rw {
+  display: inline-block;
+  transform-origin: 0 50%;
+  transform:
+    translate3d(calc(var(--fx, 0) * (1 - var(--g)) * 1px),
+                calc(var(--fy, 0) * (1 - var(--g)) * 1px), 0)
+    scale(calc(1 + (var(--fs, 1) - 1) * (1 - var(--g))));
+  opacity: var(--g);
+  will-change: transform, opacity;
+}
+.response-line .sep {
+  font-weight: 300;
+  color: var(--taupe-full);
+  opacity: clamp(0, calc((var(--g) - 0.55) / 0.35), 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sec-say.feature .w { transform: none; opacity: 1; filter: none; }
+  .response-line { --g: 1; }
+  .response-line .rw { transform: none; opacity: 1; }
+}
+
+/* ── a drawing set beside its paragraph ──────────────────────
+   The drawing leads, the paragraph reads it, and the two sit on a
+   shared baseline — text bottom to drawing bottom — so they read as
+   one object rather than as a picture with a caption beside it.
+   Click the drawing to open it full size in the viewer.
+   ─────────────────────────────────────────────────────────── */
+.sec-say.with-aside .sec-inner {
+  /* The drawing column is sized so the sheet comes out at roughly the
+     height of the paragraph beside it. Bottoms are aligned, and the
+     credit hangs below the row rather than lifting the drawing off
+     that shared baseline. */
+  grid-template-columns:
+    var(--gutter)
+    minmax(0, 18rem)
+    minmax(0, calc(var(--body) - 18rem - var(--gap)));
+  align-items: end;
+}
+.sec-say.with-aside .sec-label      { align-self: start; }
+.sec-say.with-aside .say-asides     { grid-column: 2; grid-row: 1; }
+.sec-say.with-aside > * > div:nth-child(2) { grid-column: 3; grid-row: 1; }
+.say-asides { display: flex; flex-direction: column; gap: clamp(1rem, 2.5vh, 1.6rem); }
+.say-aside { margin: 0; position: relative; }
+/* A single drawing hangs its credit below the row so its bottom edge
+   still lands on the paragraph's baseline. Two of them stack, so the
+   credits sit in normal flow between them instead. */
+.say-asides.many .fig-cap {
+  position: static;
+  width: auto;
+  margin-top: 0.5em;
+}
+.say-aside .plate { width: 100%; padding: 0.45rem; }
+.say-aside img { width: 100%; height: auto; display: block; }
+.say-aside .fig-cap {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  margin-top: 0.6em;
+  font-size: clamp(0.58rem, 0.7vw, 0.68rem);
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+}
+/* room for the credit, which hangs outside the row */
+.sec-say.with-aside { padding-bottom: clamp(4rem, 8vh, 6rem); }
+
+@media (max-width: 980px) {
+  .sec-say.with-aside .sec-inner {
+    grid-template-columns: var(--gutter) minmax(0, 1fr);
+    align-items: start;
+  }
+  .sec-say.with-aside .say-asides,
+  .sec-say.with-aside > * > div:nth-child(2) { grid-column: 2; grid-row: auto; }
+  .say-asides { max-width: 420px; margin-bottom: 2rem; }
+}
+
+/* ── route markers, flanking the landing ─────────────────────
+   Drawn as sheet callouts: leader line out of the image, bubble on
+   the line, arrowhead continuing in the direction of travel. Read
+   together they say there are two ways out of here and what each one
+   is for.
+   ─────────────────────────────────────────────────────────── */
+.route {
+  width: min(1440px, 92vw);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--taupe-full);
+}
+.route.up    { flex-direction: column-reverse; padding-bottom: clamp(2rem, 4vh, 3.2rem); }
+.route.down  { padding-top: clamp(2rem, 4vh, 3.2rem); }
+
+.route-stem {
+  width: 1px;
+  background: currentColor;
+  opacity: 0.4;
+}
+.route-stem.short { height: clamp(1.4rem, 2.5vh, 2.2rem); }
+.route-stem.long  { height: clamp(2.6rem, 5vh, 4.2rem); }
+.route.down .route-stem.short { background: linear-gradient(to bottom, transparent, currentColor); }
+.route.up   .route-stem.short { background: linear-gradient(to top,    transparent, currentColor); }
+
+.route-bubble {
+  position: relative;
+  width: clamp(5.4rem, 8.5vw, 7rem);
+  aspect-ratio: 1;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+/* the word owns the centre of the bubble; a.k.a. is a small note
+   riding above it, not a second half of a stacked pair */
+.route-aka {
+  position: absolute;
+  left: 50%;
+  bottom: calc(50% + 0.75em);
+  transform: translateX(-50%);
+  font-family: var(--font-body);
+  font-size: clamp(0.66rem, 0.85vw, 0.78rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--taupe-full);
+}
+.route-word {
+  font-family: var(--font-body);
+  font-size: clamp(0.8rem, 1.05vw, 0.98rem);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  text-transform: uppercase;
+  color: var(--cream-full);
+}
+.route .dir-arrow { opacity: 0.55; }
+
+/* a drawing shown at its own pixel size, never enlarged */
+.figs figure.natural .mat { display: inline-block; }
+
+/* a source link inside a caption */
+.fig-cap a {
+  color: var(--taupe-full);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(181,160,140,0.4);
+  transition: color 0.25s var(--ease-out), text-decoration-color 0.25s var(--ease-out);
+}
+.fig-cap a:hover { color: var(--cream-full); text-decoration-color: currentColor; }
+
+
+/* ── standing in for an image that does not exist yet ─────────
+   Holds the proportion of the file that belongs there, so a page can
+   be laid out and judged before anything has been exported.
+   ─────────────────────────────────────────────────────────── */
+.shot-ph {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: clamp(0.62rem, 0.85vw, 0.76rem);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  color: var(--taupe-mid);
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(181,160,140,0.28);
+  border-radius: 2px;
+}
+/* on a white sheet it has to read the other way round */
+.plate .shot-ph,
+.mat .shot-ph,
+.planspots-plan .shot-ph {
+  color: #9a938b;
+  background: #f4f2ef;
+  border-color: #d9d4cd;
+}
+
+/* ── the story landing ───────────────────────────────────────
+   Not a portrait band. The poem sits left in a plaque, the
+   introduction right, and the headshot with the name above them
+   both — small, because the words are the subject here.
+   ─────────────────────────────────────────────────────────── */
+.landing {
+  position: relative;
+  padding: clamp(5rem, 12vh, 9rem) 0 clamp(6rem, 14vh, 10rem);
+}
+.landing-inner {
+  width: min(1440px, 92vw);
+  margin: 0 auto;
+}
+
+.landing-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(9rem, 15vw, 13rem);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: end;
+  padding-bottom: clamp(2.5rem, 6vh, 4rem);
+  margin-bottom: clamp(2.5rem, 6vh, 4rem);
+  border-bottom: 1px solid var(--border-mid, rgba(181,160,140,0.18));
+}
+.landing-id h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4.6rem);
+  font-weight: 200;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--cream-full);
+  margin: 0 0 clamp(1.6rem, 4vh, 2.6rem);
+}
+/* the rows wrap, so they need space between the lines as well as
+   between the columns — a scope note under one row was running into
+   the labels of the row beneath it */
+.landing-id dl {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.6rem, 4vh, 2.4rem) clamp(2rem, 5vw, 4rem);
+}
+.landing-id .hero-row { margin-bottom: 0; }
+
+.headshot { margin: 0; }
+.headshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+.headshot figcaption {
+  margin-top: 0.6em;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 300;
+  color: var(--taupe-mid);
+}
+
+/* the poem and the introduction, first thing on the way down */
+.sec-intro .sec-inner {
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  align-items: start;
+}
+.sec-intro .sec-inner > * { grid-column: auto; }
+
+/* ── the poem ────────────────────────────────────────────────
+   Set as a plaque: a titled bar with rules running out either
+   side, the verse centred beneath it, and a rule closing it off.
+   ─────────────────────────────────────────────────────────── */
+.poem { margin: 0; }
+.poem-head {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.4rem);
+  margin-bottom: clamp(1.6rem, 4vh, 2.4rem);
+}
+.poem-head::before,
+.poem-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(181,160,140,0.4);
+}
+.poem-head span {
+  flex: none;
+  padding: 0.6em 1.1em;
+  background: rgba(240,236,228,0.86);
+  color: #14130f;
+  font-family: var(--font-body);
+  font-size: clamp(0.66rem, 0.95vw, 0.8rem);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+}
+.poem-lines {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: clamp(0.92rem, 1.25vw, 1.08rem);
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--cream-mid);
+}
+.poem-lines p { margin: 0; }
+.poem-by {
+  margin-top: clamp(1.2rem, 3vh, 1.8rem);
+  padding-bottom: clamp(1.4rem, 3.5vh, 2.2rem);
+  border-bottom: 1px solid rgba(181,160,140,0.4);
+  text-align: right;
+  font-family: var(--font-body);
+  font-size: clamp(0.76rem, 1vw, 0.9rem);
+  font-weight: 300;
+  color: var(--taupe-full);
+}
+
+/* ── the introduction ────────────────────────────────────── */
+.narrative p {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  font-weight: 300;
+  line-height: 1.72;
+  color: var(--cream-mid);
+  margin: 0 0 1.15em;
+  max-width: 62ch;
+}
+.narrative p:last-child { margin-bottom: 0; }
+.narrative strong {
+  font-weight: 500;
+  color: var(--cream-full);
+}
+
+/* the two ways out, in the black above and below */
+.land-dir {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  font-family: var(--font-body);
+  font-size: clamp(0.72rem, 1vw, 0.86rem);
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  text-indent: 0.38em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+  pointer-events: none;
+}
+.land-dir.up   { top: clamp(1.4rem, 4vh, 2.6rem); }
+.land-dir.down { bottom: clamp(1.4rem, 4vh, 2.6rem); flex-direction: column-reverse; }
+
+@media (max-width: 860px) {
+  .landing-head { grid-template-columns: 1fr; align-items: start; }
+  .sec-intro .sec-inner { grid-template-columns: 1fr; }
+  .headshot { max-width: 11rem; }
+}
+
+
+/* ── the CV ──────────────────────────────────────────────────
+   The print version's shape, in the page's own voice: a section
+   label in the gutter, then entries hung off a single timeline
+   spine. Dated and undated sections share the spine and the date
+   column, so education, projects and references read as one
+   continuous document rather than as separate lists.
+   ─────────────────────────────────────────────────────────── */
+.sec-cv { padding: clamp(2.5rem, 6vh, 4.5rem) 0; }
+
+.cv-lede {
+  font-family: var(--font-body);
+  font-size: clamp(1.15rem, 1.9vw, 1.55rem);
+  font-weight: 300;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--cream-full);
+  margin: 0 0 clamp(1.6rem, 4vh, 2.4rem);
+  max-width: 30ch;
+}
+
+/* purpose · method · medium */
+.cv-creed {
+  margin: 0 0 clamp(1.6rem, 4vh, 2.4rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem clamp(1.8rem, 4vw, 3.2rem);
+}
+.cv-creed div { display: flex; align-items: baseline; gap: 0.55em; }
+.cv-creed dt {
+  font-family: var(--font-body);
+  font-size: clamp(0.62rem, 0.85vw, 0.72rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+}
+.cv-creed dd {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+  font-weight: 300;
+  color: var(--cream-full);
+}
+
+/* three lines that have to land as three lines */
+.cv-chant {
+  margin: 0 0 clamp(1.6rem, 4vh, 2.4rem);
+  padding-left: clamp(1rem, 2vw, 1.6rem);
+  border-left: 1px solid rgba(181,160,140,0.35);
+}
+.cv-chant p {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  font-weight: 300;
+  line-height: 1.62;
+  color: var(--cream-mid);
+}
+
+.cv-note-top {
+  margin: 0 0 clamp(1.4rem, 3vh, 2rem);
+  font-family: var(--font-body);
+  font-size: clamp(0.78rem, 1vw, 0.88rem);
+  font-weight: 300;
+  color: var(--taupe-full);
+}
+
+/* ── the spine ─────────────────────────────────────────────── */
+.cv-entries { position: relative; }
+.cv-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: clamp(4.5rem, 9vw, 7rem) minmax(0, 1fr);
+  gap: clamp(1rem, 2.5vw, 2rem);
+  padding: 0 0 clamp(1.6rem, 3.5vh, 2.4rem) 0;
+}
+.cv-entry:last-child { padding-bottom: 0; }
+/* the line runs down the gap between the date and the entry */
+.cv-entry::before {
+  content: '';
+  position: absolute;
+  left: clamp(4.5rem, 9vw, 7rem);
+  top: 0.7em; bottom: 0;
+  width: 1px;
+  background: rgba(181,160,140,0.28);
+}
+.cv-entry:last-child::before { bottom: auto; height: 0; }
+/* and a node where each entry meets it */
+.cv-entry::after {
+  content: '';
+  position: absolute;
+  left: clamp(4.5rem, 9vw, 7rem);
+  top: 0.62em;
+  width: 5px; height: 5px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--taupe-full);
+}
+.cv-entry > .cv-what { padding-left: clamp(1rem, 2.5vw, 2rem); }
+.cv-entries .cv-entry { gap: 0; }
+
+.cv-when {
+  font-family: var(--font-body);
+  font-size: clamp(0.68rem, 0.92vw, 0.8rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+  padding-top: 0.15em;
+  padding-right: clamp(1rem, 2.5vw, 2rem);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cv-title {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.35vw, 1.15rem);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--cream-full);
+}
+.cv-title a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(181,160,140,0.4);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.cv-title a:hover { border-color: var(--cream-full); }
+.cv-org {
+  display: block;
+  margin-top: 0.2em;
+  font-size: 0.86em;
+  font-weight: 300;
+  color: var(--taupe-full);
+}
+.cv-note {
+  margin: 0.55em 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.86rem, 1.15vw, 0.98rem);
+  font-weight: 300;
+  line-height: 1.62;
+  color: var(--cream-mid);
+  max-width: 58ch;
+}
+
+@media (max-width: 700px) {
+  .cv-entry { grid-template-columns: 1fr; }
+  .cv-entry::before, .cv-entry::after { display: none; }
+  .cv-entry > .cv-what { padding-left: 0; }
+  .cv-when { text-align: left; padding: 0 0 0.4em; }
+}
+
+
+/* ── a project set as a poem ─────────────────────────────────
+   The far end of the climb, so it has to arrive fast — a visitor
+   climbing shouldn't have to scroll through a page of verse to find
+   the top. Set in two columns, left aligned, over moving water.
+   ─────────────────────────────────────────────────────────── */
+.sec-poem {
+  position: relative;
+  padding: clamp(3rem, 8vh, 5rem) 0 clamp(2rem, 5vh, 3.5rem);
+  overflow: hidden;
+}
+.sec-poem.over-video { padding: clamp(3rem, 7vh, 5rem) 0 clamp(6rem, 13vh, 9.5rem); }
+.poem-bed {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+/* enough scrim that the verse reads, not so much that the water dies */
+.sec-poem.over-video::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(8,7,5,0.55) 0%, rgba(8,7,5,0.45) 40%, rgba(8,7,5,0.5) 75%, rgba(8,7,5,0.7) 100%);
+  z-index: 1;
+}
+.sec-poem .sec-inner { position: relative; z-index: 4; }
+/* the verse sits upper right, clear of the ridge on the left */
+.sec-poem .poem {
+  grid-column: 2;
+  /* narrow enough that the verse sits under the title rather than
+     running out past it */
+  width: min(23rem, 100%);
+  margin-left: auto;
+  margin-right: clamp(0rem, 5vw, 7rem);
+}
+
+.sec-poem .poem-head { margin-bottom: 0.5rem; }
+.poem-sub {
+  margin: 0 0 clamp(1.2rem, 3vh, 1.8rem);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: clamp(0.7rem, 0.9vw, 0.8rem);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--taupe-full);
+}
+
+/* One column, set tight. Lines within a stanza sit close together so
+   the poem reads as a shape; the air between stanzas does the
+   separating instead. */
+.sec-poem .poem-lines {
+  columns: 1;
+  width: fit-content;
+  margin-inline: auto;          /* centred under the title */
+  text-align: left;
+  font-size: clamp(0.82rem, 1.05vw, 0.95rem);
+  line-height: 1.32;
+}
+/* over moving water the verse needs full strength and a little
+   shadow, or the whitewater reads straight through it */
+.sec-poem.over-video .poem-lines {
+  color: var(--cream-full);
+  text-shadow: 0 1px 12px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.6);
+}
+.sec-poem.over-video .poem-sub { color: var(--cream-mid); }
+.poem-lines .stanza {
+  break-inside: avoid;
+  margin-bottom: 1.5em;
+}
+.poem-lines .stanza:last-child { margin-bottom: 0; }
+
+@media (max-width: 760px) {
+  .sec-poem .poem-lines { width: 100%; }
+}
+
+/* ── strip ───────────────────────────────────────────────────
+   Three sheets on the width of the text above them, the middle one
+   standing forward and overlapping its neighbours.
+
+   The track is moved by transform, not by scrolling: a scroller
+   clips, and the middle sheet has to grow past the row it sits in.
+   The frame's vertical padding is what gives it room to do that.
+   ─────────────────────────────────────────────────────────── */
+/* The frame sits on the text's own edges — left and right — so the
+   raised sheet lands centred under the paragraph rather than drifting
+   off toward the margin. Prominence comes from the cell being a large
+   share of that frame, not from the frame outgrowing the text. */
+.strip {
+  --cw: 56%;              /* cell width, as a share of the frame */
+  --pop: 1.36;            /* how far the middle one stands forward */
+  position: relative;
+  width: var(--body);
+  /* The raised sheet hangs about 57px past the row it sits in, so the
+     padding has to clear that overhang *before* it becomes breathing
+     room. Top and bottom both carry it. */
+  padding-top: clamp(2.4rem, 6vh, 4rem);
+  padding-bottom: clamp(2.6rem, 6.5vh, 4.4rem);
+  overflow: hidden;       /* the sides are cut by the frame, as intended */
+  outline: none;
+}
+.strip:focus-visible { outline: 1px solid var(--taupe-mid); outline-offset: 0.6rem; }
+
+.strip-track {
+  display: flex;
+  width: 100%;
+  /* bring the chosen sheet to the middle of the frame */
+  transform: translateX(calc(50% - var(--cw) * (var(--i) + 0.5)));
+  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* the one frame in which the loop rebases — no travel, no tell */
+.strip-track.still { transition: none; }
+
+.strip-cell {
+  flex: 0 0 var(--cw);
+  aspect-ratio: var(--ar, 17 / 11);   /* the sheet's own proportion, so nothing crops */
+  transform: scale(0.86);
+  opacity: 0.4;
+  filter: blur(1.5px);
+  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 480ms var(--ease-out),
+              filter 480ms var(--ease-out);
+}
+.strip-cell.on {
+  transform: scale(var(--pop));
+  opacity: 1;
+  filter: none;
+  z-index: 2;             /* lifted off the table, over the others */
+}
+
+.strip-sheet {
+  position: relative;
+  display: block;
+  width: 100%; height: 100%;
+  padding: 0;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+}
+.strip-cell.on .strip-sheet { box-shadow: 0 22px 60px rgba(0,0,0,0.6); }
+.strip-sheet img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+.strip-cell.on .strip-sheet:hover img { opacity: 0; }
+
+/* the title, standing in for the sheet on hover — set the way the
+   landing lists Status and Role */
+.strip-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+  background: var(--ink);
+  opacity: 0;
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+.strip-cell.on .strip-sheet:hover .strip-face,
+.strip-cell.on .strip-sheet:focus-visible .strip-face { opacity: 1; }
+.strip-sub {
+  font-family: var(--font-body);
+  font-size: clamp(0.5rem, 0.62vw, 0.6rem);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+}
+.strip-title {
+  margin-top: 0.4em;
+  font-family: var(--font-body);
+  font-size: clamp(0.8rem, 1.05vw, 0.98rem);
+  font-weight: 300;
+  line-height: 1.3;
+  color: var(--cream-full);
+}
+
+/* ── the two ways along it ───────────────────────────────── */
+.strip-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  border: none;
+  background: none;
+  padding: 1.2rem 0.9rem;
+  font-size: 2.4rem;
+  line-height: 0.7;
+  color: rgba(240,236,228,0.7);
+  text-shadow: 0 2px 14px rgba(0,0,0,0.8);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+.strip-arrow:hover:not(:disabled) { color: #fff; }
+.strip-arrow:disabled { opacity: 0.15; cursor: default; }
+.strip-arrow.left  { left: calc(50% - var(--cw) * 0.5 * var(--pop) - 2.6rem); }
+.strip-arrow.right { right: calc(50% - var(--cw) * 0.5 * var(--pop) - 2.6rem); }
+
+.strip-dots {
+  position: relative;
+  z-index: 3;              /* the raised sheet reaches down over this */
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: clamp(2.2rem, 5vh, 3.8rem);
+}
+.strip-dot {
+  width: 2.4rem; height: 2px;
+  padding: 0; border: none; border-radius: 2px;
+  background: rgba(181,160,140,0.3);
+  cursor: pointer;
+  transition: background var(--dur-mid) var(--ease-out);
+}
+.strip-dot:hover { background: rgba(181,160,140,0.6); }
+.strip-dot.on { background: var(--cream-full); }
+
+@media (max-width: 760px) {
+  .strip { --cw: 70%; --pop: 1.22; }
+  .strip-arrow { display: none; }
+}
+
+/* two drawings beside a paragraph, stacked, sharing its height */
+.say-aside + .say-aside { margin-top: clamp(0.8rem, 2vh, 1.3rem); }
+
+
+/* ── paired rows ─────────────────────────────────────────────
+   Each drawing set against the paragraph it belongs to, sharing a
+   grid row so the two start on the same line. The closing note runs
+   under the drawings in their own column, so it reads as a caption
+   on the pair rather than as another paragraph.
+   ─────────────────────────────────────────────────────────── */
+.paired {
+  display: grid;
+  grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+  gap: clamp(1.6rem, 4vh, 2.6rem) clamp(1.4rem, 4vw, 4rem);
+  align-items: start;
+  max-width: var(--body);
+}
+.paired-fig { margin: 0; }
+.paired-fig .plate { width: 100%; padding: 0.45rem; }
+.paired-fig img { width: 100%; height: auto; display: block; }
+.paired-fig .fig-cap {
+  margin-top: 0.6em;
+  font-size: clamp(0.58rem, 0.7vw, 0.68rem);
+  line-height: 1.5;
+}
+.paired-text p:last-child { margin-bottom: 0; }
+
+.paired-close {
+  grid-column: 1;
+  padding-top: clamp(0.4rem, 1vh, 0.8rem);
+  border-top: 1px solid rgba(181,160,140,0.28);
+}
+.paired-close .q {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.86rem, 1.1vw, 0.98rem);
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--cream-mid);
+  max-width: none;
+}
+.paired-close strong { font-weight: 600; font-size: 1em; color: var(--cream-full); }
+
+@media (max-width: 860px) {
+  .paired { grid-template-columns: 1fr; }
+  .paired-close { grid-column: 1; }
+}
+
+/* where the project is */
+/* the title's own bottom margin is what was holding the location off;
+   drop it when a location follows rather than fighting it with a
+   negative offset */
+.hero-card h1:has(+ .hero-where),
+.hero-card h1:has(+ .hero-said) { margin-bottom: 0; }
+.hero-where {
+  margin: 0.05rem 0 1.5rem;
+  font-family: var(--font-body);
+  font-size: clamp(0.92rem, 1.25vw, 1.12rem);
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  color: var(--cream-mid);
+}
+
+/* ── wave bed ────────────────────────────────────────────────
+   The drawing behind the poem, its lines redrawn on a canvas.
+
+   Layering matters here and was the thing that broke it: a wrapper
+   with `z-index: 0` makes a stacking context, which trapped both the
+   canvas and the control *underneath* the section's scrim. Nothing
+   inside could be seen or clicked. The pieces now sit in the section's
+   own stack — still under the scrim, canvas over it, control above
+   everything.
+   ─────────────────────────────────────────────────────────── */
+/* Deliberately not `inset: 0`. The bed occupies only the lower part of
+   the section, so the drawing enters from below the verse instead of
+   rising behind it — object-position alone cannot do this, since it
+   only chooses which slice of the file is shown, not where the box
+   sits. No z-index either: see the note above. */
+.wavebed { position: absolute; top: 22%; left: 0; right: 0; bottom: 0; }
+.wavebed-still,
+.wavebed-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+.wavebed-still {
+  /* Over the scrim, not under it. Beneath an 86%-black panel the
+     drawing was being erased — which is why it kept looking absent
+     however far its opacity was raised. */
+  z-index: 2;
+  object-fit: cover;
+  /* The drawing is black ink on white, inverted to sit on the page.
+     The sheet's lower ink field has been cropped out of the file
+     itself — inverted it came back as a slab of white across the
+     bottom, which no amount of positioning could hide at every
+     window height. */
+  object-position: 50% 18%;
+  filter: invert(1) contrast(1.12);
+  opacity: 0.75;
+}
+.wavebed-canvas { z-index: 3; }                  /* over the drawing, under the verse */
+
+@media (prefers-reduced-motion: reduce) {
+  .wavebed-canvas { display: none; }
+}
+
+/* who wrote it — fixed opposite the dock, so it travels with the track */
+.sound-credit {
+  position: fixed;
+  right: clamp(1rem, 2.5vw, 2rem);
+  bottom: clamp(1.15rem, 2.7vh, 1.95rem);
+  z-index: 90;
+  max-width: 46vw;
+  text-align: right;
+  font-family: var(--font-body);
+  font-size: clamp(0.54rem, 0.66vw, 0.63rem);
+  font-weight: 300;
+  letter-spacing: 0.09em;
+  line-height: 1.5;
+  color: rgba(181,160,140,0.7);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+  pointer-events: none;
+}
+.sound-credit.in { opacity: 1; transform: none; }
+.sound-credit a {
+  pointer-events: auto;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+  text-decoration-color: rgba(181,160,140,0.45);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.sound-credit a:hover { color: var(--cream-full); }
+
+@media (max-width: 620px) {
+  .sound-credit { display: none; }
+}
+
+.poem-credit {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: clamp(0.6rem, 0.75vw, 0.7rem);
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: var(--taupe-full);
+}
+
+/* a strip cell holding a clip rather than a drawing */
+.strip-cell.clip .strip-sheet { background: #0d0c0a; }
+.strip-cell video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.strip-play {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  width: 3.2rem; height: 3.2rem;
+  display: grid; place-items: center;
+  border: 1px solid rgba(240,236,228,0.7);
+  border-radius: 50%;
+  background: rgba(8,7,5,0.5);
+  backdrop-filter: blur(4px);
+  color: var(--cream-full);
+  font-size: 0.9rem;
+  padding-left: 0.15em;             /* optical centring of the glyph */
+  pointer-events: none;
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+.strip-cell:not(.on) .strip-play { opacity: 0.35; }
+/* once it is running, the badge gets out of the way */
+/* A clip does not swap for its title on hover — that title card was
+   covering the video the moment you moved to click it. */
+.strip-cell.clip .strip-sheet:hover .strip-face,
+.strip-cell.clip .strip-sheet:focus-visible .strip-face { opacity: 0; }
+.strip-cell.clip.playing .strip-play { opacity: 0; }
+.strip-cell.clip .strip-sheet:hover .strip-play { border-color: #fff; background: rgba(8,7,5,0.75); }
+
+.poem-credit a {
+  color: var(--cream-mid);
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(181,160,140,0.5);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.poem-credit a:hover { color: var(--cream-full); text-decoration-color: currentColor; }
+
+
+/* ── sound dock ──────────────────────────────────────────────
+   The track belongs to the page, so its control does too: fixed
+   bottom-left, small, out of the way of the menu at top-right, and
+   present wherever the visitor has scrolled to. Four bars that move
+   while the sound is on and rest flat while it is off.
+   ─────────────────────────────────────────────────────────── */
+.sound-dock {
+  position: fixed;
+  left: clamp(1rem, 2.5vw, 2rem);
+  bottom: clamp(1rem, 2.5vh, 1.8rem);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 0.65em;
+  padding: 0.5em 1em 0.5em 0.85em;
+  border: 1px solid rgba(240,236,228,0.28);
+  border-radius: 2rem;
+  background: rgba(8,7,5,0.72);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: clamp(0.58rem, 0.72vw, 0.68rem);
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+.sound-dock.in { opacity: 1; transform: none; }
+.sound-dock:hover { border-color: rgba(240,236,228,0.7); color: var(--cream-full); }
+.sound-dock.on { color: var(--cream-full); border-color: rgba(240,236,228,0.5); }
+
+.sound-bars { display: flex; align-items: flex-end; gap: 2px; height: 0.85em; }
+.sound-bars i {
+  width: 2px; height: 30%;
+  background: currentColor;
+  transition: height var(--dur-mid) var(--ease-out);
+}
+.sound-dock.on .sound-bars i { animation: bar 900ms ease-in-out infinite; }
+.sound-dock.on .sound-bars i:nth-child(2) { animation-delay: 140ms; }
+.sound-dock.on .sound-bars i:nth-child(3) { animation-delay: 300ms; }
+.sound-dock.on .sound-bars i:nth-child(4) { animation-delay: 90ms; }
+@keyframes bar { 0%,100% { height: 25%; } 50% { height: 100%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sound-dock.on .sound-bars i { animation: none; height: 65%; }
+}
+
+/* ── a landing over a light image ────────────────────────────
+   One project opens on a white render. Everything the page lays over
+   that image — the card, the two direction markers, the menu — is
+   built for a dark photograph, so on this one it inverts. Scoped to
+   `.on-light`, set from `hero.light` in the project file, so no other
+   page is touched.
+   ─────────────────────────────────────────────────────────── */
+.on-light .story-hero::after {
+  background: linear-gradient(
+    to right, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 45%, transparent 72%);
+}
+.on-light .hero-card {
+  /* up out of the way of the logotype printed in the corner of the sheet */
+  bottom: auto;
+  top: clamp(2rem, 7vh, 4.5rem);
+  max-width: 30ch;
+}
+.on-light .hero-card h1 {
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  color: #14130f;
+}
+.on-light .hero-where { font-size: clamp(0.8rem, 1vw, 0.92rem); color: #4a453d; }
+.on-light .hero-row   { margin-bottom: var(--sp-4); }
+.on-light .hero-row dt { color: #6b645a; }
+.on-light .hero-row dd { color: #14130f; font-size: clamp(0.82rem, 1.05vw, 0.95rem); }
+.on-light .hero-line { display: block; }
+.on-light .hero-line + .hero-line { margin-top: 0.35em; }
+.on-light .hero-credit { color: rgba(20,19,15,0.5); text-shadow: none; }
+
+/* the two directions, and the arrows that animate with them */
+.on-light .hero-dir2 { color: #14130f; text-shadow: 0 1px 10px rgba(255,255,255,0.7); }
+.on-light .hero-dir2 .dir-arrow { color: #14130f; }
+
+/* The hamburger is handled globally, not here — see `.menu-bar`.
+   Tinting it per page was wrong: `.on-light` covers the whole
+   document, so darkening the bars for the white landing hid them
+   again the moment the page scrolled onto the black. */
+
+/* ── a banner at the head of the climb ───────────────────────
+   Full width, no measure, no gutter — the last thing reached going
+   up, and the only place on a project page that ignores the grid.
+   ─────────────────────────────────────────────────────────── */
+.sec-banner { padding: 0 0 clamp(3rem, 8vh, 5rem); }
+.sec-banner img { width: 100%; height: auto; display: block; }
+
+/* an acronym worth spelling out, under the title */
+.hero-said {
+  margin: 0.3rem 0 0.2rem;
+  font-family: var(--font-body);
+  font-size: clamp(0.66rem, 0.84vw, 0.78rem);
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  color: var(--cream-mid);
+  /* a name worth spelling out is worth keeping on one line, even
+     where that runs it past the card's own measure */
+  max-width: none;
+  white-space: nowrap;
+}
+@media (max-width: 640px) { .hero-said { white-space: normal; } }
+.on-light .hero-said { color: #4a453d; }
+
+/* ── the letter ──────────────────────────────────────────────
+   The process page, set as correspondence: a narrow measure, an
+   indented salutation, generous leading, and a signature that sits
+   where a signature sits. No headings — a letter does not have them.
+   ─────────────────────────────────────────────────────────── */
+.letter-page {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(6rem, 16vh, 11rem) clamp(1.5rem, 6vw, 4rem);
+}
+.letter {
+  width: min(46rem, 100%);
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.35vw, 1.15rem);
+  font-weight: 300;
+  line-height: 1.85;
+  letter-spacing: 0.005em;
+  color: var(--cream-mid);
+}
+.letter p { margin: 0 0 1.5em; max-width: 62ch; }
+.letter p:last-child { margin-bottom: 0; }
+
+.letter-to {
+  margin-bottom: 2em;
+  color: var(--cream-full);
+  letter-spacing: 0.02em;
+}
+
+/* the line the whole letter turns on */
+.letter-turn {
+  color: var(--cream-full);
+  font-size: 1.08em;
+  padding-left: clamp(1rem, 2.5vw, 2rem);
+  border-left: 1px solid rgba(181,160,140,0.4);
+}
+
+.letter a {
+  color: var(--cream-full);
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(181,160,140,0.5);
+  transition: text-decoration-color var(--dur-fast) var(--ease-out);
+}
+.letter a:hover { text-decoration-color: currentColor; }
+
+.letter-sign {
+  margin-top: 2.5em;
+  font-style: italic;
+  color: var(--cream-full);
+}
+
+/* ── a sheet that is not the strip's shape ───────────────────
+   The strip holds every cell to one proportion, which is what makes
+   it read as a band. A portrait drawing in a landscape band would be
+   cropped to nothing, so it is contained instead and sits on the
+   sheet's own ground — shown whole, at the cost of some paper either
+   side. Marked per item with `fit: 'contain'`.
+   ─────────────────────────────────────────────────────────── */
+.strip-sheet img.contain,
+.strip-sheet video.contain {
+  object-fit: contain;
+  background: #fff;
+}
+.strip-cell.clip .strip-sheet video.contain { background: #0d0c0a; }
+
+/* the role, sitting under the name rather than as a list row */
+.landing-role {
+  margin: -0.9rem 0 clamp(1.8rem, 4.5vh, 2.8rem);
+  font-family: var(--font-body);
+  font-size: clamp(0.92rem, 1.25vw, 1.1rem);
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  color: var(--cream-mid);
+}
+.landing-id .hero-row dd a {
+  color: var(--cream-full);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: rgba(181,160,140,0.5);
+  transition: text-decoration-color var(--dur-fast) var(--ease-out);
+}
+.landing-id .hero-row dd a:hover { text-decoration-color: currentColor; }

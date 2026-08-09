@@ -1,3 +1,5 @@
+import { projects } from '../work/projects.js'
+
 export default function ArchitectureSection({ node }) {
   if (!node) return null
   return (
@@ -28,17 +30,60 @@ export default function ArchitectureSection({ node }) {
       }}>
         {node.desc}
       </p>
-      <div style={{
-        marginTop: '3rem',
-        padding: '1.2rem 1.4rem',
-        border: '1px solid rgba(181,160,140,0.12)',
-        borderRadius: '3px',
-        fontSize: '0.8rem',
-        color: 'rgba(181,160,140,0.35)',
-        fontStyle: 'italic',
-        fontFamily: 'var(--font-display)',
-      }}>
-        This story is still being written.
+      {/* Projects — links into the /work section */}
+      <div style={{ marginTop: '2.5rem' }}>
+        <div style={{
+          fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase',
+          color: 'rgba(181,160,140,0.9)', fontFamily: 'var(--font-body)',
+          fontWeight: 500, marginBottom: '1rem',
+        }}>
+          Projects
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {projects.map(p => (
+            <a
+              key={p.slug}
+              href={`/work/${p.slug}`}
+              style={{
+                display: 'block',
+                padding: '0.9rem 1.1rem',
+                border: '1px solid rgba(181,160,140,0.12)',
+                borderRadius: '3px',
+                transition: 'border-color 380ms cubic-bezier(0.16,1,0.3,1), background 380ms cubic-bezier(0.16,1,0.3,1)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'rgba(181,160,140,0.28)'
+                e.currentTarget.style.background  = '#1c1914'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'rgba(181,160,140,0.12)'
+                e.currentTarget.style.background  = 'transparent'
+              }}
+            >
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 300,
+                color: 'rgba(240,236,228,0.92)', lineHeight: 1.2, marginBottom: '0.2rem',
+              }}>
+                {p.title}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 300,
+                color: 'rgba(240,236,228,0.55)', lineHeight: 1.55,
+              }}>
+                {p.tagline}
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <a
+          href="/work"
+          className="btn"
+          style={{ marginTop: '1.5rem' }}
+        >
+          All work ↗
+        </a>
       </div>
     </div>
   )

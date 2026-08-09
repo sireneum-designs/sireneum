@@ -16,3 +16,9 @@ Thumbs.db
 # Editor
 .vscode/settings.json
 *.swp
+
+# source files kept out of the build and out of git
+_originals/
+
+# Vite dev temp files
+vite.config.js.timestamp-*

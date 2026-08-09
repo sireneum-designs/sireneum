@@ -2,14 +2,33 @@ import { useState, useEffect } from 'react'
 import Landing from './components/Landing.jsx'
 import Constellation from './components/Constellation.jsx'
 import StoryPanel from './components/StoryPanel.jsx'
+import WorkIndex from './work/WorkIndex.jsx'
+import ProjectPage from './work/ProjectPage.jsx'
+import Story from './pages/Story.jsx'
+import Process from './pages/Process.jsx'
 
 const YEAR = new Date().getFullYear()
 
-// HOLDING MODE — true: public placeholder ("propagating soon", no enter).
-// Set to false when the full site is ready to launch.
+// HOLDING MODE — true: the landing stays a placeholder and the constellation
+// map is closed. Set false when the full site is ready to launch.
 const HOLDING = true
 
+// ── Routes ──────────────────────────────────────────────────
+// Deliberately OUTSIDE the holding gate: these pages are reachable from the
+// menu (and by direct link) while the constellation behind the landing is
+// still closed. Resolved synchronously so pages never flash the landing view.
+function resolveRoute() {
+  const path = window.location.pathname.replace(/\/+$/, '')
+  if (path === '/work')          return { page: 'work-index' }
+  if (path.startsWith('/work/')) return { page: 'project', slug: path.slice('/work/'.length) }
+  if (path === '/story')         return { page: 'story' }
+  if (path === '/process')       return { page: 'process' }
+  return null
+}
+
 export default function App() {
+  const route = resolveRoute()
+
   const [view, setView] = useState('landing') // 'landing' | 'map' | 'story'
   const [activeNode, setActiveNode] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
@@ -27,6 +46,18 @@ export default function App() {
   function closePanel() {
     setPanelOpen(false)
     setTimeout(() => setActiveNode(null), 400)
+  }
+
+  // ── Routed pages ────────────────────────────────────────────
+  // After all hooks, so hook order stays stable. Bypasses HOLDING.
+  if (route) {
+    switch (route.page) {
+      case 'work-index': return <WorkIndex />
+      case 'project':    return <ProjectPage slug={route.slug} />
+      case 'story':      return <Story />
+      case 'process':    return <Process />
+      default:           break
+    }
   }
 
   return (

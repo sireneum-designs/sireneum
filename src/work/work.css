@@ -1,0 +1,450 @@
+/* ── WORK ─────────────────────────────────────────────────────
+   Project pages. Uses the Sireneum tokens from index.css.
+
+   TYPOGRAPHY: Inter throughout, at every size. Serif appears only on
+   the sireneum wordmark on the landing (--font-mark). Navigation is
+   not where the uniqueness budget gets spent.
+
+   Drawings sit on white mats against the dark page rather than
+   flipping the page to a light theme, the way a gallery hangs
+   white-matted work on dark walls.
+   ─────────────────────────────────────────────────────────── */
+
+.work-root {
+  min-height: 100vh;
+  background: var(--ink);
+  color: var(--cream-full);
+}
+
+.work-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--sp-16) var(--sp-8) var(--sp-24);
+}
+
+/* ── header ──────────────────────────────────────────────── */
+.work-kicker {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+  margin-bottom: var(--sp-4);
+}
+.work-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: var(--cream-full);
+  margin-bottom: var(--sp-4);
+}
+.work-tagline {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--cream-mid);
+  max-width: 52ch;
+  margin-bottom: var(--sp-12);
+}
+
+/* ── facts ───────────────────────────────────────────────── */
+.work-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: var(--sp-16);
+}
+.work-fact { background: var(--ink-mid); padding: var(--sp-4); }
+.work-fact dt {
+  font-family: var(--font-body);
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+  margin-bottom: var(--sp-2);
+}
+.work-fact dd {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--cream-full);
+}
+
+/* ── body ────────────────────────────────────────────────── */
+.work-body { max-width: 68ch; margin-bottom: var(--sp-16); }
+.work-body p {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--cream-mid);
+  margin-bottom: 1.4em;
+}
+.work-body p:last-child { margin-bottom: 0; }
+
+/* ── media ───────────────────────────────────────────────── */
+.work-media {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-12) var(--sp-8);
+}
+.media-item { margin: 0; }
+.media-item.full { grid-column: 1 / -1; }
+.media-item.half { grid-column: span 1; }
+@media (max-width: 760px) {
+  .work-media { grid-template-columns: 1fr; }
+  .media-item.half { grid-column: 1 / -1; }
+}
+
+.media-frame {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+.media-frame.mat { background: #FFFFFF; padding: var(--sp-6); }
+.media-frame.mat.bordered { box-shadow: 0 0 0 1px var(--border-mid); }
+.media-frame img { display: block; width: 100%; height: auto; }
+
+.media-caption {
+  margin-top: var(--sp-3);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--taupe-mid);
+}
+
+/* placeholder — shown when src is null */
+.media-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 240px;
+  padding: var(--sp-8);
+  text-align: center;
+  border: 1px dashed var(--border-mid);
+  border-radius: var(--radius);
+  background: var(--ink-mid);
+}
+.media-placeholder .ph-kind {
+  font-family: var(--font-body);
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+}
+.media-placeholder .ph-alt {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 300;
+  color: var(--cream-mid);
+}
+.media-placeholder .ph-path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.64rem;
+  color: rgba(181,160,140,0.45);
+}
+
+/* ── index grid ──────────────────────────────────────────── */
+.work-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--sp-4);
+}
+.work-card {
+  display: block;
+  padding: var(--sp-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--ink-mid);
+  transition: border-color var(--dur-mid) var(--ease-out),
+              background var(--dur-mid) var(--ease-out),
+              transform var(--dur-mid) var(--ease-out);
+}
+.work-card:hover {
+  border-color: var(--border-mid);
+  background: var(--ink-lift);
+  transform: translateY(-3px);
+}
+.work-card-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  color: var(--cream-full);
+  margin-bottom: var(--sp-2);
+}
+.work-card-tagline {
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--cream-mid);
+  margin-bottom: var(--sp-6);
+}
+.work-card-meta {
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+}
+
+/* ── rules + labels ──────────────────────────────────────── */
+.work-rule {
+  height: 1px;
+  background: var(--border);
+  margin: var(--sp-12) 0;
+}
+.work-section-label {
+  font-family: var(--font-body);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+  margin-bottom: var(--sp-8);
+}
+
+/* ── how I work ──────────────────────────────────────────── */
+.work-process { max-width: 68ch; }
+.work-process em,
+.work-body em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--cream-full);
+}
+
+/* ── prev / next ─────────────────────────────────────────── */
+.work-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-top: var(--sp-16);
+  padding-top: var(--sp-8);
+  border-top: 1px solid var(--border);
+}
+.work-nav > div { max-width: 46%; }
+.work-nav .nav-dir {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+  margin-bottom: var(--sp-1);
+}
+.work-nav .nav-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-size: 1.15rem;
+  color: var(--cream-mid);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.work-nav a:hover .nav-title { color: var(--cream); }
+
+/* ── the rack ────────────────────────────────────────────────
+   The work shelved like CDs seen edge-on. Each project is a thin
+   spine with its title running up it; the one you are on widens
+   into its cover. Widths are driven by one flex-basis change, so
+   the whole rack redistributes itself in a single transition
+   rather than several fighting each other.
+   ─────────────────────────────────────────────────────────── */
+.rack-page {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 4vh, 2.5rem);
+  padding: clamp(4rem, 10vh, 7rem) clamp(1.5rem, 5vw, 4rem);
+}
+
+.rack {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  width: min(1240px, 94vw);
+  height: clamp(340px, 58vh, 520px);
+  outline: none;
+}
+.rack:focus-visible { outline: 1px solid var(--taupe-mid); outline-offset: 1.4rem; }
+
+/* ── a spine ─────────────────────────────────────────────── */
+.spine {
+  position: relative;
+  flex: 0 1 3.4rem;            /* shelved */
+  min-width: 2.2rem;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--ink-mid);
+  border: 1px solid var(--border-mid);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    flex-basis 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 400ms var(--ease-out),
+    border-color 400ms var(--ease-out),
+    transform 400ms var(--ease-out);
+}
+.spine:hover { border-color: rgba(181,160,140,0.45); }
+.spine.open {
+  flex: 1 1 auto;              /* pulled out */
+  border-color: rgba(181,160,140,0.5);
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+}
+
+/* ── the spine label, running up the case ────────────────── */
+.spine-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.4rem 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);   /* reads bottom-to-top, as on a shelf */
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 300ms var(--ease-out);
+}
+.spine.open .spine-label { opacity: 0; pointer-events: none; }
+
+.spine-title {
+  font-family: var(--font-body);
+  font-size: clamp(0.78rem, 1.05vw, 0.95rem);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--cream-full);
+}
+.spine-year {
+  font-family: var(--font-body);
+  font-size: 0.66rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  color: var(--taupe-full);
+}
+
+/* ── the cover, once it is pulled out ────────────────────── */
+.cover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out) 120ms;
+}
+.spine.open .cover { opacity: 1; }
+.cover img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cover-blank {
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(181,160,140,0.05) 0 12px,
+      transparent 12px 24px
+    ),
+    var(--ink-mid);
+}
+.cover::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to top, rgba(8,7,5,0.92) 0%, rgba(8,7,5,0.55) 42%, rgba(8,7,5,0.1) 100%);
+}
+.cover-face {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+}
+.cover-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.2vw, 2.6rem);
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--cream-full);
+}
+.cover-tagline {
+  font-family: var(--font-body);
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--cream-mid);
+  max-width: 46ch;
+}
+.cover-meta {
+  margin-top: 0.3rem;
+  font-family: var(--font-body);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+}
+
+/* ── under the rack ──────────────────────────────────────── */
+.rack-foot {
+  width: min(1240px, 94vw);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2rem;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+}
+.rack-count { font-variant-numeric: tabular-nums; color: var(--taupe-full); }
+
+/* ── narrow: the rack lies down and becomes a stack ──────── */
+@media (max-width: 760px) {
+  .rack {
+    flex-direction: column;
+    height: auto;
+    gap: 5px;
+  }
+  .spine { flex: 0 1 3.2rem; min-height: 3.2rem; }
+  .spine.open { flex: 0 0 clamp(260px, 46vh, 380px); transform: none; }
+  .spine-label {
+    writing-mode: horizontal-tb;
+    transform: none;
+    padding: 0 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spine, .cover, .spine-label { transition-duration: 1ms; }
+  .spine.open { transform: none; }
+}

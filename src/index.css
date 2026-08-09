@@ -14,9 +14,14 @@
   --cream-full:   rgba(240,236,228,0.92);
   --white:        #faf9f7;
 
-  /* Typography — matched to Out of Phase landing standard */
-  --font-display: 'Playfair Display', Georgia, serif;
+  /* Typography.
+     One face, Inter, at every size. No display serif — the drawings are
+     the ornament. --font-display is kept as a separate token so headings
+     can be changed independently later without touching body copy.
+     --font-mark is the sireneum wordmark on the landing only. */
+  --font-display: 'Inter', system-ui, sans-serif;
   --font-body:    'Inter', system-ui, sans-serif;
+  --font-mark:    'Playfair Display', Georgia, serif;
 
   /* Type scale */
   --text-xs:   0.68rem;
@@ -203,3 +208,20 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Cursor ──────────────────────────────────────────────────── */
 body { cursor: default; }
+
+/* ── the hamburger, on any ground ─────────────────────────────
+   `difference` blends the bars against whatever sits behind them, so
+   they resolve to warm taupe on the black page and to a cool dark on
+   a white render — without the page having to declare which it is.
+   One rule instead of a per-project override that could only ever be
+   right for the part of the page it was written for.
+   ─────────────────────────────────────────────────────────── */
+.menu-bar {
+  background: rgb(170, 158, 145);
+  mix-blend-mode: difference;
+}
+.menu-bar.open { background: rgb(240, 236, 228); }
+
+@supports not (mix-blend-mode: difference) {
+  .menu-bar { background: rgba(181, 160, 140, 0.75); }
+}

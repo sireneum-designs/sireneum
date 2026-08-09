@@ -28,8 +28,12 @@ export default function WorkSection({ node }) {
       }}>
         {node.desc}
       </p>
+      <div style={{ marginTop: '2.5rem' }}>
+        <a href="/work" className="btn">Architecture — selected work ↗</a>
+      </div>
+
       <div style={{
-        marginTop: '3rem',
+        marginTop: '2rem',
         padding: '1.2rem 1.4rem',
         border: '1px solid rgba(181,160,140,0.12)',
         borderRadius: '3px',
@@ -38,7 +42,7 @@ export default function WorkSection({ node }) {
         fontStyle: 'italic',
         fontFamily: 'var(--font-display)',
       }}>
-        This story is still being written.
+        Design and research are still being written.
       </div>
     </div>
   )

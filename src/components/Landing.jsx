@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import ContactForm from './ContactForm.jsx'
+import Menu from './Menu.jsx'
 
 // Logo file candidates — first one that loads wins.
 // Drop your logo into public/images/ as sireneum-logo.svg or sireneum-logo.png
@@ -9,7 +9,6 @@ export default function Landing({ onEnter, holding = false }) {
   const canvasRef = useRef(null)
   const [ready, setReady] = useState(false)
   const [leaving, setLeaving] = useState(false)
-  const [contactOpen, setContactOpen] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 200)
@@ -224,67 +223,9 @@ export default function Landing({ onEnter, holding = false }) {
         display: 'block', pointerEvents: 'none',
       }} />
 
-      {/* Hamburger menu — top right (hidden while holding) */}
-      {!holding && <div style={{
-        position: 'absolute', top: '1.5rem', right: '1.5rem',
-        display: 'flex', flexDirection: 'column', gap: '5px',
-        cursor: 'pointer', zIndex: 10, padding: '8px',
-        opacity: ready ? 1 : 0,
-        transition: 'opacity 1.2s ease 0.8s',
-      }}
-        onClick={handleEnter}
-        title="Enter"
-      >
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{
-            width: '22px', height: '1px',
-            background: 'rgba(181,160,140,0.5)',
-            transition: 'background 0.2s',
-          }} />
-        ))}
-      </div>}
-
-      {/* Contact menu — top right (drops below the hamburger when the full site is live) */}
-      <div style={{
-        position: 'absolute', top: holding ? '1.5rem' : '3.8rem', right: '1.8rem',
-        display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
-        zIndex: 10,
-        opacity: ready ? 1 : 0,
-        transition: 'opacity 1.2s ease 0.8s',
-      }}>
-        <button
-          onClick={() => setContactOpen(o => !o)}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: 'var(--font-body)',
-            fontSize: '0.65rem', fontWeight: 500,
-            letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: contactOpen ? 'rgba(181,160,140,0.85)' : 'rgba(181,160,140,0.45)',
-            padding: '0.4rem 0',
-            transition: 'color 0.25s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = 'rgba(181,160,140,0.85)'}
-          onMouseLeave={e => e.currentTarget.style.color = contactOpen ? 'rgba(181,160,140,0.85)' : 'rgba(181,160,140,0.45)'}
-        >
-          contact
-        </button>
-
-        {contactOpen && (
-          <div style={{
-            marginTop: '0.6rem',
-            background: 'rgba(10,9,6,0.92)',
-            border: '1px solid rgba(181,160,140,0.18)',
-            borderRadius: '3px',
-            padding: '0.9rem 1.2rem',
-            display: 'flex', flexDirection: 'column', gap: '0.7rem',
-            textAlign: 'left',
-            animation: 'contactIn 0.25s cubic-bezier(0.16,1,0.3,1) both',
-          }}>
-            <style>{`@keyframes contactIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
-            <ContactForm compact />
-          </div>
-        )}
-      </div>
+      {/* Site menu — hamburger, top right. Story / Work / Process / Contact.
+          Shown regardless of holding mode: the menu is now the way in. */}
+      <Menu />
 
       {/* Center content — above the wave line */}
       <div style={{
@@ -310,10 +251,12 @@ export default function Landing({ onEnter, holding = false }) {
           transform: ready ? 'translateY(0)' : 'translateY(12px)',
           transition: 'opacity 1.2s var(--ease-out) 0.4s, transform 1.2s var(--ease-out) 0.4s',
         }}>
+          {/* The wordmark is the one place serif survives — a mark, not
+              type. Swap to var(--font-display) to take it sans as well. */}
           <h1 style={{
-            fontFamily: 'var(--font-display)',
+            fontFamily: 'var(--font-mark)',
             fontSize: 'clamp(2.8rem, 7vw, 5.5rem)',
-            fontWeight: 500,
+            fontWeight: 400,
             letterSpacing: '0.05em',
             color: 'var(--cream-full)',
             lineHeight: 1,
@@ -328,7 +271,7 @@ export default function Landing({ onEnter, holding = false }) {
           transition: 'opacity 1.4s var(--ease-out) 0.75s',
         }}>
           <p style={{
-            fontFamily: 'var(--font-display)',
+            fontFamily: 'var(--font-mark)',
             fontStyle: 'italic',
             fontWeight: 400,
             fontSize: 'clamp(0.95rem, 2vw, 1.15rem)',
@@ -341,26 +284,16 @@ export default function Landing({ onEnter, holding = false }) {
 
       </div>
 
-      {/* Enter prompt — anchored at the bottom, below the animation.
-          In holding mode it becomes a quiet status line instead. */}
-      <div style={{
-        position: 'absolute', bottom: '2.2rem', left: 0, right: 0,
-        display: 'flex', justifyContent: 'center',
-        zIndex: 2,
-        opacity: ready ? 1 : 0,
-        transition: 'opacity 1.4s var(--ease-out) 1.2s',
-      }}>
-        {holding ? (
-          <div style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '0.65rem', fontWeight: 500,
-            letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: 'rgba(181,160,140,0.45)',
-            userSelect: 'none',
-          }}>
-            propagating soon
-          </div>
-        ) : (
+      {/* Enter prompt — only when the full site is live. While holding,
+          the bottom stays empty; the menu is the way through. */}
+      {!holding && (
+        <div style={{
+          position: 'absolute', bottom: '2.2rem', left: 0, right: 0,
+          display: 'flex', justifyContent: 'center',
+          zIndex: 2,
+          opacity: ready ? 1 : 0,
+          transition: 'opacity 1.4s var(--ease-out) 1.2s',
+        }}>
           <button
             onClick={handleEnter}
             style={{
@@ -383,8 +316,8 @@ export default function Landing({ onEnter, holding = false }) {
             </div>
             <ChevronDown />
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
