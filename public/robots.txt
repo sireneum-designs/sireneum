@@ -1,8 +1,20 @@
 # robots.txt — sireneum.com
-# Search engines are welcome. AI-training and data-harvesting crawlers are not.
-# Machine-readable outreach policy: https://sireneum.com/llms.txt
+#
+# Search engines are welcome.
+#
+# AI crawlers and AI agents are both declined, deliberately — the bulk crawlers
+# that harvest for training, and the on-demand agents (ChatGPT-User,
+# Claude-User, Perplexity-User) that fetch a page to summarize it on someone's
+# behalf. This site is meant to be read, not relayed.
+#
+# Outreach and rights policy:  https://sireneum.com/llms.txt
+# TDM rights reservation:      https://sireneum.com/.well-known/tdmrep.json
+#
+# Note that this file is a request, not a control. It is honoured by parties
+# who publish their crawler names and answer for their behaviour, and ignored
+# by everyone else.
 
-# --- AI training / dataset crawlers ---
+# --- AI training / dataset crawlers, and on-demand AI agents ---
 User-agent: GPTBot
 Disallow: /
 

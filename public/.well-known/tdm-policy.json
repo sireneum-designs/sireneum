@@ -1,0 +1,24 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/odrl.jsonld",
+    "http://www.w3.org/ns/tdmrep.jsonld"
+  ],
+  "@type": "Offer",
+  "profile": "http://www.w3.org/ns/tdmrep",
+  "uid": "https://sireneum.com/policies/1",
+  "assigner": {
+    "uid": "https://sireneum.com",
+    "vcard:fn": "Sireneum Designs",
+    "vcard:hasURL": "https://sireneum.com/llms.txt"
+  },
+  "permission": [
+    {
+      "action": "tdm:mine",
+      "duty": [
+        {
+          "action": "obtainConsent"
+        }
+      ]
+    }
+  ]
+}
