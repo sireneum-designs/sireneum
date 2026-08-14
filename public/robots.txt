@@ -1,51 +1,40 @@
 # robots.txt — sireneum.com
 #
-# Search engines are welcome.
+# Two different questions, answered in two different places:
 #
-# AI crawlers and AI agents are both declined, deliberately — the bulk crawlers
-# that harvest for training, and the on-demand agents (ChatGPT-User,
-# Claude-User, Perplexity-User) that fetch a page to summarize it on someone's
-# behalf. This site is meant to be read, not relayed.
+#   Who may read this site?        This file.
+#   What may they do with it?      /llms.txt
+#                                  /.well-known/tdmrep.json
 #
-# Outreach and rights policy:  https://sireneum.com/llms.txt
-# TDM rights reservation:      https://sireneum.com/.well-known/tdmrep.json
+# Reading is welcome. Search engines, and AI systems retrieving a page to
+# answer someone's question, are all doing the same thing: pointing a person
+# who is looking for this studio toward it.
 #
-# Note that this file is a request, not a control. It is honoured by parties
-# who publish their crawler names and answer for their behaviour, and ignored
-# by everyone else.
+# What is declined is bulk collection into training data. That is a use, not
+# a visit, and the rights to it are expressly reserved — see tdmrep.json.
+#
+# This file is a request, not a control. It is honoured by parties who publish
+# their crawler names and answer for their behaviour, and ignored by everyone
+# else. The reservation of rights stands either way.
 
-# --- AI training / dataset crawlers, and on-demand AI agents ---
+# ── Declined: bulk crawlers collecting content as training data ──────────
+
 User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: OAI-SearchBot
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
 Disallow: /
 
 User-agent: ClaudeBot
 Disallow: /
 
-User-agent: Claude-Web
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: CCBot
 Disallow: /
 
 User-agent: Google-Extended
 Disallow: /
 
 User-agent: Applebot-Extended
-Disallow: /
-
-User-agent: PerplexityBot
-Disallow: /
-
-User-agent: Perplexity-User
 Disallow: /
 
 User-agent: Bytespider
@@ -93,6 +82,37 @@ Disallow: /
 User-agent: YouBot
 Disallow: /
 
-# --- Everyone else (search engines etc.) ---
+# ── Welcome: retrieval and citation in AI search ─────────────────────────
+# These index so that a person asking about this studio can be pointed to it.
+# Separate from the training crawlers run by the same companies, and
+# controlled separately on purpose.
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# ── Welcome: fetches made on a person's behalf, in the moment ────────────
+# Someone asked a question and the system went to read this page to answer
+# it. That is a visitor arriving by a different door.
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# ── Everyone else ────────────────────────────────────────────────────────
+
 User-agent: *
 Allow: /
