@@ -6,6 +6,7 @@ import WorkIndex from './work/WorkIndex.jsx'
 import ProjectPage from './work/ProjectPage.jsx'
 import Story from './pages/Story.jsx'
 import Process from './pages/Process.jsx'
+import Interlocutorium from './pages/Interlocutorium.jsx'
 
 const YEAR = new Date().getFullYear()
 
@@ -24,6 +25,7 @@ function resolveRoute() {
   if (path.startsWith('/work/')) return { page: 'project', slug: path.slice('/work/'.length) }
   if (path === '/story')         return { page: 'story' }
   if (path === '/process')       return { page: 'process' }
+  if (path === '/interlocutorium') return { page: 'interlocutorium' }
   return null
 }
 
@@ -59,6 +61,7 @@ export default function App() {
       case 'project':    return <ProjectPage slug={route.slug} />
       case 'story':      return <Story />
       case 'process':    return <Process />
+      case 'interlocutorium': return <Interlocutorium />
       default:           break
     }
   }

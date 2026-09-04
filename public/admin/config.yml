@@ -1,0 +1,135 @@
+# ── Decap CMS configuration ───────────────────────────────────
+# The editor at /admin reads this file. It describes one thing:
+# where posts live and what a post is made of.
+#
+# Saving in the editor writes a JSON file to
+# src/content/interlocutorium/ and commits it. The site picks it up
+# on the next build — no separate publish step, and the repo stays
+# the only source of truth.
+
+backend:
+  name: github
+  repo: sireneum-designs/sireneum
+  branch: main
+  # Sign-in goes through Netlify's OAuth provider by default, which
+  # is why ADMIN-SETUP.md asks you to install it on the site once.
+
+# Uncomment these two lines, run `npx decap-server` in a second
+# terminal alongside `npm run dev`, and /admin will edit the files on
+# this machine instead of GitHub — useful for trying the form out
+# without committing anything.
+# local_backend: true
+
+# Where uploaded video and stills go, and the path the site uses to
+# reach them. public/interlocutorium/x.mp4 is served at
+# /interlocutorium/x.mp4 — that is the whole trick.
+media_folder: "public/interlocutorium"
+public_folder: "/interlocutorium"
+
+collections:
+  - name: "interlocutorium"
+    label: "Interlocutorium posts"
+    label_singular: "post"
+    folder: "src/content/interlocutorium"
+    extension: "json"
+    format: "json"
+    create: true
+    identifier_field: "id"
+    slug: "{{slug}}"
+    summary: "{{date}} — {{id}}"
+    sortable_fields: ["date", "id"]
+    fields:
+      - label: "ID"
+        name: "id"
+        widget: "string"
+        hint: >
+          Short slug, lowercase, hyphens, unique. Becomes the filename
+          and the post's own link (/interlocutorium#the-id).
+          Convention: YYMM-a-few-words.
+
+      - label: "Date"
+        name: "date"
+        widget: "datetime"
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        picker_utc: false
+        hint: "Sorts the feed, newest first, and shows above the post."
+
+      - label: "Media"
+        name: "media"
+        widget: "object"
+        required: false
+        collapsed: false
+        hint: >
+          Leave empty for a text-only post. COMPRESS VIDEO FIRST —
+          see ADMIN-SETUP.md. Anything over about 10 MB is too heavy
+          to keep in the repo.
+        fields:
+          - label: "Kind"
+            name: "kind"
+            widget: "select"
+            options: ["video", "image"]
+            default: "video"
+          - label: "File"
+            name: "src"
+            widget: "file"
+            required: false
+            hint: "The mp4, or the image for an image post."
+          - label: "Poster (video only)"
+            name: "poster"
+            widget: "image"
+            required: false
+            hint: >
+              A still frame shown before playback. Without one the post
+              opens on a black rectangle.
+          - label: "Alt text (image only)"
+            name: "alt"
+            widget: "string"
+            required: false
+          - label: "Aspect ratio"
+            name: "aspect"
+            widget: "select"
+            options: ["9 / 16", "1 / 1", "4 / 5", "16 / 9"]
+            default: "9 / 16"
+
+      - label: "Caption"
+        name: "caption"
+        widget: "text"
+        hint: >
+          The post's text. Blank line between paragraphs.
+          **bold**, *italic* and [text](https://…) all work.
+
+      - label: "Closing question"
+        name: "question"
+        widget: "string"
+        required: false
+        hint: "Set apart from the caption on the page, because it is the point."
+
+      - label: "Credits"
+        name: "credits"
+        widget: "string"
+        required: false
+        default: "Original music by Sireneum, composed with Suno."
+        hint: >
+          One quiet line under the post. Music, images, anything owed a
+          credit. [text](https://…) works here, so a credit can link to
+          the track or the source.
+
+      - label: "Discussion links"
+        name: "discuss"
+        widget: "list"
+        required: false
+        label_singular: "link"
+        summary: "{{fields.where}}"
+        fields:
+          - label: "Where"
+            name: "where"
+            widget: "select"
+            options: ["instagram", "threads", "facebook", "linkedin", "youtube"]
+          - label: "URL"
+            name: "href"
+            widget: "string"
+            required: false
+            hint: >
+              Leave blank until the post is live there — blank links are
+              skipped rather than shown broken.

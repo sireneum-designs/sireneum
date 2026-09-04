@@ -15,6 +15,7 @@ const LINKS = [
   { label: 'story',   href: '/story',   note: 'sireneum, and how I got here' },
   { label: 'work',    href: '/work',    note: 'architecture — selected projects' },
   { label: 'process', href: '/process', note: 'how I think about design' },
+  { label: 'interlocutorium', href: '/interlocutorium', note: 'an inquiry into us, made by us' },
 ]
 
 export default function Menu({ delay = 0.8, top = '1.5rem', panelTop = '4.2rem' }) {

@@ -1,0 +1,252 @@
+/* ── INTERLOCUTORIUM ──────────────────────────────────────────
+   Landing page for the Sireneum project of the same name.
+
+   Uses the tokens from index.css and the page ground from
+   work.css (.work-root). Nothing here is project-specific to a
+   building, so it does not borrow the /work page furniture —
+   it sets its own measure and keeps the same voice.
+
+   The room diagram is the only ornament. It carries the
+   argument, so it is not decoration: each viewer's cone reveals
+   a different part of the same plan, and only the three
+   together light the whole room.
+   ─────────────────────────────────────────────────────────── */
+
+.intl-page {
+  --measure: 62ch;
+  padding: clamp(4.5rem, 12vh, 8rem) var(--sp-8) var(--sp-24);
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* ── masthead ────────────────────────────────────────────── */
+.intl-kicker {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+  margin-bottom: var(--sp-6);
+}
+.intl-kicker a { color: var(--taupe-full); border-bottom: 1px solid var(--border-mid); }
+.intl-kicker a:hover { color: var(--cream); }
+
+.intl-title {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: clamp(2.6rem, 8.5vw, 5.6rem);
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  color: var(--white);
+  margin-bottom: var(--sp-8);
+}
+
+.intl-premise {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(1.25rem, 2.9vw, 2.05rem);
+  line-height: 1.32;
+  letter-spacing: -0.015em;
+  color: var(--cream-full);
+  max-width: 26ch;
+  margin-bottom: var(--sp-6);
+}
+
+.intl-lede {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+  line-height: 1.7;
+  color: var(--cream-mid);
+  max-width: var(--measure);
+}
+
+/* ── the room ────────────────────────────────────────────── */
+.intl-room {
+  margin: clamp(3.5rem, 9vh, 6rem) 0 clamp(2rem, 5vh, 3rem);
+}
+.intl-room svg { display: block; width: 100%; height: auto; }
+
+.intl-room-frame {
+  background: var(--ink-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(1rem, 2.6vw, 2rem);
+}
+
+/* every element inside the plan eases between states, so switching
+   viewpoint reads as light moving rather than a page redraw */
+.intl-room .plan-el {
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+
+.intl-eyes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: var(--sp-6);
+}
+.intl-eye {
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--taupe-mid);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.95rem;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+.intl-eye:hover { color: var(--cream); border-color: var(--border-mid); }
+.intl-eye.on {
+  color: var(--ink);
+  background: var(--taupe);
+  border-color: var(--taupe);
+}
+.intl-eye:focus-visible { outline: 1px solid var(--taupe-mid); outline-offset: 3px; }
+
+.intl-room-cap {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 300;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: rgba(181,160,140,0.55);
+  max-width: 54ch;
+  margin-top: var(--sp-4);
+  min-height: 2.6em;   /* holds its line so the page does not jump */
+}
+
+/* ── prose sections ──────────────────────────────────────── */
+.intl-sec {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: clamp(1rem, 3vw, 2.5rem);
+  padding: clamp(2.2rem, 6vh, 3.6rem) 0;
+  border-top: 1px solid var(--border);
+}
+.intl-sec-label {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+  padding-top: 0.35rem;
+}
+.intl-sec p {
+  font-family: var(--font-body);
+  font-size: clamp(0.9rem, 1.15vw, 1rem);
+  font-weight: 300;
+  line-height: 1.72;
+  color: var(--cream-mid);
+  max-width: var(--measure);
+  margin-bottom: 1.1em;
+}
+.intl-sec p:last-child { margin-bottom: 0; }
+.intl-sec em     { font-style: italic; color: var(--cream-full); }
+.intl-sec strong { font-weight: 400; color: var(--cream-full); }
+
+/* the three refusals — set as a short stack so they land as beats */
+.intl-nots { list-style: none; margin: 0 0 1.1em; }
+.intl-nots li {
+  font-family: var(--font-body);
+  font-size: clamp(0.9rem, 1.15vw, 1rem);
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--cream-mid);
+  padding: 0.45rem 0 0.45rem 1.5rem;
+  position: relative;
+  max-width: var(--measure);
+}
+.intl-nots li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--taupe-mid);
+}
+
+/* ── follow ──────────────────────────────────────────────── */
+.intl-follow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: var(--sp-6);
+}
+.intl-follow a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--taupe-full);
+  transition: color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+.intl-follow a:hover {
+  color: var(--cream);
+  border-color: var(--taupe-mid);
+  background: var(--taupe-dim);
+}
+.intl-follow a .handle {
+  font-size: 0.66rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--taupe-mid);
+}
+
+/* ── foot ────────────────────────────────────────────────── */
+.intl-foot {
+  border-top: 1px solid var(--border);
+  margin-top: clamp(2.5rem, 7vh, 4.5rem);
+  padding-top: var(--sp-8);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-6);
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.intl-foot p {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 300;
+  line-height: 1.65;
+  color: rgba(181,160,140,0.6);
+  max-width: 46ch;
+}
+.intl-foot p a { color: var(--cream-mid); border-bottom: 1px solid var(--border-mid); }
+.intl-foot p a:hover { color: var(--cream); }
+.intl-foot .intl-mark {
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(181,160,140,0.35);
+}
+
+/* ── narrow ──────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .intl-sec { grid-template-columns: 1fr; gap: 0.6rem; }
+  .intl-sec-label { padding-top: 0; }
+  .intl-premise { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intl-room .plan-el { transition: none; }
+}
