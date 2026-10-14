@@ -178,7 +178,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 .dash h1{font-family:var(--display);font-size:30px;margin:0;text-transform:uppercase;letter-spacing:.03em}
 .dash h2{font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
 .plist{display:grid;gap:0;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
-.prow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
 .prow:last-child{border-bottom:none}
 .prow .t{font-weight:600}
 .prow .s{font-family:var(--mono);font-size:12px;color:var(--muted)}
@@ -214,7 +214,8 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
         <label class="f">Client passcode<input id="np_pass" autocomplete="off"></label>
       </div>
       <p class="empty">The client opens <b id="np_url">sireneum.com/client/…</b> and enters the passcode once per browser. Write the passcode down — it can be reset but not read back.</p>
-      <div class="row"><button class="btn primary" id="np_go">Create project</button><span class="msg" id="np_msg" style="color:var(--warn);font-size:13px"></span></div>
+      <div class="row"><button class="btn primary" id="np_go">Create project</button><button class="btn" id="np_imp" title="Create the project from a backup file made with “Download backup”">Create from backup file…</button><input type="file" id="np_file" accept=".json,application/json" hidden><span class="msg" id="np_msg" style="color:var(--warn);font-size:13px"></span></div>
+      <p class="empty">To move a project from the local server to sireneum.com: on the local dashboard click “Download backup”, then here enter the project address and a client passcode and choose “Create from backup file…”.</p>
     </section>
     <div class="row"><button class="btn sm" id="dashOut">Sign out of studio</button></div>
     <p class="copy">© 2026 Sireneum Designs. All rights reserved.</p>
@@ -516,9 +517,10 @@ async function bootDash(){
     $("gate").hidden=true; $("dash").hidden=false;
     try{
       const {projects}=await api("_projects",{key});
-      $("plist").innerHTML= projects.length? projects.map(p=>`<div class="prow"><div><div class="t">${esc(p.name)}${p.client?` · ${esc(p.client)}`:""}</div><div class="s">sireneum.com/client/${esc(p.slug)} · ${p.sheets} sheet${p.sheets===1?"":"s"} · updated ${esc(new Date(p.updated).toLocaleDateString())}</div></div><a class="btn sm" href="/client/${esc(p.slug)}">Open</a><button class="btn sm" data-copy="${esc(p.slug)}">Copy link</button></div>`).join("")
+      $("plist").innerHTML= projects.length? projects.map(p=>`<div class="prow"><div><div class="t">${esc(p.name)}${p.client?` · ${esc(p.client)}`:""}</div><div class="s">sireneum.com/client/${esc(p.slug)} · ${p.sheets} sheet${p.sheets===1?"":"s"} · updated ${esc(new Date(p.updated).toLocaleDateString())}</div></div><a class="btn sm" href="/client/${esc(p.slug)}">Open</a><button class="btn sm" data-copy="${esc(p.slug)}">Copy link</button><button class="btn sm" data-bak="${esc(p.slug)}" title="Save the whole project, drawings included, as one file">Download backup</button></div>`).join("")
         : `<p class="empty" style="padding:12px 14px">No projects yet. Create the first one below.</p>`;
       $("plist").querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyText("https://sireneum.com/client/"+b.dataset.copy));
+      $("plist").querySelectorAll("[data-bak]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ await exportProject(b.dataset.bak,key); }catch(err){ toast("Backup failed: "+err.message); } b.disabled=false; });
     }catch(err){ if(err.status===401){ lsSet("pos-admin",null); ask("Sign in again."); } else $("plist").innerHTML=`<p class="empty" style="padding:12px 14px">${esc(err.message)}</p>`; }
   };
   $("np_pass").value=genPass();
@@ -532,8 +534,60 @@ async function bootDash(){
       ["np_slug","np_name","np_client","np_addr","np_projno"].forEach(i=>$(i).value=""); $("np_pass").value=genPass(); show();
     }catch(err){ $("np_msg").textContent=err.message; }
   };
+  $("np_imp").onclick=()=>{
+    $("np_msg").textContent="";
+    if(!/^[a-z0-9][a-z0-9-]{1,40}$/.test($("np_slug").value.trim())){ $("np_msg").textContent="Enter the project address first."; $("np_slug").focus(); return; }
+    if($("np_pass").value.trim().length<8){ $("np_msg").textContent="The client passcode must be at least 8 characters."; return; }
+    $("np_file").value=""; $("np_file").click();
+  };
+  $("np_file").onchange=async()=>{
+    const f=$("np_file").files[0]; if(!f) return;
+    const slug=$("np_slug").value.trim(), pass=$("np_pass").value.trim();
+    try{
+      const n=await importProject(f,slug,pass,key,msg=>$("np_msg").textContent=msg);
+      $("np_msg").textContent="";
+      const m=modal(`<h3>Project created from backup</h3><p class="empty">${n.sheets} sheet${n.sheets===1?"":"s"}, ${n.items} symbols. Send your client the link and passcode.</p><label class="f">Link<input class="inp" readonly value="https://sireneum.com/client/${esc(slug)}"></label><label class="f">Passcode<input class="inp" readonly value="${esc(pass)}"></label><div class="row"><a class="btn primary" href="/client/${esc(slug)}">Open project</a><button class="btn" data-x>Close</button></div>`,true);
+      m.querySelector("[data-x]").onclick=()=>m.remove();
+      ["np_slug","np_name","np_client","np_addr","np_projno"].forEach(i=>$(i).value=""); $("np_pass").value=genPass(); show();
+    }catch(err){ $("np_msg").textContent=err.message; }
+  };
   $("dashOut").onclick=()=>{ lsSet("pos-admin",null); location.reload(); };
   if(!key) ask(); else show();
+}
+/* ---------- backup files: the whole project plus its drawings in one JSON file ---------- */
+const COLL_NAMES=["sheets","items","wires","notes","dims","fixtures","keys","flags"];
+const blobToDataUrl=b=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(b); });
+async function exportProject(slug,key){
+  toast("Preparing backup…");
+  const {doc}=await api(slug,{key});
+  const assets={};
+  for(const sh of Object.values(doc.sheets||{})) if(sh.base&&sh.base.asset&&!assets[sh.base.asset]) assets[sh.base.asset]=await blobToDataUrl(await api(slug+"/assets/"+sh.base.asset,{key,raw:true}));
+  const out={format:"sireneum-client-plan",version:1,exported:new Date().toISOString(),doc,assets};
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(out)],{type:"application/json"}));
+  a.download=`${slug}-backup-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+async function importProject(file,slug,pass,key,say){
+  say("Reading file…");
+  let data; try{ data=JSON.parse(await file.text()); }catch(e){ throw new Error("That file isn't a project backup."); }
+  const doc=data&&data.doc; if(!doc||!doc.meta||!doc.sheets) throw new Error("That file isn't a project backup.");
+  const tb=doc.meta.tb||{};
+  say("Creating project…");
+  await api("_projects",{method:"POST",key,body:{slug,passcode:pass,name:tb.project||slug,client:tb.client||"",addr:tb.addr||"",projno:tb.projno||""}});
+  const map={}, ids=Object.keys(data.assets||{});
+  for(let i=0;i<ids.length;i++){
+    say(`Uploading drawing ${i+1} of ${ids.length}…`);
+    const blob=await (await fetch(data.assets[ids[i]])).blob();
+    const r=await api(slug+"/assets",{method:"POST",key,body:blob,raw:"upload",type:blob.type||"image/jpeg"});
+    map[ids[i]]=r.id;
+  }
+  const ops=[{c:"meta",v:doc.meta}];
+  for(const c of COLL_NAMES) for(const [id,v] of Object.entries(doc[c]||{})){
+    const o={...v}; if(c==="sheets"&&o.base&&map[o.base.asset]) o.base={...o.base,asset:map[o.base.asset]};
+    ops.push({c,id,v:o});
+  }
+  for(let i=0;i<ops.length;i+=400){ say(`Saving ${Math.min(i+400,ops.length)} of ${ops.length}…`); await api(slug+"/ops",{method:"POST",key,body:{ops:ops.slice(i,i+400)}}); }
+  return {sheets:Object.keys(doc.sheets).length, items:Object.keys(doc.items||{}).length};
 }
 function copyText(t){
   const done=()=>toast("Copied.");
