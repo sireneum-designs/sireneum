@@ -398,7 +398,8 @@ const SYMS = [
  {id:"linear",cat:"Lighting",name:"Linear / LED strip",svg:`<rect x="-20" y="-6" width="40" height="12" ${W}/><circle r="3.4" fill="currentColor"/>`},
  {id:"undercab",cat:"Lighting",name:"Under-cabinet",svg:`<rect x="-20" y="-4" width="40" height="8" ${W}/><path d="M-15 4L-8-4M-6 4L1-4M3 4L10-4M12 4L18-3" stroke-width="1.6"/>`},
  {id:"track",cat:"Lighting",name:"Track light",svg:`<path d="M-20 0H20" stroke-width="2.6"/><circle cx="-12" r="4" ${W}/><circle r="4" ${W}/><circle cx="12" r="4" ${W}/>`},
- {id:"exterior",cat:"Lighting",name:"Exterior light (WP)",svg:`<path d="${ticks}"/><circle r="11" ${W}/>${T(0,4,"WP",9)}`},
+ {id:"extwall",cat:"Lighting",name:"Exterior wall light (WP)",svg:`<path d="M-15-9H15" stroke-width="2.4"/><path d="M-11-9A11 11 0 0 0 11-9Z" ${W}/>${T(0,-1,"WP",7.5)}`},
+ {id:"exterior",cat:"Lighting",name:"Exterior ceiling light (WP)",svg:`<path d="${ticks}"/><circle r="11" ${W}/>${T(0,4,"WP",9)}`},
  {id:"floodx",cat:"Lighting",name:"Exterior flood light",svg:`<path d="M-9 13H9" stroke-width="2.4"/><path d="M0 13V7"/><path d="M-11 7L0-11L11 7Z" ${W}/><path d="M-6-12L-11-17M6-12L11-17M0-13V-19"/>`},
  {id:"flood",cat:"Lighting",name:"Flood w/ motion",svg:`<path d="M-11 6L0-12L11 6Z" ${W}/><path d="M-6-12L-11-17M6-12L11-17M0-13V-19"/>${T(0,4,"M",8)}`},
  {id:"fan",cat:"Lighting",name:"Ceiling fan",svg:`${blades}<circle r="4" ${W}/>`},
@@ -1522,6 +1523,13 @@ $("bAddFx").onclick=()=>{ const f=addFixture(); openSchedule(fxGroup(f)); };
 
 /* ---------- inspector ---------- */
 function fxOptions(cur){ return `<option value="">— none —</option>`+FX_GROUPS.map(([g,,,short])=>{ const rs=fxSort().filter(f=>fxGroup(f)===g); return rs.length? `<optgroup label="${short}">`+rs.map(f=>`<option value="${f.id}" ${f.id===cur?"selected":""}>${esc(f.mark)}${f.desc?" — "+esc(f.desc.slice(0,28)):""}</option>`).join("")+`</optgroup>` : ""; }).join("")+`<option value="__new">+ New type mark…</option>`; }
+/* changing a symbol also moves it between "shared with all sheets" and "this sheet only" to match its new type */
+function swapType(it,type){
+  const wasShared=it.sheet==="", nowShared=SHARED_DEFAULT.has(type);
+  it.type=type;
+  if(wasShared&&!nowShared) it.sheet=cur;
+  else if(!wasShared&&nowShared) it.sheet="";
+}
 function renderInspector(){
   const b=$("inspBody");
   if(b.contains(document.activeElement) && (document.activeElement.id==="inNote"||document.activeElement.id==="flReply"||document.activeElement.id==="inKeyText")) return;
@@ -1544,9 +1552,10 @@ function renderInspector(){
   if(!sel.size){ b.innerHTML=`<p class="empty">Nothing selected. Click a symbol, run, dimension or note to edit it. Shift-click adds to the selection.</p>`; return; }
   if(sel.size>1){
     const its=S.items.filter(i=>sel.has(i.id));
-    b.innerHTML=`<p class="empty">${sel.size} objects selected.</p>`+(its.length?`<label class="f">Set type mark for ${its.length} symbol${its.length>1?"s":""}<select id="inFxMulti">${fxOptions("")}</select></label>`+`<label class="f">Tag position<select id="inTagPos">${[["ul","Upper left"],["ur","Upper right"],["ll","Lower left"],["lr","Lower right"]].map(([v,l])=>`<option value="${v}" ${(its[0].tagPos||"ul")===v?"selected":""}>${l}</option>`).join("")}</select></label>`:"");
+    b.innerHTML=`<p class="empty">${sel.size} objects selected.</p>`+(its.length?`<label class="f">Set type mark for ${its.length} symbol${its.length>1?"s":""}<select id="inFxMulti">${fxOptions("")}</select></label>`+`<label class="f">Change symbol for ${its.length} symbol${its.length>1?"s":""}<select id="inTypeMulti"><option value="">— keep —</option>${CATS.map(c=>`<optgroup label="${c}">`+SYMS.filter(s=>s.cat===c).map(s=>`<option value="${s.id}">${s.name}</option>`).join("")+`</optgroup>`).join("")}</select></label>`+`<label class="f">Tag position<select id="inTagPos">${[["ul","Upper left"],["ur","Upper right"],["ll","Lower left"],["lr","Lower right"]].map(([v,l])=>`<option value="${v}" ${(its[0].tagPos||"ul")===v?"selected":""}>${l}</option>`).join("")}</select></label>`:"");
     const s=$("inFxMulti"); if(s) s.onchange=()=>{ let v=s.value; if(v==="__new") v=addFixture(its[0].type).id; commit(); its.forEach(i=>{ if(i.fx!==v){ i.fx=v; i.num=v?nextNum(v):0; } rememberMark(i.type,v); }); changed(); };
     const tpm=$("inTagPos"); if(tpm) tpm.onchange=e=>{ commit(); its.forEach(i=>i.tagPos=e.target.value); changed(); };
+    const stm=$("inTypeMulti"); if(stm) stm.onchange=e=>{ if(!e.target.value) return; commit(); its.forEach(i=>swapType(i,e.target.value)); changed(); toast(`${its.length} symbol${its.length>1?"s":""} changed to ${SYM[e.target.value].name}.`); };
     return;
   }
   const id=[...sel][0], f=findAny(id); if(!f) return;
@@ -1560,7 +1569,7 @@ function renderInspector(){
     ${it.fx?`<label class="f">Tag position<select id="inTagPos">${[["ul","Upper left"],["ur","Upper right"],["ll","Lower left"],["lr","Lower right"]].map(([v,l])=>`<option value="${v}" ${(it.tagPos||"ul")===v?"selected":""}>${l}</option>`).join("")}</select></label>`:""}
     <label class="f">Shown on<select id="inShare"><option value="" ${!it.sheet?"selected":""}>Every sheet (shared position)</option><option value="${cur}" ${it.sheet?"selected":""}>This sheet only</option></select></label>
     <p class="empty">${it.fx? `Tagged ${esc(tagText(it))}. New ${esc(SYM[it.type].name.toLowerCase())}s you drop take type ${esc((fxById(it.fx)||{}).mark||"")} and the next number.` : "Give this symbol a type mark to tag it and count it in the fixture schedule. Switch letters tie switches to what they control."}</p>`;
-    $("inType").onchange=e=>{ commit(); it.type=e.target.value; changed(); };
+    $("inType").onchange=e=>{ commit(); swapType(it,e.target.value); changed(); };
     $("inFx").onchange=e=>{ let v=e.target.value; if(v==="__new") v=addFixture(it.type).id; commit(); it.fx=v; it.num=v?nextNum(v):0; rememberMark(it.type,v); changed(); };
     $("inNum").onchange=e=>{ commit(); it.num=Math.max(1,parseInt(e.target.value)||1); changed(); };
     $("inTag").onchange=e=>{ commit(); it.tag=e.target.value.trim(); changed(); };
