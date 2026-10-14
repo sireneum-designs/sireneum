@@ -113,6 +113,7 @@ label.f textarea,textarea.inp{resize:vertical;min-height:44px}
 .rev{display:grid;grid-template-columns:44px minmax(0,1fr) 84px 24px;gap:4px;margin-bottom:4px}
 .rev input{border:1px solid var(--line);background:var(--bg);border-radius:4px;padding:4px 6px;min-width:0}
 .rev button{border:1px solid var(--line);background:transparent;border-radius:3px;cursor:pointer;color:var(--muted)}
+body.client .studio-only{display:none!important}
 .modal{position:fixed;inset:0;z-index:60;background:rgba(10,14,18,.55);display:grid;place-items:center;padding:16px}
 .modal .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;width:min(1180px,100%);max-height:100%;overflow:auto;padding:16px;display:grid;gap:12px}
 .modal .card.narrow{width:min(500px,100%)}
@@ -242,8 +243,8 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
     <div class="sheetpick">
       <label for="sheetSel" class="ct">Sheet</label>
       <select id="sheetSel"></select>
-      <button class="btn sm" id="bSheetNew" title="Add a sheet">+ Sheet</button>
-      <button class="btn sm" id="bSheetEdit" title="Rename, renumber or delete this sheet">Edit sheet</button>
+      <button class="btn sm studio-only" id="bSheetNew" title="Add a sheet">+ Sheet</button>
+      <button class="btn sm studio-only" id="bSheetEdit" title="Rename, renumber or delete this sheet">Edit sheet</button>
     </div>
     <button class="btn" id="bRefresh" title="Load the latest changes from others">Refresh</button>
     <button class="btn primary" id="bPrint">Print / Export…</button>
@@ -289,7 +290,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
         </g>
       </svg>
       <div class="banner" id="banner" hidden></div>
-      <div class="empty-stage" id="noSheets" hidden><div class="card"><h3>No sheets yet</h3><p class="empty">Start with a floor plan. Upload an image or PDF page, set its scale, and place symbols on it. Add more sheets — a reflected ceiling plan, for instance — that share the same light fixtures.</p><button class="btn primary" id="bFirstSheet">Add the first sheet</button></div></div>
+      <div class="empty-stage" id="noSheets" hidden><div class="card"><h3>No sheets yet</h3><p class="empty">Start with a floor plan. Upload an image or PDF page, set its scale, and place symbols on it. Add more sheets — a reflected ceiling plan, for instance — that share the same light fixtures.</p><button class="btn primary studio-only" id="bFirstSheet">Add the first sheet</button></div></div>
       <div class="status" id="status"></div>
     </div>
   </div>
@@ -316,14 +317,14 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
       <p class="empty">Use “Comment flag” in the toolbar, then click the drawing where the comment applies.</p>
     </details>
     <details><summary>Legend</summary><div class="legend" id="legend"></div></details>
-    <details id="dScale"><summary>Drawing &amp; alignment</summary>
+    <details id="dScale" class="studio-only"><summary>Drawing &amp; alignment</summary>
       <p class="empty" id="scaleInfo"></p>
       <div class="row" style="margin-bottom:8px"><button class="btn sm" id="tCal">Set scale</button><button class="btn sm" id="tRef">Mark reference point</button><button class="btn sm" id="tAlign">Align to reference</button></div>
       <p class="empty">Fixtures sit at one real position shared by every sheet. Mark a reference point (a building corner, say) once, then on each other sheet click the same corner with “Align to reference”.</p>
       <label class="chk"><input type="checkbox" id="cRef"> Show the reference point (always shown while aligning; never printed)</label>
       <div class="row"><button class="btn sm" id="bPlan">Replace this sheet’s drawing…</button></div>
     </details>
-    <details><summary>Title block</summary>
+    <details class="studio-only"><summary>Title block</summary>
       <p class="empty">Shared by every sheet in this project. Sheet number and title are set with Edit sheet.</p>
       <label class="f">Project<input data-m="tb.project"></label>
       <label class="f">Project address<input data-m="tb.addr"></label>
@@ -364,7 +365,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
       </div>
       <button class="btn sm" id="bSignOut" style="margin-top:6px">Sign out on this browser</button>
     </details>
-    <details><summary>Start over</summary>
+    <details class="studio-only"><summary>Start over</summary>
       <p class="empty">Removes every symbol, run, dimension and note on this sheet, including shared fixtures shown here. Undo brings them back.</p>
       <button class="btn warn" id="bClear">Clear this sheet</button>
     </details>
@@ -1040,6 +1041,7 @@ function renderBanner(){
   else if(!M().ref && S.sheets.length>1){ bn.hidden=false; bn.innerHTML=`Mark a reference point (a building corner) so the sheets line up. <button class="btn sm primary" data-b="ref">Mark reference point</button>`; }
   else if(M().ref && sh.base && !sh.base.aligned && S.sheets.length>1 && !sh.base.isRefSheet){ bn.hidden=false; bn.innerHTML=`Line this sheet up with the others: click the reference corner on this drawing. <button class="btn sm primary" data-b="align">Align to reference</button> <button class="btn sm" data-b="skip">It’s already aligned</button>`; }
   else bn.hidden=true;
+  if(ROLE!=="admin"&&!bn.hidden) bn.textContent="Sireneum Designs is still setting up this sheet.";
   bn.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.b;
     if(k==="up") replaceDrawing(); else if(k==="cal") setTool("cal"); else if(k==="ref") setTool("ref"); else if(k==="align") setTool("align");
@@ -1297,6 +1299,7 @@ cv.addEventListener("dblclick",e=>{ const t=e.target.closest("[data-kind=note]")
 
 /* ---------- commands ---------- */
 function setTool(t,k){
+  if(ROLE!=="admin"&&(t==="cal"||t==="ref"||t==="align")) return;
   armed=null; $("pal").querySelectorAll(".tile.armed").forEach(x=>x.classList.remove("armed"));
   tool=t; if(k) wireKind=k; wireStart=null; pend=null; armedKey=null; updateButtons(); render();
 }
@@ -1449,7 +1452,7 @@ $("bSheetEdit").onclick=()=>{
 
 /* ---------- drawings: upload ---------- */
 $("bPlan").onclick=replaceDrawing;
-function replaceDrawing(){ if(!SH()){ toast("Add a sheet first."); return; } $("fPlan").click(); }
+function replaceDrawing(){ if(ROLE!=="admin") return; if(!SH()){ toast("Add a sheet first."); return; } $("fPlan").click(); }
 $("fPlan").onchange=async e=>{
   const f=e.target.files[0]; e.target.value=""; if(!f) return;
   try{
@@ -2108,6 +2111,7 @@ async function exportPng(){
 /* ---------- boot ---------- */
 async function startApp(){
   $("gate").hidden=true; $("app").hidden=false;
+  document.body.classList.toggle("client",ROLE!=="admin");
   try{ lastMark=JSON.parse(lsGet("pos-lastmark-"+SLUG,"{}"))||{}; }catch(e){ lastMark={}; }
   showRef = lsGet("pos-refshow-"+SLUG,"0")==="1";
   buildPalette(); setSync("ok");
