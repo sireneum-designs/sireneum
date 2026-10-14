@@ -310,7 +310,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
       <p class="empty" id="scaleInfo"></p>
       <div class="row" style="margin-bottom:8px"><button class="btn sm" id="tCal">Set scale</button><button class="btn sm" id="tRef">Mark reference point</button><button class="btn sm" id="tAlign">Align to reference</button></div>
       <p class="empty">Fixtures sit at one real position shared by every sheet. Mark a reference point (a building corner, say) once, then on each other sheet click the same corner with “Align to reference”.</p>
-      <label class="chk"><input type="checkbox" id="cRef"> Show the reference point (never printed)</label>
+      <label class="chk"><input type="checkbox" id="cRef"> Show the reference point (always shown while aligning; never printed)</label>
       <div class="row"><button class="btn sm" id="bPlan">Replace this sheet’s drawing…</button></div>
     </details>
     <details><summary>Title block</summary>
@@ -390,6 +390,7 @@ const SYMS = [
  {id:"undercab",cat:"Lighting",name:"Under-cabinet",svg:`<rect x="-20" y="-4" width="40" height="8" ${W}/><path d="M-15 4L-8-4M-6 4L1-4M3 4L10-4M12 4L18-3" stroke-width="1.6"/>`},
  {id:"track",cat:"Lighting",name:"Track light",svg:`<path d="M-20 0H20" stroke-width="2.6"/><circle cx="-12" r="4" ${W}/><circle r="4" ${W}/><circle cx="12" r="4" ${W}/>`},
  {id:"exterior",cat:"Lighting",name:"Exterior light (WP)",svg:`<path d="${ticks}"/><circle r="11" ${W}/>${T(0,4,"WP",9)}`},
+ {id:"floodx",cat:"Lighting",name:"Exterior flood light",svg:`<path d="M-9 13H9" stroke-width="2.4"/><path d="M0 13V7"/><path d="M-11 7L0-11L11 7Z" ${W}/><path d="M-6-12L-11-17M6-12L11-17M0-13V-19"/>`},
  {id:"flood",cat:"Lighting",name:"Flood w/ motion",svg:`<path d="M-11 6L0-12L11 6Z" ${W}/><path d="M-6-12L-11-17M6-12L11-17M0-13V-19"/>${T(0,4,"M",8)}`},
  {id:"fan",cat:"Lighting",name:"Ceiling fan",svg:`${blades}<circle r="4" ${W}/>`},
  {id:"fanlight",cat:"Lighting",name:"Fan w/ light kit",svg:`${blades}<circle r="6" ${W}/><circle r="3" fill="currentColor"/>`},
@@ -425,7 +426,7 @@ const SYMS = [
 const SYM = Object.fromEntries(SYMS.map(s=>[s.id,s]));
 const CATS = ["Lighting","Switches","Receptacles","Signal & safety","Power"];
 // Ceiling-mounted devices are shared: one real position, shown on every sheet (plan and RCP).
-const SHARED_DEFAULT = new Set(["ceil","recessed","pendant","linear","track","exterior","flood","fan","fanlight","exhaust","smoke","co","smokeco"]);
+const SHARED_DEFAULT = new Set(["ceil","recessed","pendant","linear","track","exterior","floodx","flood","fan","fanlight","exhaust","smoke","co","smokeco"]);
 const WIRES = {switch:{name:"Switch leg",dash:true,arrow:false},circuit:{name:"Circuit",dash:false,arrow:false},home:{name:"Home run to panel",dash:false,arrow:true}};
 const SHEETS = {
   A:{name:"ARCH A — 12 × 9",w:12,h:9}, B:{name:"ARCH B — 18 × 12",w:18,h:12}, C:{name:"ARCH C — 24 × 18",w:24,h:18},
@@ -790,7 +791,7 @@ function dimSVG(d, color, forExport){
 
 /* ---------- comment flags ---------- */
 let showFlags = true, flagFilter = "open";
-let showRef = true;   // per browser: lsGet("pos-ref-<slug>") after sign-in
+let showRef = false;   // per browser: lsGet("pos-ref-<slug>") after sign-in
 const flagById = id => S.flags.find(f=>f.id===id);
 const visFlags = () => S.flags.filter(f=>f.sheet===cur);
 const fmtWhen = iso => { try{ const d=new Date(iso); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }catch(e){ return iso; } };
@@ -1301,7 +1302,7 @@ $("myName").addEventListener("change",e=>{ const v=e.target.value.trim(); lsSet(
 $("tCal").onclick=()=>setTool("cal");
 $("tRef").onclick=()=>setTool("ref");
 $("tAlign").onclick=()=>setTool("align");
-$("cRef").onchange=e=>{ showRef=e.target.checked; lsSet("pos-ref-"+SLUG,showRef?"1":"0"); render(); };
+$("cRef").onchange=e=>{ showRef=e.target.checked; lsSet("pos-refshow-"+SLUG,showRef?"1":"0"); render(); };
 $("bRot").onclick=()=>rotateSel(45);
 $("bDup").onclick=dupSel; $("bDel").onclick=delSel;
 $("bUndo").onclick=undo; $("bRedo").onclick=redo;
@@ -1979,7 +1980,7 @@ async function exportPng(){
 async function startApp(){
   $("gate").hidden=true; $("app").hidden=false;
   try{ lastMark=JSON.parse(lsGet("pos-lastmark-"+SLUG,"{}"))||{}; }catch(e){ lastMark={}; }
-  showRef = lsGet("pos-ref-"+SLUG,"1")==="1";
+  showRef = lsGet("pos-refshow-"+SLUG,"0")==="1";
   buildPalette(); setSync("ok");
   await load(true);
   if(!S.meta) S.meta=defaultMeta({});
