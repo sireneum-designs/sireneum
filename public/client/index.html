@@ -112,15 +112,17 @@ label.f textarea,textarea.inp{resize:vertical;min-height:44px}
 .modal{position:fixed;inset:0;z-index:60;background:rgba(10,14,18,.55);display:grid;place-items:center;padding:16px}
 .modal .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;width:min(1180px,100%);max-height:100%;overflow:auto;padding:16px;display:grid;gap:12px}
 .modal .card.narrow{width:min(500px,100%)}
+.modal .card.wide{width:min(1960px,100%)}
+.tablewrap{scrollbar-width:auto}
 .modal h3{font-family:var(--display);font-size:19px;margin:0;text-transform:uppercase;letter-spacing:.04em}
 .modal img{max-width:100%;max-height:65vh;border:1px solid var(--line);background:#fff}
 .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
-table.sched{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}
+table.sched{border-collapse:collapse;table-layout:fixed;width:max-content;min-width:100%;font-size:13px}
 table.sched th{font-family:var(--display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:12px;color:var(--muted);text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);background:var(--bg)}
 table.sched td{padding:4px;border-bottom:1px solid var(--line);vertical-align:top}
 table.sched td input,table.sched td textarea,table.sched td select{border:1px solid transparent;background:transparent;border-radius:3px;padding:5px 6px;width:100%;min-width:0;color:var(--fg)}
 table.sched td input:hover,table.sched td textarea:hover{border-color:var(--line)}
-table.sched td textarea{resize:vertical;min-height:32px}
+table.sched td textarea{resize:none;overflow:hidden;min-height:30px;line-height:1.35;display:block}
 table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:center;padding-top:9px}
 .printdlg{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px;align-items:start}
 .pv{background:var(--desk);border:1px solid var(--line);border-radius:4px;padding:10px;display:grid;place-items:center;min-height:240px}
@@ -462,7 +464,7 @@ const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(k); return v===null?d:v; 
 const lsSet=(k,v)=>{ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} };
 function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),3600); }
 function modal(html,narrow){
-  const m=document.createElement("div"); m.className="modal"; m.innerHTML=`<div class="card${narrow?" narrow":""}">${html}</div>`;
+  const m=document.createElement("div"); m.className="modal"; m.innerHTML=`<div class="card${narrow===true?" narrow":typeof narrow==="string"?" "+narrow:""}">${html}</div>`;
   m.addEventListener("pointerdown",e=>{ if(e.target===m) m.remove(); });
   document.body.appendChild(m); return m;
 }
@@ -1421,7 +1423,9 @@ async function usePdf(f){
 }
 
 /* ---------- fixture schedule ---------- */
-const FX_FIELDS=[["mark","Type",70],["desc","Description",220],["mfr","Manufacturer",130],["cat","Catalog no.",140],["lamp","Lamp / lumens / CCT",150],["watts","Watts",60],["volts","Volts",60],["mount","Mounting",120],["notes","Remarks",170]];
+const FX_FIELDS=[["mark","Type",64],["desc","Description",260],["mfr","Manufacturer",190],["cat","Catalog no.",140],["lamp","Lamp / lumens / CCT",230],["watts","Watts",84],["volts","Volts",66],["mount","Mounting",210],["notes","Remarks",300]];
+const FX_SHORT=new Set(["mark","watts","volts"]);
+const autoGrow=t=>{ t.style.height="auto"; t.style.height=(t.scrollHeight+2)+"px"; };
 function nextMarkLetter(){
   const used=new Set(S.fixtures.map(f=>f.mark));
   for(let i=0;i<26*27;i++){ const m= i<26? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26); if(!used.has(m)) return m; }
@@ -1445,7 +1449,7 @@ function openSchedule(){
       <button class="btn sm" data-renum title="Renumber tags top-to-bottom, left-to-right within each type">Renumber tags</button>
       <button class="btn sm" data-x>Done</button></div></div>
     <p class="empty">Shared by every sheet. Quantity and tag range are counted from the drawings; fill in the rest and it prints on each sheet.</p>
-    <div class="tablewrap"><table class="sched"><thead><tr>${FX_FIELDS.map(f=>`<th style="width:${f[2]}px">${f[1]}</th>`).join("")}<th style="width:70px">Symbol</th><th style="width:50px">Qty</th><th style="width:80px">Tags</th><th style="width:40px"></th></tr></thead><tbody id="schedBody"></tbody></table></div>`);
+    <div class="tablewrap"><table class="sched"><thead><tr>${FX_FIELDS.map(f=>`<th style="width:${f[2]}px">${f[1]}</th>`).join("")}<th style="width:170px">Symbol</th><th style="width:56px">Qty</th><th style="width:104px">Tags</th><th style="width:48px"></th></tr></thead><tbody id="schedBody"></tbody></table></div>`,"wide");
   schedOpen=m;
   m.querySelector("[data-x]").onclick=()=>{ schedOpen=null; m.remove(); };
   m.addEventListener("pointerdown",e=>{ if(e.target===m) schedOpen=null; });
@@ -1460,15 +1464,17 @@ function renderSchedRows(force){
     return;
   }
   const rows=fxSort();
-  body.innerHTML= rows.length? rows.map(f=>`<tr data-id="${f.id}">${FX_FIELDS.map(([k])=>`<td>${k==="desc"||k==="notes"?`<textarea data-f="${k}" rows="1">${esc(f[k]||"")}</textarea>`:`<input data-f="${k}" value="${esc(f[k]||"")}">`}</td>`).join("")}
+  body.innerHTML= rows.length? rows.map(f=>`<tr data-id="${f.id}">${FX_FIELDS.map(([k])=>`<td>${FX_SHORT.has(k)?`<input data-f="${k}" value="${esc(f[k]||"")}">`:`<textarea data-f="${k}" rows="1">${esc(f[k]||"")}</textarea>`}</td>`).join("")}
     <td><select data-f="sym"><option value="">—</option>${SYMS.map(s=>`<option value="${s.id}" ${s.id===f.sym?"selected":""}>${s.name}</option>`).join("")}</select></td>
     <td class="num" data-qty>${fxQty(f.id)}</td><td class="num" data-tags>${tagRange(f.id)}</td>
     <td><button class="btn sm warn" data-del title="Delete type ${esc(f.mark)}">✕</button></td></tr>`).join("")
     : `<tr><td colspan="13" class="empty" style="padding:14px">No fixture types yet. Add a type mark to start the schedule.</td></tr>`;
   body.querySelectorAll("[data-f]").forEach(inp=>{
     const ev= inp.tagName==="SELECT"? "change" : "input";
+    if(inp.tagName==="TEXTAREA") inp.addEventListener("input",()=>autoGrow(inp));
     inp.addEventListener(ev,()=>{ const f=fxById(inp.closest("tr").dataset.id); if(!f) return; let v=inp.value; if(inp.dataset.f==="mark") v=v.trim().toUpperCase().slice(0,4); f[inp.dataset.f]=v; render(); renderFxSummary(); renderInspector(); scheduleFlush(); });
   });
+  requestAnimationFrame(()=>body.querySelectorAll("textarea").forEach(autoGrow));
   body.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
     const id=b.closest("tr").dataset.id; commit();
     S.fixtures=S.fixtures.filter(f=>f.id!==id); S.items.forEach(i=>{ if(i.fx===id){ i.fx=""; i.num=0; } }); changed(); renderSchedRows(true);
