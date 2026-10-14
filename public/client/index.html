@@ -134,6 +134,8 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 .gate .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:24px;width:min(440px,100%);display:grid;gap:12px}
 .gate h1{font-family:var(--display);font-size:26px;margin:0;text-transform:uppercase;letter-spacing:.03em}
 .gate .eyebrow{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.pw{display:flex;gap:6px;align-items:stretch}
+.pw input{flex:1}
 .gate .msg{color:var(--warn);font-size:13px;min-height:1em;margin:0}
 .dash{height:100%;overflow:auto;padding:28px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
 .dash .wrap{max-width:980px;margin:0 auto;display:grid;gap:22px}
@@ -189,7 +191,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
     <div class="eyebrow">Sireneum Designs</div>
     <h1 id="gateTitle">Project plans</h1>
     <p class="empty" id="gateText">Enter the passcode Sireneum Designs gave you. This browser remembers it.</p>
-    <label class="f">Passcode<input id="gatePass" type="password" autocomplete="current-password" required></label>
+    <label class="f"><span id="gateLabel">Passcode</span><span class="pw"><input id="gatePass" type="password" autocomplete="current-password" required><button type="button" class="btn" id="gateShow" aria-pressed="false" aria-controls="gatePass">Show</button></span></label>
     <p class="msg" id="gateMsg"></p>
     <button class="btn primary" type="submit">Open plans</button>
     <p class="copy" style="margin:6px 0 0">© 2026 Sireneum Designs. All rights reserved.</p>
@@ -440,6 +442,7 @@ async function api(path,{method="GET",body,key,raw,type}={}){
 }
 
 /* ---------- routing ---------- */
+$("gateShow").addEventListener("click",()=>{ const i=$("gatePass"), show=i.type==="password"; i.type=show?"text":"password"; $("gateShow").textContent=show?"Hide":"Show"; $("gateShow").setAttribute("aria-pressed",String(show)); i.focus(); });
 const parts=location.pathname.replace(/^\/client\/?/,"").split("/").filter(Boolean);
 const SLUG=(parts[0]||"").toLowerCase();
 let KEY="", ROLE="";
