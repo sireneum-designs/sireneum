@@ -2,6 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
+# Client plan tool: sireneum.com/client/<project> (data via netlify/functions/client-plans.mts)
+[[redirects]]
+  from = "/client/*"
+  to = "/client/index.html"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

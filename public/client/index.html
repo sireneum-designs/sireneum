@@ -1,0 +1,1661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Client Plans — Sireneum Designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: drafting desk — symbol drawer left, sheet center, inspector & sheet setup right; stacks on phones */
+:root{
+  --bg:#e9ecef; --panel:#f7f8f9; --line:#cfd5db; --fg:#1b2229; --muted:#5d6874;
+  --ink:#1d47b8; --ink-soft:#dfe7fb; --warn:#b4471d; --ok:#2f7d4f; --desk:#d7dce1; --paper:#ffffff; --on-ink:#ffffff;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14181d; --panel:#1b2026; --line:#2e363f; --fg:#e4e8ec; --muted:#97a2ae;
+  --ink:#7ea2ff; --ink-soft:#22304f; --warn:#f08a5d; --ok:#6fcf97; --desk:#0f1216; --paper:#ffffff; --on-ink:#0b1430; color-scheme:dark}}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;margin:0;overflow:hidden}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--ink)}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;grid-template-columns:236px minmax(0,1fr) 300px;grid-template-areas:"top top top" "pal cv side"}
+header{grid-area:top;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px max(16px,env(safe-area-inset-right,0px)) 9px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap;margin-right:auto}
+.brand h1{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.02em;margin:0;text-transform:uppercase;white-space:nowrap}
+.brand .proj{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34ch}
+.sheetpick{display:flex;align-items:center;gap:6px}
+.sheetpick select{border:1px solid var(--ink);background:var(--ink-soft);border-radius:4px;padding:6px 8px;font-weight:600;max-width:320px}
+.chip{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted);white-space:nowrap}
+.chip.live{color:var(--ok);border-color:currentColor}
+.chip.err{color:var(--warn);border-color:currentColor}
+.btn{border:1px solid var(--line);background:transparent;border-radius:4px;padding:6px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.2;white-space:nowrap;text-decoration:none;color:inherit}
+.btn:hover{border-color:var(--ink)}
+.btn:focus-visible,.tile:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.btn.on{background:var(--ink-soft);border-color:var(--ink);color:var(--fg)}
+.btn.warn{color:var(--warn)}
+.btn.sm{padding:3px 8px;font-size:12.5px}
+.btn[disabled]{opacity:.45;cursor:default}
+.pal{grid-area:pal;overflow:auto;border-right:1px solid var(--line);background:var(--panel);padding:12px 12px 24px}
+.pal h2,.side h2{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+.pal h2:first-child{margin-top:2px}
+.hint{font-size:12px;color:var(--muted);line-height:1.4;margin:0 0 4px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tile{border:1px solid var(--line);border-radius:4px;background:var(--paper);color:#1d47b8;cursor:grab;padding:4px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;touch-action:none;user-select:none}
+.tile svg{width:38px;height:38px;overflow:visible}
+.tile span{font-size:10.5px;line-height:1.15;color:#3a444e;text-align:center}
+.tile:hover{border-color:var(--ink)}
+.tile.armed{outline:2px solid var(--ink);outline-offset:1px;background:#eef3ff}
+.tile .sh{font-size:9px;color:#2f7d4f;letter-spacing:.04em;text-transform:uppercase}
+.copy{font-size:11.5px;color:var(--muted);margin-top:22px;line-height:1.5}
+.cvwrap{grid-area:cv;position:relative;min-width:0;min-height:0;display:grid;grid-template-rows:auto 1fr}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+.tools .sep{width:1px;height:22px;background:var(--line);margin:0 3px}
+.tools .seg{display:inline-flex}
+.tools .seg .btn{border-radius:0}
+.tools .seg .btn:first-child{border-radius:4px 0 0 4px}
+.tools .seg .btn:last-child{border-radius:0 4px 4px 0}
+.tools .seg .btn+.btn{border-left:none}
+.stage{position:relative;overflow:hidden;background:var(--desk);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:24px 24px;touch-action:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#cv.panning{cursor:grabbing}
+#cv.placing{cursor:copy}
+#cv.wiring,#cv.measuring{cursor:crosshair}
+#cv.texting{cursor:text}
+.status{position:absolute;left:10px;bottom:10px;font-family:var(--mono);font-size:11.5px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 8px;color:var(--muted);pointer-events:none;max-width:calc(100% - 20px)}
+.banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--warn);color:var(--fg);border-radius:6px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 28px);font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.empty-stage{position:absolute;inset:0;display:grid;place-items:center;padding:20px}
+.empty-stage .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px;max-width:440px;display:grid;gap:10px}
+.empty-stage h3{font-family:var(--display);font-size:20px;margin:0;text-transform:uppercase}
+.ghost{position:fixed;pointer-events:none;z-index:50;width:44px;height:44px;margin:-22px 0 0 -22px;color:#1d47b8;opacity:.85}
+.side{grid-area:side;overflow:auto;border-left:1px solid var(--line);background:var(--panel);padding:6px 14px 28px}
+.side details{border-bottom:1px solid var(--line);padding:4px 0 10px}
+.side summary{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 0 6px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.side summary::-webkit-details-marker{display:none}
+.side summary::after{content:"+";font-family:var(--mono);font-size:14px}
+.side details[open] summary::after{content:"–"}
+label.f{display:grid;gap:3px;font-size:12px;color:var(--muted);margin-bottom:8px;min-width:0}
+label.f input,label.f textarea,label.f select,.inp{border:1px solid var(--line);background:var(--bg);border-radius:4px;padding:6px 8px;color:var(--fg);width:100%;min-width:0}
+label.f textarea,textarea.inp{resize:vertical;min-height:44px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.legend{display:grid;gap:4px}
+.li{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;font-size:13px}
+.li svg{width:28px;height:28px;background:var(--paper);border-radius:3px;color:#1d47b8;overflow:visible}
+.ct{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{font-size:12.5px;color:var(--muted);line-height:1.45;margin:4px 0 8px}
+.range{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:8px}
+.range input{grid-column:1/-1;width:100%}
+.range output{font-family:var(--mono);font-size:11.5px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px}
+.kbd{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7}
+.kbd b{font-weight:500;color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:0 4px;background:var(--bg)}
+.nlist{display:grid;gap:6px;margin-bottom:8px}
+.nrow{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px;align-items:start}
+.nrow .n{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:7px;text-align:right}
+.nrow .acts{display:flex;flex-direction:column;gap:2px}
+.nrow .acts button{border:1px solid var(--line);background:transparent;border-radius:3px;font-size:11px;width:24px;height:20px;padding:0;cursor:pointer;color:var(--muted)}
+.fxrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13px;padding:3px 0}
+.mark{font-family:var(--mono);font-weight:500;font-size:12px;border:1.5px solid #1d47b8;color:#1d47b8;background:#fff;border-radius:999px;padding:0 7px;min-width:26px;text-align:center}
+.fxrow .d{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rev{display:grid;grid-template-columns:44px minmax(0,1fr) 84px 24px;gap:4px;margin-bottom:4px}
+.rev input{border:1px solid var(--line);background:var(--bg);border-radius:4px;padding:4px 6px;min-width:0}
+.rev button{border:1px solid var(--line);background:transparent;border-radius:3px;cursor:pointer;color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:60;background:rgba(10,14,18,.55);display:grid;place-items:center;padding:16px}
+.modal .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;width:min(1180px,100%);max-height:100%;overflow:auto;padding:16px;display:grid;gap:12px}
+.modal .card.narrow{width:min(500px,100%)}
+.modal h3{font-family:var(--display);font-size:19px;margin:0;text-transform:uppercase;letter-spacing:.04em}
+.modal img{max-width:100%;max-height:65vh;border:1px solid var(--line);background:#fff}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table.sched{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}
+table.sched th{font-family:var(--display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:12px;color:var(--muted);text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);background:var(--bg)}
+table.sched td{padding:4px;border-bottom:1px solid var(--line);vertical-align:top}
+table.sched td input,table.sched td textarea,table.sched td select{border:1px solid transparent;background:transparent;border-radius:3px;padding:5px 6px;width:100%;min-width:0;color:var(--fg)}
+table.sched td input:hover,table.sched td textarea:hover{border-color:var(--line)}
+table.sched td textarea{resize:vertical;min-height:32px}
+table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:center;padding-top:9px}
+.printdlg{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px;align-items:start}
+.pv{background:var(--desk);border:1px solid var(--line);border-radius:4px;padding:10px;display:grid;place-items:center;min-height:240px}
+.pv canvas{max-width:100%;height:auto;box-shadow:0 1px 6px rgba(0,0,0,.25);background:#fff}
+.warns{display:grid;gap:6px}
+.warns p{margin:0;font-size:12.5px;line-height:1.4;color:var(--warn);border-left:3px solid var(--warn);padding-left:8px}
+.warns p.ok{color:var(--ok);border-color:var(--ok)}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:4px;font-size:13px;z-index:70;max-width:90vw}
+/* login & dashboard */
+.gate{min-height:100%;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.gate .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:24px;width:min(440px,100%);display:grid;gap:12px}
+.gate h1{font-family:var(--display);font-size:26px;margin:0;text-transform:uppercase;letter-spacing:.03em}
+.gate .eyebrow{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.gate .msg{color:var(--warn);font-size:13px;min-height:1em;margin:0}
+.dash{height:100%;overflow:auto;padding:28px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+.dash .wrap{max-width:980px;margin:0 auto;display:grid;gap:22px}
+.dash h1{font-family:var(--display);font-size:30px;margin:0;text-transform:uppercase;letter-spacing:.03em}
+.dash h2{font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.plist{display:grid;gap:0;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:none}
+.prow .t{font-weight:600}
+.prow .s{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.newp{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:4px}
+.newp .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+@media (max-width:980px){
+  body{overflow:auto}
+  .app{height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto;grid-template-areas:"top" "cv" "pal" "side"}
+  .cvwrap{height:68vh}
+  .pal,.side{border:none;border-top:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}
+  .printdlg{grid-template-columns:minmax(0,1fr)}
+  .prow{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ── studio dashboard (sireneum.com/client/) ── -->
+<div id="dash" class="dash" hidden>
+  <div class="wrap">
+    <div><div class="eyebrow" style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em">SIRENEUM DESIGNS · STUDIO</div><h1>Client plans</h1></div>
+    <section><h2>Projects</h2><div class="plist" id="plist"><p class="empty" style="padding:12px 14px">Loading…</p></div></section>
+    <section class="newp">
+      <h2>New project</h2>
+      <div class="g">
+        <label class="f">Project address<input id="np_slug" placeholder="pangrazio" autocomplete="off"></label>
+        <label class="f">Project name<input id="np_name" placeholder="Single Family Residence"></label>
+        <label class="f">Client<input id="np_client" placeholder="Client name"></label>
+        <label class="f">Site address<input id="np_addr" placeholder="Street, city, state"></label>
+        <label class="f">Project no.<input id="np_projno"></label>
+        <label class="f">Client passcode<input id="np_pass" autocomplete="off"></label>
+      </div>
+      <p class="empty">The client opens <b id="np_url">sireneum.com/client/…</b> and enters the passcode once per browser. Write the passcode down — it can be reset but not read back.</p>
+      <div class="row"><button class="btn primary" id="np_go">Create project</button><span class="msg" id="np_msg" style="color:var(--warn);font-size:13px"></span></div>
+    </section>
+    <div class="row"><button class="btn sm" id="dashOut">Sign out of studio</button></div>
+    <p class="copy">© 2026 Sireneum Designs. All rights reserved.</p>
+  </div>
+</div>
+
+<!-- ── passcode gate ── -->
+<div id="gate" class="gate" hidden>
+  <form class="card" id="gateForm">
+    <div class="eyebrow">Sireneum Designs</div>
+    <h1 id="gateTitle">Project plans</h1>
+    <p class="empty" id="gateText">Enter the passcode Sireneum Designs gave you. This browser remembers it.</p>
+    <label class="f">Passcode<input id="gatePass" type="password" autocomplete="current-password" required></label>
+    <p class="msg" id="gateMsg"></p>
+    <button class="btn primary" type="submit">Open plans</button>
+    <p class="copy" style="margin:6px 0 0">© 2026 Sireneum Designs. All rights reserved.</p>
+  </form>
+</div>
+
+<!-- ── plan tool ── -->
+<div class="app" id="app" hidden>
+  <header>
+    <div class="brand"><h1>Plans</h1><span class="proj" id="hdrProj"></span><span class="chip" id="sync">Loading…</span></div>
+    <div class="sheetpick">
+      <label for="sheetSel" class="ct">Sheet</label>
+      <select id="sheetSel"></select>
+      <button class="btn sm" id="bSheetNew" title="Add a sheet">+ Sheet</button>
+      <button class="btn sm" id="bSheetEdit" title="Rename, renumber or delete this sheet">Edit sheet</button>
+    </div>
+    <button class="btn" id="bRefresh" title="Load the latest changes from others">Refresh</button>
+    <button class="btn primary" id="bPrint">Print / Export…</button>
+    <input type="file" id="fPlan" accept="image/png,image/jpeg,application/pdf" hidden>
+    <input type="file" id="fProj" accept=".json,application/json" hidden>
+  </header>
+
+  <aside class="pal" id="pal" aria-label="Symbols"></aside>
+
+  <div class="cvwrap">
+    <div class="tools" role="toolbar" aria-label="Drawing tools">
+      <button class="btn on" id="tSel" title="Select and move (V)">Select</button>
+      <span class="seg">
+        <button class="btn" id="tW_switch" title="Switch legs between symbols (L)">Switch leg</button>
+        <button class="btn" id="tW_circuit" title="Circuit runs between symbols">Circuit</button>
+        <button class="btn" id="tW_home" title="Home run toward the panel">Home run</button>
+      </span>
+      <button class="btn" id="tText" title="Place a text note (T)">Note</button>
+      <button class="btn" id="tDim" title="Dimension, marked VIF (D)">Dimension</button>
+      <span class="sep"></span>
+      <button class="btn" id="bRot" title="Rotate selection 45° (R)">Rotate</button>
+      <button class="btn" id="bDup" title="Duplicate (Ctrl+D)">Duplicate</button>
+      <button class="btn warn" id="bDel" title="Delete (Del)">Delete</button>
+      <span class="sep"></span>
+      <button class="btn" id="bUndo" title="Undo (Ctrl+Z)">Undo</button>
+      <button class="btn" id="bRedo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+      <span class="sep"></span>
+      <button class="btn" id="bZo" title="Zoom out">−</button>
+      <button class="btn" id="bZi" title="Zoom in">+</button>
+      <button class="btn" id="bFit" title="Fit drawing to view">Fit</button>
+    </div>
+    <div class="stage" id="stage">
+      <svg id="cv" xmlns="http://www.w3.org/2000/svg">
+        <g id="view">
+          <rect id="paper" fill="#fff"></rect>
+          <image id="baseImg" preserveAspectRatio="none"></image>
+          <g id="gWires"></g><g id="gDims"></g><g id="gItems"></g><g id="gNotes"></g><g id="gRef"></g><g id="gSel"></g>
+          <path id="rubber" fill="none" stroke="#e0661f" stroke-dasharray="6 5" visibility="hidden"></path>
+        </g>
+      </svg>
+      <div class="banner" id="banner" hidden></div>
+      <div class="empty-stage" id="noSheets" hidden><div class="card"><h3>No sheets yet</h3><p class="empty">Start with a floor plan. Upload an image or PDF page, set its scale, and place symbols on it. Add more sheets — a reflected ceiling plan, for instance — that share the same light fixtures.</p><button class="btn primary" id="bFirstSheet">Add the first sheet</button></div></div>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <details open><summary>Selection</summary><div id="inspBody"></div></details>
+    <details open><summary>Fixture schedule</summary>
+      <div id="fxSummary"></div>
+      <div class="row"><button class="btn sm" id="bSched">Edit schedule…</button><button class="btn sm" id="bAddFx">Add type mark</button></div>
+    </details>
+    <details><summary>Sheet notes</summary>
+      <p class="empty">Numbered general notes for this sheet.</p>
+      <div class="nlist" id="notesList"></div>
+      <button class="btn sm" id="bAddNote">Add note</button>
+    </details>
+    <details><summary>Legend</summary><div class="legend" id="legend"></div></details>
+    <details id="dScale"><summary>Drawing &amp; alignment</summary>
+      <p class="empty" id="scaleInfo"></p>
+      <div class="row" style="margin-bottom:8px"><button class="btn sm" id="tCal">Set scale</button><button class="btn sm" id="tRef">Mark reference point</button><button class="btn sm" id="tAlign">Align to reference</button></div>
+      <p class="empty">Fixtures sit at one real position shared by every sheet. Mark a reference point (a building corner, say) once, then on each other sheet click the same corner with “Align to reference”.</p>
+      <div class="row"><button class="btn sm" id="bPlan">Replace this sheet’s drawing…</button></div>
+    </details>
+    <details><summary>Title block</summary>
+      <p class="empty">Shared by every sheet in this project. Sheet number and title are set with Edit sheet.</p>
+      <label class="f">Project<input data-m="tb.project"></label>
+      <label class="f">Project address<input data-m="tb.addr"></label>
+      <label class="f">Client<input data-m="tb.client"></label>
+      <div class="row2">
+        <label class="f">Project no.<input data-m="tb.projno"></label>
+        <label class="f">Date<input data-m="tb.date"></label>
+        <label class="f">Phase / issue<input data-m="tb.issue"></label>
+        <label class="f">Drawn by<input data-m="tb.drawn"></label>
+        <label class="f">Checked by<input data-m="tb.checked"></label>
+      </div>
+      <h2>Revisions</h2>
+      <div id="revList"></div>
+      <button class="btn sm" id="bAddRev">Add revision</button>
+      <h2>Firm</h2>
+      <label class="f">Firm name<input data-m="firm.name"></label>
+      <label class="f">Address<input data-m="firm.addr1" placeholder="Street"></label>
+      <label class="f">City, state, zip<input data-m="firm.addr2"></label>
+      <div class="row2">
+        <label class="f">Phone<input data-m="firm.phone"></label>
+        <label class="f">Web<input data-m="firm.web"></label>
+      </div>
+      <label class="f">Email<input data-m="firm.email"></label>
+    </details>
+    <details><summary>Display</summary>
+      <div class="range"><span>Symbol size</span><output id="oSym"></output><input type="range" id="rSym" min="40" max="250" step="5"></div>
+      <div class="range"><span>Drawing strength</span><output id="oOp"></output><input type="range" id="rOp" min="15" max="100" step="5"></div>
+      <label class="chk"><input type="checkbox" id="cTagNo"> Show tag numbers (A1, A2…)</label>
+      <label class="chk"><input type="checkbox" id="cLive"> Live updates (check for others’ changes every few seconds)</label>
+    </details>
+    <details id="dProject"><summary>Project</summary>
+      <div class="row" style="margin-bottom:8px"><button class="btn sm" id="bBackup">Download backup</button><button class="btn sm" id="bImport" hidden>Import backup…</button></div>
+      <div id="adminBox" hidden>
+        <p class="empty">Studio only: set a new client passcode for this project.</p>
+        <div class="row"><input class="inp" id="newPass" style="flex:1" placeholder="New passcode (8+ characters)"><button class="btn sm" id="bSetPass">Set</button></div>
+        <p class="empty"><a href="/client/">All client projects</a></p>
+      </div>
+      <button class="btn sm" id="bSignOut" style="margin-top:6px">Sign out on this browser</button>
+    </details>
+    <details><summary>Start over</summary>
+      <p class="empty">Removes every symbol, run, dimension and note on this sheet, including shared fixtures shown here. Undo brings them back.</p>
+      <button class="btn warn" id="bClear">Clear this sheet</button>
+    </details>
+    <details><summary>Keys</summary>
+      <div class="kbd"><b>V</b> select · <b>L</b> switch leg · <b>T</b> note · <b>D</b> dimension · <b>R</b> rotate · <b>Del</b> delete · <b>Ctrl+D</b> duplicate · <b>Ctrl+Z</b> undo · arrows nudge · <b>Shift</b> keeps a line square · <b>Esc</b> stop · scroll to zoom · drag empty space to pan</div>
+    </details>
+    <p class="copy">© 2026 Sireneum Designs. All rights reserved.</p>
+  </aside>
+</div>
+<div id="ghost" class="ghost" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const INK = "#1d47b8";
+const COLS = ["items","wires","notes","dims","fixtures"];      // undoable, per-object synced
+const SYNC = ["sheets",...COLS];                               // per-object synced
+const API = "/api/client/";
+
+/* ---------- symbol library (unit box -20..20) ---------- */
+const W = 'fill="#fff"';
+const T = (x,y,s,size,anchor) => `<text x="${x}" y="${y}" font-size="${size}" font-family="Arial,Helvetica,sans-serif" font-weight="700" text-anchor="${anchor||'middle'}" fill="currentColor" stroke="none">${s}</text>`;
+const ticks = 'M0-11V-18M0 11V18M-11 0H-18M11 0H18';
+const duplex = `<path d="M-4.5-16V16M4.5-16V16"/><circle r="9" ${W}/><path d="M-4.5-9V9M4.5-9V9" stroke-width="2"/>`;
+const sw = (sub)=> T(sub?-3:0,7,"S",21) + (sub? T(4,12,sub,sub.length>1?9:11,'start'):"");
+const blades = '<path d="M0-4C-5-9-4-17 0-18C4-17 5-9 0-4Z M0 4C5 9 4 17 0 18C-4 17-5 9 0 4Z M-4 0C-9 5-17 4-18 0C-17-4-9-5-4 0Z M4 0C9-5 17-4 18 0C17 4 9 5 4 0Z" '+W+'/>';
+const SYMS = [
+ {id:"ceil",cat:"Lighting",name:"Ceiling light",svg:`<path d="${ticks}"/><circle r="11" ${W}/>`},
+ {id:"recessed",cat:"Lighting",name:"Recessed can",svg:`<circle r="11" ${W}/><circle r="5" fill="currentColor"/>`},
+ {id:"pendant",cat:"Lighting",name:"Pendant",svg:`<circle r="11" ${W}/>${T(0,5,"P",13)}`},
+ {id:"sconce",cat:"Lighting",name:"Wall sconce",svg:`<path d="M-15-7H15"/><path d="M-10-7A10 10 0 0 0 10-7Z" ${W}/><path d="M0 3V9"/>`},
+ {id:"linear",cat:"Lighting",name:"Linear / LED strip",svg:`<rect x="-20" y="-6" width="40" height="12" ${W}/><circle r="3.4" fill="currentColor"/>`},
+ {id:"undercab",cat:"Lighting",name:"Under-cabinet",svg:`<rect x="-20" y="-4" width="40" height="8" ${W}/><path d="M-15 4L-8-4M-6 4L1-4M3 4L10-4M12 4L18-3" stroke-width="1.6"/>`},
+ {id:"track",cat:"Lighting",name:"Track light",svg:`<path d="M-20 0H20" stroke-width="2.6"/><circle cx="-12" r="4" ${W}/><circle r="4" ${W}/><circle cx="12" r="4" ${W}/>`},
+ {id:"exterior",cat:"Lighting",name:"Exterior light (WP)",svg:`<path d="${ticks}"/><circle r="11" ${W}/>${T(0,4,"WP",9)}`},
+ {id:"flood",cat:"Lighting",name:"Flood w/ motion",svg:`<path d="M-11 6L0-12L11 6Z" ${W}/><path d="M-6-12L-11-17M6-12L11-17M0-13V-19"/>${T(0,4,"M",8)}`},
+ {id:"fan",cat:"Lighting",name:"Ceiling fan",svg:`${blades}<circle r="4" ${W}/>`},
+ {id:"fanlight",cat:"Lighting",name:"Fan w/ light kit",svg:`${blades}<circle r="6" ${W}/><circle r="3" fill="currentColor"/>`},
+ {id:"exhaust",cat:"Lighting",name:"Exhaust fan",svg:`<rect x="-12" y="-12" width="24" height="24" ${W}/>${T(0,4,"EF",10)}`},
+ {id:"s1",cat:"Switches",name:"Single-pole switch",svg:sw("")},
+ {id:"s3",cat:"Switches",name:"3-way switch",svg:sw("3")},
+ {id:"s4",cat:"Switches",name:"4-way switch",svg:sw("4")},
+ {id:"sd",cat:"Switches",name:"Dimmer",svg:sw("D")},
+ {id:"sos",cat:"Switches",name:"Occupancy / vacancy",svg:sw("OS")},
+ {id:"sf",cat:"Switches",name:"Fan speed control",svg:sw("F")},
+ {id:"duplex",cat:"Receptacles",name:"Duplex receptacle",svg:duplex},
+ {id:"gfci",cat:"Receptacles",name:"GFCI receptacle",svg:duplex+T(11,-11,"GFI",8,'start')},
+ {id:"wp",cat:"Receptacles",name:"WP GFCI receptacle",svg:duplex+T(11,-11,"WP",8,'start')},
+ {id:"half",cat:"Receptacles",name:"Switched (half-hot)",svg:`<path d="M-4.5-16V16M4.5-16V16"/><circle r="9" ${W}/><path d="M0-9A9 9 0 0 1 0 9Z" fill="currentColor"/><path d="M-4.5-9V9" stroke-width="2"/>`},
+ {id:"quad",cat:"Receptacles",name:"Quad receptacle",svg:`<path d="M-4.5-16V16M4.5-16V16M-16-4.5H16M-16 4.5H16"/><circle r="9" ${W}/>`},
+ {id:"usb",cat:"Receptacles",name:"USB receptacle",svg:duplex+T(11,-11,"USB",8,'start')},
+ {id:"r240",cat:"Receptacles",name:"240V receptacle",svg:`<path d="M-6-16V16M0-16V16M6-16V16"/><circle r="10" ${W}/><path d="M-5-7L5-7L0 6Z" fill="currentColor"/>${T(12,-11,"240V",8,'start')}`},
+ {id:"floor",cat:"Receptacles",name:"Floor receptacle",svg:`<rect x="-14" y="-14" width="28" height="28" ${W}/><circle r="7" fill="none"/><path d="M-3.5-7V7M3.5-7V7" stroke-width="1.8"/>`},
+ {id:"smoke",cat:"Signal & safety",name:"Smoke detector",svg:`<circle r="12" ${W}/>${T(0,4.5,"SD",11)}`},
+ {id:"co",cat:"Signal & safety",name:"CO detector",svg:`<circle r="12" ${W}/>${T(0,4.5,"CO",11)}`},
+ {id:"smokeco",cat:"Signal & safety",name:"Smoke / CO combo",svg:`<circle r="13" ${W}/>${T(0,3.5,"S/CO",8)}`},
+ {id:"thermo",cat:"Signal & safety",name:"Thermostat",svg:`<circle r="11" ${W}/>${T(0,5.5,"T",14)}`},
+ {id:"chime",cat:"Signal & safety",name:"Door chime",svg:`<rect x="-13" y="-9" width="26" height="18" ${W}/>${T(0,4,"CH",10)}`},
+ {id:"bell",cat:"Signal & safety",name:"Doorbell button",svg:`<rect x="-8" y="-8" width="16" height="16" ${W}/><circle r="3.5" fill="currentColor"/>`},
+ {id:"data",cat:"Signal & safety",name:"Data / phone",svg:`<path d="M-11 9L0-11L11 9Z" fill="currentColor"/>`},
+ {id:"tv",cat:"Signal & safety",name:"TV / coax",svg:`<path d="M-11 9L0-11L11 9Z" ${W}/>${T(0,6,"TV",8)}`},
+ {id:"gdo",cat:"Signal & safety",name:"Garage door opener",svg:`<rect x="-14" y="-9" width="28" height="18" ${W}/>${T(0,4,"GDO",9)}`},
+ {id:"jbox",cat:"Power",name:"Junction box",svg:`<circle r="11" ${W}/>${T(0,5,"J",13)}`},
+ {id:"panel",cat:"Power",name:"Panelboard",svg:`<rect x="-20" y="-7" width="40" height="14" ${W}/><path d="M-20 7L20-7V7Z" fill="currentColor"/>`},
+ {id:"disc",cat:"Power",name:"Disconnect",svg:`<rect x="-12" y="-12" width="24" height="24" ${W}/><path d="M-12 12L12-12"/>`},
+ {id:"ev",cat:"Power",name:"EV charger",svg:`<rect x="-14" y="-10" width="28" height="20" ${W}/>${T(0,4.5,"EV",11)}`},
+];
+const SYM = Object.fromEntries(SYMS.map(s=>[s.id,s]));
+const CATS = ["Lighting","Switches","Receptacles","Signal & safety","Power"];
+// Ceiling-mounted devices are shared: one real position, shown on every sheet (plan and RCP).
+const SHARED_DEFAULT = new Set(["ceil","recessed","pendant","linear","track","exterior","flood","fan","fanlight","exhaust","smoke","co","smokeco"]);
+const WIRES = {switch:{name:"Switch leg",dash:true,arrow:false},circuit:{name:"Circuit",dash:false,arrow:false},home:{name:"Home run to panel",dash:false,arrow:true}};
+const SHEETS = {
+  A:{name:"ARCH A — 12 × 9",w:12,h:9}, B:{name:"ARCH B — 18 × 12",w:18,h:12}, C:{name:"ARCH C — 24 × 18",w:24,h:18},
+  D:{name:"ARCH D — 36 × 24",w:36,h:24}, E1:{name:"ARCH E1 — 42 × 30",w:42,h:30}, E:{name:"ARCH E — 48 × 36",w:48,h:36},
+  T:{name:"Tabloid — 17 × 11 (half-size)",w:17,h:11}
+};
+const SCALES = [["1/8",.125],["3/16",.1875],["1/4",.25],["3/8",.375],["1/2",.5],["3/4",.75],["1",1],["fit",0]];
+const scaleLabel = k => k==="fit"? "NOT TO SCALE" : `${k}" = 1'-0"`;
+const symGroup = (id, extra) => `<g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${SYM[id].svg}${extra||""}</g>`;
+const iconSVG = id => `<svg viewBox="-24 -24 48 48" aria-hidden="true">${symGroup(id)}</svg>`;
+const DEFAULT_NOTES = {
+  plan:[
+    "Lighting and electrical layout shows design intent only. Circuiting, load calculations, conductor sizing and code compliance by the licensed electrical contractor.",
+    "Final device and fixture locations to be coordinated in the field with the owner and contractor.",
+    "Dimensions marked VIF are approximate and shall be verified in field before rough-in.",
+    "Provide GFCI and AFCI protection where required by code.",
+    "Smoke and CO alarms to be hardwired, interconnected, with battery backup.",
+    "Fixture tags (e.g. A1) refer to the lighting fixture schedule."
+  ],
+  rcp:[
+    "Reflected ceiling plan: fixtures shown in true plan position, as seen looking up.",
+    "Coordinate fixture locations with roof framing; adjust to clear beams and maintain manufacturer clearances. Report conflicts to the designer before rough-in.",
+    "Dimensions marked VIF are approximate and shall be verified in field.",
+    "Fixture tags (e.g. A1) refer to the lighting fixture schedule."
+  ]
+};
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const uid = () => Date.now().toString(36).slice(-4)+Math.random().toString(36).slice(2,8);
+const today = () => { const d=new Date(); return (d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear(); };
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+function canon(v){
+  if(v===null||typeof v!=="object") return JSON.stringify(v===undefined?null:v);
+  if(Array.isArray(v)) return "["+v.map(canon).join(",")+"]";
+  return "{"+Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+":"+canon(v[k])).join(",")+"}";
+}
+const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(k); return v===null?d:v; }catch(e){ return d; } };
+const lsSet=(k,v)=>{ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} };
+function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),3600); }
+function modal(html,narrow){
+  const m=document.createElement("div"); m.className="modal"; m.innerHTML=`<div class="card${narrow?" narrow":""}">${html}</div>`;
+  m.addEventListener("pointerdown",e=>{ if(e.target===m) m.remove(); });
+  document.body.appendChild(m); return m;
+}
+function genPass(){ const a="abcdefghjkmnpqrstuvwxyz23456789"; const r=crypto.getRandomValues(new Uint8Array(12)); let s=""; r.forEach((b,i)=>{ s+=a[b%a.length]; if(i===3||i===7) s+="-"; }); return s; }
+async function api(path,{method="GET",body,key,raw,type}={}){
+  const h={"x-plan-key":key||""}; let b=body;
+  if(body!==undefined&&!raw){ h["content-type"]="application/json"; b=JSON.stringify(body); }
+  if(raw&&type) h["content-type"]=type;
+  const r=await fetch(API+path,{method,headers:h,body:b,cache:"no-store"});
+  if(raw===true&&method==="GET"){ if(!r.ok) throw Object.assign(new Error("Couldn't load a drawing."),{status:r.status}); return r.blob(); }
+  let data={}; try{ data=await r.json(); }catch(e){}
+  if(!r.ok) throw Object.assign(new Error(data.error||("Request failed ("+r.status+")")),{status:r.status});
+  return data;
+}
+
+/* ---------- routing ---------- */
+const parts=location.pathname.replace(/^\/client\/?/,"").split("/").filter(Boolean);
+const SLUG=(parts[0]||"").toLowerCase();
+let KEY="", ROLE="";
+if(!SLUG) bootDash(); else bootProject();
+
+/* ================= studio dashboard ================= */
+async function bootDash(){
+  document.title="Client plans — Sireneum Designs";
+  let key=lsGet("pos-admin","");
+  const ask=(msg)=>{
+    $("gate").hidden=false; $("dash").hidden=true;
+    $("gateTitle").textContent="Studio sign-in"; $("gateText").textContent="Enter the studio admin key to manage client projects."; $("gateMsg").textContent=msg||"";
+    $("gateForm").onsubmit=async e=>{ e.preventDefault(); key=$("gatePass").value.trim(); try{ await api("_projects",{key}); lsSet("pos-admin",key); show(); }catch(err){ $("gateMsg").textContent= err.status===401? "That key isn't right." : err.message; } };
+    $("gatePass").focus();
+  };
+  const show=async()=>{
+    $("gate").hidden=true; $("dash").hidden=false;
+    try{
+      const {projects}=await api("_projects",{key});
+      $("plist").innerHTML= projects.length? projects.map(p=>`<div class="prow"><div><div class="t">${esc(p.name)}${p.client?` · ${esc(p.client)}`:""}</div><div class="s">sireneum.com/client/${esc(p.slug)} · ${p.sheets} sheet${p.sheets===1?"":"s"} · updated ${esc(new Date(p.updated).toLocaleDateString())}</div></div><a class="btn sm" href="/client/${esc(p.slug)}">Open</a><button class="btn sm" data-copy="${esc(p.slug)}">Copy link</button></div>`).join("")
+        : `<p class="empty" style="padding:12px 14px">No projects yet. Create the first one below.</p>`;
+      $("plist").querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyText("https://sireneum.com/client/"+b.dataset.copy));
+    }catch(err){ if(err.status===401){ lsSet("pos-admin",null); ask("Sign in again."); } else $("plist").innerHTML=`<p class="empty" style="padding:12px 14px">${esc(err.message)}</p>`; }
+  };
+  $("np_pass").value=genPass();
+  $("np_slug").oninput=()=>{ const v=$("np_slug").value.toLowerCase().replace(/[^a-z0-9-]+/g,"-"); $("np_slug").value=v; $("np_url").textContent="sireneum.com/client/"+(v||"…"); };
+  $("np_go").onclick=async()=>{
+    const b={slug:$("np_slug").value.trim(),name:$("np_name").value.trim(),client:$("np_client").value.trim(),addr:$("np_addr").value.trim(),projno:$("np_projno").value.trim(),passcode:$("np_pass").value.trim()};
+    $("np_msg").textContent="";
+    try{ await api("_projects",{method:"POST",key,body:b});
+      const m=modal(`<h3>Project created</h3><p class="empty">Send your client the link and passcode.</p><label class="f">Link<input class="inp" readonly value="https://sireneum.com/client/${esc(b.slug)}"></label><label class="f">Passcode<input class="inp" readonly value="${esc(b.passcode)}"></label><div class="row"><a class="btn primary" href="/client/${esc(b.slug)}">Open project</a><button class="btn" data-x>Close</button></div>`,true);
+      m.querySelector("[data-x]").onclick=()=>m.remove();
+      ["np_slug","np_name","np_client","np_addr","np_projno"].forEach(i=>$(i).value=""); $("np_pass").value=genPass(); show();
+    }catch(err){ $("np_msg").textContent=err.message; }
+  };
+  $("dashOut").onclick=()=>{ lsSet("pos-admin",null); location.reload(); };
+  if(!key) ask(); else show();
+}
+function copyText(t){
+  const done=()=>toast("Copied.");
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(done,()=>fallback()); else fallback();
+  function fallback(){ const m=modal(`<h3>Copy</h3><input class="inp" readonly value="${esc(t)}"><div class="row"><button class="btn" data-x>Close</button></div>`,true); const i=m.querySelector("input"); i.focus(); i.select(); m.querySelector("[data-x]").onclick=()=>m.remove(); }
+}
+
+/* ================= project gate ================= */
+async function bootProject(){
+  const tryKey=async(k)=>{ const r=await api(SLUG+"/auth",{key:k}); KEY=k; ROLE=r.role; return true; };
+  const keys=[lsGet("pos-key-"+SLUG,""), lsGet("pos-admin","")].filter(Boolean);
+  for(const k of keys){ try{ if(await tryKey(k)) return startApp(); }catch(err){ if(err.status===404){ return notFound(); } } }
+  $("gate").hidden=false;
+  $("gateTitle").textContent="Project plans";
+  $("gateForm").onsubmit=async e=>{
+    e.preventDefault(); const k=$("gatePass").value.trim();
+    try{ await tryKey(k); if(ROLE!=="admin") lsSet("pos-key-"+SLUG,k); else lsSet("pos-admin",k); $("gate").hidden=true; startApp(); }
+    catch(err){ $("gateMsg").textContent= err.status===404? "There is no project at this address." : err.status===401? "That passcode isn't right." : err.message; }
+  };
+  $("gatePass").focus();
+}
+function notFound(){ $("gate").hidden=false; $("gateTitle").textContent="Not found"; $("gateText").textContent="There is no project at this address. Check the link Sireneum Designs sent you."; $("gateForm").querySelectorAll("label,button,.msg").forEach(e=>e.hidden=true); }
+
+/* ================= plan tool ================= */
+let S = {sheets:[],items:[],wires:[],notes:[],dims:[],fixtures:[],meta:null};
+let cur = "";                 // current sheet id
+let rev = 0;
+let sel = new Set();
+let tool = "select";          // select | wire | text | dim | cal | ref | align
+let wireKind = "switch", wireStart=null, pend=null, armed=null;
+let view = {x:0,y:0,z:1};
+const undoStack=[], redoStack=[];
+let lastMark={};
+let live = lsGet("pos-live","1")==="1";
+const synced={}; SYNC.forEach(c=>synced[c]={}); let metaSynced=null;
+
+const M = () => S.meta;
+const SH = () => S.sheets.find(s=>s.id===cur) || null;
+const BASE = () => (SH()&&SH().base) || null;
+const ppf = () => (BASE()&&BASE().ppf) || 0;
+const OX = () => (BASE()&&BASE().ox) || 0, OY = () => (BASE()&&BASE().oy) || 0;
+const size = () => 1.6*((SH()&&SH().display&&SH().display.symScale)||100)/100*(ppf()||20);   // symbol diameter in drawing px
+const X = o => OX()+o.x*ppf(), Y = o => OY()+o.y*ppf();
+const P = o => ({x:X(o),y:Y(o)});
+const toFt = p => ({x:(p.x-OX())/ppf(), y:(p.y-OY())/ppf()});
+const r3 = v => Math.round(v*1000)/1000;
+const itemById = id => S.items.find(i=>i.id===id);
+const fxById = id => S.fixtures.find(f=>f.id===id);
+const onSheet = o => !o.sheet || o.sheet===cur;
+const vis = c => S[c].filter(o=> c==="items"? onSheet(o) : o.sheet===cur);
+function findAny(id){ for(const c of COLS){ const o=S[c].find(x=>x.id===id); if(o) return {c,o}; } return null; }
+const sortedSheets = () => [...S.sheets].sort((a,b)=>(a.order||0)-(b.order||0)||String(a.no).localeCompare(String(b.no),undefined,{numeric:true}));
+
+/* ---------- undo (diff-based; only reverts what this person changed) ---------- */
+function snapAll(){ const s={}; for(const c of COLS){ s[c]={}; for(const o of S[c]) s[c][o.id]=canon(o); } return s; }
+function commit(){ if(undoStack.length) undoStack[undoStack.length-1].open=false; undoStack.push({before:snapAll(),after:null,open:true}); if(undoStack.length>150) undoStack.shift(); redoStack.length=0; }
+function recordAfter(){ const t=undoStack[undoStack.length-1]; if(t&&t.open) t.after=snapAll(); }
+function applySnap(target, other){
+  for(const c of COLS){
+    const ids=new Set([...Object.keys(target[c]),...Object.keys(other[c])]);
+    for(const id of ids){
+      if(target[c][id]===other[c][id]) continue;
+      const i=S[c].findIndex(x=>x.id===id);
+      if(target[c][id]===undefined){ if(i>=0) S[c].splice(i,1); }
+      else { const o=JSON.parse(target[c][id]); if(i>=0) S[c][i]=o; else S[c].push(o); }
+    }
+  }
+}
+function undo(){ const e=undoStack.pop(); if(!e) return; if(!e.after) e.after=snapAll(); e.open=false; applySnap(e.before,e.after); redoStack.push(e); sel.clear(); touch(); }
+function redo(){ const e=redoStack.pop(); if(!e) return; applySnap(e.after,e.before); undoStack.push(e); sel.clear(); touch(); }
+
+/* ---------- sync with sireneum.com ---------- */
+let flushT=null, flushing=false, flushAgain=false, pollT=null, syncState="ok";
+function setSync(state,msg){
+  syncState=state||syncState;
+  const c=$("sync");
+  c.className="chip"+(syncState==="ok"&&live?" live":"")+(syncState==="err"?" err":"");
+  c.textContent= syncState==="saving"? "Saving…" : syncState==="err"? "Not saved" : live? "Saved · live" : "Saved";
+  c.title= msg || (live? "Changes save to sireneum.com and others' changes appear within seconds." : "Changes save to sireneum.com. Click Refresh to see others' changes.");
+}
+function scheduleFlush(){ clearTimeout(flushT); flushT=setTimeout(flush,350); setSync("saving"); }
+async function flush(){
+  if(flushing){ flushAgain=true; return; }
+  flushing=true;
+  const ops=[], done=[];
+  for(const c of SYNC){
+    const lm={}; for(const o of S[c]) lm[o.id]=canon(o);
+    for(const id in lm) if(lm[id]!==synced[c][id]){ ops.push({c,id,v:clone(S[c].find(x=>x.id===id))}); done.push([c,id,lm[id]]); }
+    for(const id in synced[c]) if(!(id in lm)){ ops.push({c,id,v:null}); done.push([c,id,undefined]); }
+  }
+  const mj=canon(S.meta);
+  if(mj!==metaSynced){ ops.push({c:"meta",v:clone(S.meta)}); done.push(["meta",null,mj]); }
+  try{
+    if(ops.length){
+      for(let i=0;i<ops.length;i+=400) await api(SLUG+"/ops",{method:"POST",key:KEY,body:{ops:ops.slice(i,i+400)}});
+      for(const [c,id,j] of done){ if(c==="meta") metaSynced=j; else if(j===undefined) delete synced[c][id]; else synced[c][id]=j; }
+    }
+    setSync("ok");
+  }catch(err){
+    if(err.status===401){ setSync("err","Your passcode no longer works. Sign in again."); lsSet("pos-key-"+SLUG,null); toast("Your passcode no longer works. Reload and sign in again."); }
+    else { setSync("err",err.message); flushAgain=true; await new Promise(r=>setTimeout(r,2500+Math.random()*1500)); }
+  }finally{
+    flushing=false;
+    if(flushAgain){ flushAgain=false; flush(); }
+  }
+}
+function applyRemote(c, remoteMap){
+  const remote={}; for(const id in (remoteMap||{})) remote[id]={...remoteMap[id],id};
+  const lmObj={}; S[c].forEach(o=>lmObj[o.id]=o);
+  const ids=new Set([...Object.keys(remote),...Object.keys(lmObj),...Object.keys(synced[c])]);
+  const next=[];
+  for(const id of ids){
+    const r=remote[id]? canon(remote[id]) : undefined;
+    const l=lmObj[id]? canon(lmObj[id]) : undefined;
+    const dirty = l!==synced[c][id];
+    if(!dirty){ if(r!==undefined) next.push(l===r? lmObj[id] : remote[id]); }
+    else if(lmObj[id]) next.push(lmObj[id]);
+    if(r===undefined) delete synced[c][id]; else synced[c][id]=r;
+  }
+  const order=new Map(S[c].map((o,i)=>[o.id,i]));
+  next.sort((a,b)=>(order.has(a.id)?order.get(a.id):1e9)-(order.has(b.id)?order.get(b.id):1e9));
+  S[c]=next;
+}
+function defaultMeta(m){
+  m=m||{};
+  m.tb=Object.assign({project:"",addr:"",client:"",projno:"",date:today(),issue:"Schematic Design",drawn:"",checked:""},m.tb||{});
+  m.firm=Object.assign({name:"Sireneum Designs",addr1:"",addr2:"",phone:"",email:"design@sireneum.com",web:"sireneum.com"},m.firm||{});
+  m.revisions=m.revisions||[]; m.display=Object.assign({tagNo:true},m.display||{}); if(m.ref===undefined) m.ref=null;
+  return m;
+}
+async function load(first){
+  try{
+    const r=await api(SLUG+(rev&&!first?"?rev="+rev:""),{key:KEY});
+    if(r.unchanged) return;
+    const d=r.doc; rev=d.rev;
+    const before=canon(BASE());
+    for(const c of SYNC) applyRemote(c,d[c]);
+    const rj=canon(d.meta||{}), lj=S.meta? canon(S.meta) : null;
+    if(!S.meta || lj===metaSynced) S.meta=defaultMeta(clone(d.meta||{}));
+    metaSynced=rj;
+    if(canon(S.meta)!==rj) scheduleFlush();
+    if(!SH()) cur=lsGet("pos-sheet-"+SLUG,"")||"";
+    if(!SH()&&S.sheets.length) cur=sortedSheets()[0].id;
+    bindMetaFields(); buildSheetSel(); refresh();
+    if(first||before!==canon(BASE())) { await loadBase(); fit(); }
+  }catch(err){
+    if(err.status===401){ lsSet("pos-key-"+SLUG,null); location.reload(); return; }
+    if(first) toast("Couldn't load the project: "+err.message);
+  }
+}
+function schedulePoll(){
+  clearInterval(pollT);
+  if(live) pollT=setInterval(()=>{ if(document.visibilityState==="visible"&&!flushing&&!drag) load(false); },8000);
+  setSync();
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&live) load(false); });
+
+/* ---------- base drawings ---------- */
+const assetCache={};
+async function assetURL(id){
+  if(!id) return null;
+  if(!assetCache[id]) assetCache[id]=api(SLUG+"/assets/"+id,{key:KEY,raw:true}).then(b=>URL.createObjectURL(b)).catch(e=>{ delete assetCache[id]; throw e; });
+  return assetCache[id];
+}
+async function loadBase(){
+  const b=BASE(); const img=$("baseImg");
+  if(!b||!b.asset){ img.removeAttribute("href"); render(); return; }
+  try{ const u=await assetURL(b.asset); if(BASE()&&BASE().asset===b.asset) img.setAttribute("href",u); }catch(e){ toast("Couldn't load this sheet's drawing."); }
+  render();
+}
+
+/* ---------- geometry & svg (drawing px; stored values are feet) ---------- */
+const cv=$("cv"), vg=$("view");
+function fmtFtIn(ft){ let inch=Math.round(ft*12); const f=Math.floor(inch/12), i=inch-f*12; return `${f}'-${i}"`; }
+function wireGeom(w){
+  const A0=itemById(w.a), B0=itemById(w.b);
+  if(!A0||!B0||!onSheet(A0)||!onSheet(B0)) return null;
+  const A=P(A0), B=P(B0);
+  const dx=B.x-A.x, dy=B.y-A.y, L=Math.hypot(dx,dy)||1;
+  const nx=-dy/L, ny=dx/L, mx=(A.x+B.x)/2, my=(A.y+B.y)/2, bend=(w.bend||0)*ppf();
+  const cx=mx+nx*bend, cy=my+ny*bend, r=size()*0.42;
+  const trim=(Q)=>{ const ux=cx-Q.x, uy=cy-Q.y, l=Math.hypot(ux,uy)||1; return {x:Q.x+ux/l*r, y:Q.y+uy/l*r}; };
+  return {a:trim(A),b:trim(B),cx,cy,hx:.25*A.x+.5*cx+.25*B.x,hy:.25*A.y+.5*cy+.25*B.y,A,B,nx,ny,mx,my};
+}
+function wireSVG(w, color, forExport){
+  const g=wireGeom(w); if(!g) return "";
+  const k=WIRES[w.kind]||WIRES.switch, s=size(), swd=Math.max(1.2,s*0.055);
+  let out=`<path d="M${g.a.x.toFixed(1)} ${g.a.y.toFixed(1)}Q${g.cx.toFixed(1)} ${g.cy.toFixed(1)} ${g.b.x.toFixed(1)} ${g.b.y.toFixed(1)}" fill="none" stroke="${color}" stroke-width="${swd.toFixed(2)}" stroke-linecap="round" ${k.dash?`stroke-dasharray="${(s*.28).toFixed(1)} ${(s*.18).toFixed(1)}"`:""}/>`;
+  if(k.arrow){
+    const ux=g.b.x-g.cx, uy=g.b.y-g.cy, l=Math.hypot(ux,uy)||1, ax=ux/l, ay=uy/l, al=s*.38, aw=s*.16;
+    out+=`<path d="M${g.b.x-ax*al+ay*aw},${g.b.y-ay*al-ax*aw}L${g.b.x},${g.b.y}L${g.b.x-ax*al-ay*aw},${g.b.y-ay*al+ax*aw}Z" fill="${color}" stroke="none"/>`;
+  }
+  if(!forExport) out=`<g data-id="${w.id}" data-kind="wire">`+out+`<path d="M${g.a.x} ${g.a.y}Q${g.cx} ${g.cy} ${g.b.x} ${g.b.y}" fill="none" stroke="transparent" stroke-width="${s*.5}" style="pointer-events:stroke"/></g>`;
+  return out;
+}
+function tagText(it){ const f=it.fx&&fxById(it.fx); if(!f) return ""; return (M().display.tagNo && it.num)? `${f.mark}${it.num}` : f.mark; }
+function itemSVG(it, forExport){
+  const s=size(), k=s/40, x=X(it), y=Y(it);
+  let out=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g transform="rotate(${it.rot||0}) scale(${k.toFixed(4)})">${symGroup(it.type, forExport?"":'<circle r="21" fill="transparent" stroke="none"/>')}</g>`;
+  const tt=tagText(it);
+  if(tt){
+    const fs=s*.3, w=Math.max(s*.42, fs*.62*tt.length+s*.16), h=fs*1.35, cx=-s*.62-w/2+s*.2, cy=-s*.62;
+    out+=`<rect x="${(cx-w/2).toFixed(1)}" y="${(cy-h/2).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${(h/2).toFixed(1)}" fill="#fff" stroke="currentColor" stroke-width="${(s*.04).toFixed(2)}"/>`+
+         `<text x="${cx.toFixed(1)}" y="${(cy+fs*.36).toFixed(1)}" font-size="${fs.toFixed(1)}" font-family="Arial,Helvetica,sans-serif" font-weight="700" text-anchor="middle" fill="currentColor">${esc(tt)}</text>`;
+  }
+  if(it.tag) out+=`<text x="${(s*.5).toFixed(1)}" y="${(-s*.42).toFixed(1)}" font-size="${(s*.42).toFixed(1)}" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-style="italic" fill="currentColor">${esc(it.tag)}</text>`;
+  out+="</g>";
+  return forExport? out : `<g data-id="${it.id}" data-kind="item" style="cursor:move">${out}</g>`;
+}
+function noteSVG(n, forExport){
+  const fs=size()*.44, lines=String(n.text||"").split("\n"), x=X(n), y=Y(n);
+  const t=`<text x="${x}" y="${y}" font-size="${fs.toFixed(1)}" font-family="Arial,Helvetica,sans-serif" font-weight="700" fill="currentColor" stroke="#fff" stroke-width="${(fs*.22).toFixed(1)}" paint-order="stroke" stroke-linejoin="round">`+
+    lines.map((l,i)=>`<tspan x="${x}" dy="${i?fs*1.2:0}">${esc(l)||" "}</tspan>`).join("")+`</text>`;
+  return forExport? t : `<g data-id="${n.id}" data-kind="note" style="cursor:move">${t}</g>`;
+}
+function endPt(p){ if(p.item){ const it=itemById(p.item); if(it) return P(it); } return P(p); }
+function dimGeom(d){
+  const p=endPt(d.a), q=endPt(d.b), dx=q.x-p.x, dy=q.y-p.y, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L, nx=-uy, ny=ux, o=(d.off||0)*ppf();
+  const Pp={x:p.x+nx*o,y:p.y+ny*o}, Q={x:q.x+nx*o,y:q.y+ny*o};
+  return {p,q,P:Pp,Q,L,ux,uy,nx,ny,o,mid:{x:(Pp.x+Q.x)/2,y:(Pp.y+Q.y)/2}};
+}
+const dimLabel = L => fmtFtIn(L/ppf())+" VIF";
+function dimSVG(d, color, forExport){
+  const g=dimGeom(d), s=size(), swd=Math.max(1,s*.035), t=s*.16, fs=s*.36;
+  let out="";
+  if(Math.abs(g.o)>1){
+    const sg=Math.sign(g.o), gap=s*.12, ext=s*.15;
+    for(const [a,b] of [[g.p,g.P],[g.q,g.Q]]) out+=`<path d="M${a.x+g.nx*sg*gap} ${a.y+g.ny*sg*gap}L${b.x+g.nx*sg*ext} ${b.y+g.ny*sg*ext}" stroke="${color}" stroke-width="${swd*.8}"/>`;
+  }
+  out+=`<path d="M${g.P.x} ${g.P.y}L${g.Q.x} ${g.Q.y}" stroke="${color}" stroke-width="${swd}"/>`;
+  const tx=(g.ux+g.nx)*t*.7071, ty=(g.uy+g.ny)*t*.7071;
+  for(const Q of [g.P,g.Q]) out+=`<path d="M${Q.x-tx} ${Q.y-ty}L${Q.x+tx} ${Q.y+ty}" stroke="${color}" stroke-width="${swd*2}" stroke-linecap="butt"/>`;
+  let ang=Math.atan2(g.uy,g.ux)*180/Math.PI; if(ang>90) ang-=180; if(ang<=-90) ang+=180;
+  out+=`<g transform="translate(${g.mid.x.toFixed(1)} ${g.mid.y.toFixed(1)}) rotate(${ang.toFixed(2)})"><text y="${(-fs*.4).toFixed(1)}" font-size="${fs.toFixed(1)}" font-family="Arial,Helvetica,sans-serif" font-weight="700" text-anchor="middle" fill="${color}" stroke="#fff" stroke-width="${(fs*.25).toFixed(1)}" paint-order="stroke">${esc(dimLabel(g.L))}</text></g>`;
+  if(!forExport) out=`<g data-id="${d.id}" data-kind="dim">${out}<path d="M${g.P.x} ${g.P.y}L${g.Q.x} ${g.Q.y}" stroke="transparent" stroke-width="${s*.45}" style="pointer-events:stroke"/></g>`;
+  return out;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const sh=SH(), b=BASE();
+  $("noSheets").hidden=!!sh;
+  const img=$("baseImg"), p=$("paper");
+  if(b){ img.setAttribute("width",b.w); img.setAttribute("height",b.h); img.setAttribute("opacity",(sh.display.planOp||60)/100); p.setAttribute("width",b.w); p.setAttribute("height",b.h); }
+  else { p.setAttribute("width",0); p.setAttribute("height",0); }
+  vg.setAttribute("transform",`translate(${view.x} ${view.y}) scale(${view.z})`);
+  if(!sh||!ppf()){ ["gWires","gDims","gItems","gNotes","gRef","gSel"].forEach(g=>$(g).innerHTML=""); renderStatus(); renderBanner(); return; }
+  $("gWires").innerHTML=vis("wires").map(w=>wireSVG(w,INK)).join("");
+  $("gDims").innerHTML=vis("dims").map(d=>dimSVG(d,INK)).join("");
+  $("gItems").setAttribute("color",INK); $("gItems").innerHTML=vis("items").map(i=>itemSVG(i)).join("");
+  $("gNotes").setAttribute("color",INK); $("gNotes").innerHTML=vis("notes").map(n=>noteSVG(n)).join("");
+  const s=size(), swd=(2/view.z).toFixed(2), da=`${(6/view.z).toFixed(1)} ${(4/view.z).toFixed(1)}`, hr=(7/view.z).toFixed(1);
+  // reference point marker
+  let rf="";
+  if(M().ref){ const q=P(M().ref), r=s*.55; rf=`<g stroke="#e0661f" stroke-width="${swd}" fill="none"><circle cx="${q.x}" cy="${q.y}" r="${r}"/><path d="M${q.x-r*1.6} ${q.y}H${q.x+r*1.6}M${q.x} ${q.y-r*1.6}V${q.y+r*1.6}"/></g><text x="${q.x+r*1.2}" y="${q.y-r*1.2}" font-size="${s*.32}" font-family="Arial" font-weight="700" fill="#e0661f">REF</text>`; }
+  $("gRef").innerHTML=rf;
+  let sm="";
+  for(const id of sel){
+    const f=findAny(id); if(!f) continue;
+    if(f.c==="items"){ const q=P(f.o), h=s*.62; sm+=`<rect x="${q.x-h}" y="${q.y-h}" width="${2*h}" height="${2*h}" fill="none" stroke="#e0661f" stroke-width="${swd}" stroke-dasharray="${da}"/>`; }
+    else if(f.c==="wires"){ const g=wireGeom(f.o); if(g) sm+=`<circle data-handle="${id}" cx="${g.hx}" cy="${g.hy}" r="${hr}" fill="#e0661f" stroke="#fff" stroke-width="${swd}" style="cursor:grab"/>`; }
+    else if(f.c==="dims"){ const g=dimGeom(f.o); sm+=`<path d="M${g.P.x} ${g.P.y}L${g.Q.x} ${g.Q.y}" stroke="#e0661f" stroke-width="${swd}" stroke-dasharray="${da}"/><circle data-dhandle="${id}" cx="${g.mid.x}" cy="${g.mid.y}" r="${hr}" fill="#e0661f" stroke="#fff" stroke-width="${swd}" style="cursor:grab"/>`; }
+    else if(f.c==="notes"){ const el=$("gNotes").querySelector(`[data-id="${id}"]`); if(el){ const bb=el.getBBox(); sm+=`<rect x="${bb.x-4}" y="${bb.y-4}" width="${bb.width+8}" height="${bb.height+8}" fill="none" stroke="#e0661f" stroke-width="${swd}" stroke-dasharray="${da}"/>`; } }
+  }
+  if(wireStart){ const it=itemById(wireStart); if(it){ const q=P(it); sm+=`<circle cx="${q.x}" cy="${q.y}" r="${s*.6}" fill="none" stroke="#e0661f" stroke-width="${swd}"/>`; } }
+  if(pend){ const q=pend.px||P(pend); sm+=`<circle cx="${q.x}" cy="${q.y}" r="${(4/view.z).toFixed(1)}" fill="#e0661f"/>`; }
+  $("gSel").innerHTML=sm;
+  renderStatus(); renderBanner();
+}
+function renderBanner(){
+  const bn=$("banner"), sh=SH();
+  if(!sh){ bn.hidden=true; return; }
+  if(!sh.base||!sh.base.asset){ bn.hidden=false; bn.innerHTML=`This sheet has no drawing yet. <button class="btn sm primary" data-b="up">Upload a drawing…</button>`; }
+  else if(!ppf()){ bn.hidden=false; bn.innerHTML=`Set this sheet’s scale before placing symbols: click two ends of a known length. <button class="btn sm primary" data-b="cal">Set scale</button>`; }
+  else if(!M().ref && S.sheets.length>1){ bn.hidden=false; bn.innerHTML=`Mark a reference point (a building corner) so the sheets line up. <button class="btn sm primary" data-b="ref">Mark reference point</button>`; }
+  else if(M().ref && sh.base && !sh.base.aligned && S.sheets.length>1 && !sh.base.isRefSheet){ bn.hidden=false; bn.innerHTML=`Line this sheet up with the others: click the reference corner on this drawing. <button class="btn sm primary" data-b="align">Align to reference</button> <button class="btn sm" data-b="skip">It’s already aligned</button>`; }
+  else bn.hidden=true;
+  bn.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.b;
+    if(k==="up") replaceDrawing(); else if(k==="cal") setTool("cal"); else if(k==="ref") setTool("ref"); else if(k==="align") setTool("align");
+    else if(k==="skip"){ SH().base.aligned=true; metaTouch(); render(); }
+  });
+}
+function refresh(){
+  for(const id of [...sel]) if(!findAny(id)) sel.delete(id);
+  render(); renderInspector(); renderLegend(); renderFxSummary(); updateButtons();
+  if(schedOpen) renderSchedRows();
+}
+function changed(){ recordAfter(); refresh(); scheduleFlush(); }
+function touch(){ refresh(); scheduleFlush(); }
+function metaTouch(){ updateButtons(); scheduleFlush(); }
+
+let lastPtr=null;
+function renderStatus(){
+  let t;
+  if(!SH()) t="Add a sheet to begin";
+  else if(tool==="cal") t= pend? "Set scale: click the other end of the known length (Shift = square)" : "Set scale: click one end of a known length, such as a dimension string";
+  else if(tool==="ref") t="Reference point: click a corner you can find on every sheet";
+  else if(tool==="align") t="Align: click the same reference corner on this drawing";
+  else if(!ppf()) t="Set this sheet’s scale to start";
+  else if(armed){ const f=lastMark[armed]&&fxById(lastMark[armed]); t=`Placing ${SYM[armed].name}${f?` as type ${f.mark}`:""}${SHARED_DEFAULT.has(armed)?" (shared with all sheets)":""} — click the drawing, Esc to stop`; }
+  else if(tool==="wire") t= wireStart? `${WIRES[wireKind].name}: click the next symbol (Esc to finish)` : `${WIRES[wireKind].name}: click a symbol to start`;
+  else if(tool==="text") t="Note: click the drawing to place a note";
+  else if(tool==="dim"){ t= pend&&lastPtr? `Dimension: ${fmtFtIn(Math.hypot(lastPtr.x-pend.px.x,lastPtr.y-pend.px.y)/ppf())} VIF — click the end point (Shift = square)` : "Dimension: click a fixture or point to start"; }
+  else t=`${vis("items").length} symbols · ${vis("wires").length} runs · ${vis("dims").length} dims · zoom ${Math.round(view.z*100)}%`;
+  $("status").textContent=t;
+  cv.classList.toggle("placing",!!armed);
+  cv.classList.toggle("wiring",tool==="wire"&&!armed);
+  cv.classList.toggle("texting",tool==="text"&&!armed);
+  cv.classList.toggle("measuring",["dim","cal","ref","align"].includes(tool)&&!armed);
+}
+function updateButtons(){
+  $("tSel").classList.toggle("on",tool==="select"&&!armed);
+  for(const k of Object.keys(WIRES)) $("tW_"+k).classList.toggle("on",tool==="wire"&&wireKind===k);
+  $("tText").classList.toggle("on",tool==="text"); $("tDim").classList.toggle("on",tool==="dim");
+  $("tCal").classList.toggle("on",tool==="cal"); $("tRef").classList.toggle("on",tool==="ref"); $("tAlign").classList.toggle("on",tool==="align");
+  const ready=!!(SH()&&ppf());
+  for(const id of ["tW_switch","tW_circuit","tW_home","tText","tDim","bClear"]) $(id).disabled=!ready;
+  $("tAlign").disabled=!ready||!M()||!M().ref; $("tRef").disabled=!ready; $("tCal").disabled=!BASE()||!BASE().asset;
+  const hasItem=[...sel].some(id=>itemById(id));
+  $("bRot").disabled=!hasItem; $("bDup").disabled=!sel.size; $("bDel").disabled=!sel.size;
+  $("bUndo").disabled=!undoStack.length; $("bRedo").disabled=!redoStack.length;
+  $("bSheetEdit").disabled=!SH(); $("bPrint").disabled=!ready;
+  $("bRefresh").hidden=live;
+  if(M()){
+    $("hdrProj").textContent=[M().tb.project,M().tb.client].filter(Boolean).join(" · ");
+    document.title=(M().tb.project||"Plans")+" — Sireneum Designs";
+  }
+  const b=BASE();
+  $("scaleInfo").textContent = !b? "No drawing on this sheet yet." : b.ppf ? `Scale set: ${b.ppf.toFixed(2)} drawing pixels per foot.${M().ref?" Reference point marked.":""}` : "This drawing's scale isn't set yet.";
+  $("bImport").hidden=ROLE!=="admin"; $("adminBox").hidden=ROLE!=="admin";
+}
+function buildSheetSel(){
+  const s=$("sheetSel");
+  s.innerHTML= S.sheets.length? sortedSheets().map(x=>`<option value="${x.id}" ${x.id===cur?"selected":""}>${esc(x.no)} — ${esc(x.title)}</option>`).join("") : `<option value="">No sheets</option>`;
+  s.disabled=!S.sheets.length;
+}
+$("sheetSel").onchange=async e=>{ switchSheet(e.target.value); };
+async function switchSheet(id){
+  cur=id; lsSet("pos-sheet-"+SLUG,id); sel.clear(); wireStart=null; pend=null; armed=null; tool="select";
+  $("pal").querySelectorAll(".tile.armed").forEach(x=>x.classList.remove("armed"));
+  buildSheetSel(); bindMetaFields(); refresh(); await loadBase(); fit();
+}
+
+/* ---------- palette ---------- */
+function buildPalette(){
+  let h=`<h2>Symbols</h2><p class="hint">Drag onto the drawing, or click a symbol and then click to place several. <b style="color:#2f7d4f">Shared</b> symbols appear on every sheet at the same real position (plan and RCP).</p>`;
+  for(const c of CATS) h+=`<h2>${c}</h2><div class="grid">`+SYMS.filter(s=>s.cat===c).map(s=>`<button class="tile" data-sym="${s.id}" title="${s.name}${SHARED_DEFAULT.has(s.id)?" — shared with all sheets":""}">${iconSVG(s.id)}<span>${s.name}</span>${SHARED_DEFAULT.has(s.id)?'<span class="sh">shared</span>':""}</button>`).join("")+`</div>`;
+  h+=`<p class="copy">© 2026 Sireneum Designs</p>`;
+  $("pal").innerHTML=h;
+  $("pal").querySelectorAll(".tile").forEach(t=>{
+    t.addEventListener("pointerdown",e=>startPaletteDrag(e,t.dataset.sym,t));
+    t.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); arm(t.dataset.sym); }});
+  });
+}
+function arm(id){
+  if(!ppf()){ toast("Set this sheet’s scale first."); return; }
+  armed = (armed===id)? null : id;
+  if(armed){ tool="select"; wireStart=null; pend=null; }
+  $("pal").querySelectorAll(".tile").forEach(t=>t.classList.toggle("armed",t.dataset.sym===armed));
+  updateButtons(); render();
+}
+function startPaletteDrag(e,id,tile){
+  e.preventDefault();
+  const sx=e.clientX, sy=e.clientY; let dragging=false; const gh=$("ghost");
+  tile.setPointerCapture(e.pointerId);
+  const mv=ev=>{
+    if(!dragging && Math.hypot(ev.clientX-sx,ev.clientY-sy)>5){ dragging=true; gh.innerHTML=iconSVG(id); gh.hidden=false; }
+    if(dragging){ gh.style.left=ev.clientX+"px"; gh.style.top=ev.clientY+"px"; }
+  };
+  const up=ev=>{
+    tile.removeEventListener("pointermove",mv); tile.removeEventListener("pointerup",up); tile.removeEventListener("pointercancel",up);
+    gh.hidden=true;
+    if(!dragging){ arm(id); return; }
+    const r=$("stage").getBoundingClientRect();
+    if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom){ if(!ppf()){ toast("Set this sheet’s scale first."); return; } const p=toPlan(ev.clientX,ev.clientY); placeSymbol(id,p); }
+  };
+  tile.addEventListener("pointermove",mv); tile.addEventListener("pointerup",up); tile.addEventListener("pointercancel",up);
+}
+function nextNum(fx){ let m=0; for(const i of S.items) if(i.fx===fx&&i.num>m) m=i.num; return m+1; }
+function defaultFx(type){
+  if(lastMark[type]&&fxById(lastMark[type])) return lastMark[type];
+  const f=S.fixtures.filter(x=>x.sym===type); return f.length===1? f[0].id : "";
+}
+function placeSymbol(type,p){
+  commit();
+  const fx=defaultFx(type), q=toFt(p);
+  const it={id:uid(),type,x:r3(q.x),y:r3(q.y),rot:0,tag:"",fx,num:fx?nextNum(fx):0,sheet:SHARED_DEFAULT.has(type)?"":cur};
+  S.items.push(it); sel=new Set([it.id]); changed();
+}
+function rememberMark(type,fx){ if(fx) lastMark[type]=fx; else delete lastMark[type]; lsSet("pos-lastmark-"+SLUG,JSON.stringify(lastMark)); }
+
+/* ---------- view ---------- */
+function toPlan(cx,cy){ const r=cv.getBoundingClientRect(); return {x:(cx-r.left-view.x)/view.z, y:(cy-r.top-view.y)/view.z}; }
+function fit(){
+  const r=cv.getBoundingClientRect(), b=BASE(); if(!r.width||!b) return;
+  const pad=24, z=Math.min((r.width-pad*2)/b.w,(r.height-pad*2)/b.h);
+  view.z=z; view.x=(r.width-b.w*z)/2; view.y=(r.height-b.h*z)/2; render();
+}
+function zoomAt(f,cx,cy){
+  const r=cv.getBoundingClientRect(); const px=cx-r.left, py=cy-r.top;
+  const nz=Math.min(16,Math.max(.03,view.z*f)); const k=nz/view.z;
+  view.x=px-(px-view.x)*k; view.y=py-(py-view.y)*k; view.z=nz; render();
+}
+cv.addEventListener("wheel",e=>{ e.preventDefault(); zoomAt(Math.exp(-e.deltaY*0.0015),e.clientX,e.clientY); },{passive:false});
+
+/* ---------- canvas pointer ---------- */
+let drag=null; const pointers=new Map();
+function ortho(a,p,shift){ if(!shift) return p; return Math.abs(p.x-a.x)>Math.abs(p.y-a.y)? {x:p.x,y:a.y} : {x:a.x,y:p.y}; }
+cv.addEventListener("pointerdown",e=>{
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===2){ const [a,b]=[...pointers.values()]; drag={mode:"pinch",d:Math.hypot(a.x-b.x,a.y-b.y),z:view.z,vx:view.x,vy:view.y,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2}; return; }
+  const p=toPlan(e.clientX,e.clientY);
+  const hEl=e.target.closest("[data-handle]"), dhEl=e.target.closest("[data-dhandle]"), tEl=e.target.closest("[data-id]");
+  const id=tEl&&tEl.dataset.id, kind=tEl&&tEl.dataset.kind;
+  cv.setPointerCapture(e.pointerId);
+  const pan=()=>{ drag={mode:"pan",sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y}; cv.classList.add("panning"); };
+  if(!SH()||!BASE()){ pan(); return; }
+  if(tool==="cal"){
+    if(!pend){ pend={px:{x:p.x,y:p.y}}; render(); return; }
+    const q=ortho(pend.px,p,e.shiftKey), L=Math.hypot(q.x-pend.px.x,q.y-pend.px.y); pend=null; render();
+    if(L>=5) askScale(L); return;
+  }
+  if(!ppf()){ pan(); return; }
+  if(tool==="ref"){ M().ref={x:r3((p.x-OX())/ppf()),y:r3((p.y-OY())/ppf())}; SH().base.aligned=true; SH().base.isRefSheet=true; setTool("select"); metaTouch(); render(); toast("Reference point marked. On each other sheet, use Align to reference."); return; }
+  if(tool==="align"){ const b=SH().base, ref=M().ref; b.ox=r3(p.x-ref.x*b.ppf); b.oy=r3(p.y-ref.y*b.ppf); b.aligned=true; setTool("select"); metaTouch(); refresh(); toast("Sheet aligned. Shared fixtures now sit in the same place as on the other sheets."); return; }
+  if(armed && !hEl && !dhEl){ placeSymbol(armed,p); return; }
+  if(tool==="wire"){
+    if(kind==="item"){
+      if(wireStart && wireStart!==id){
+        commit(); const A=itemById(wireStart), B=itemById(id);
+        S.wires.push({id:uid(),a:wireStart,b:id,kind:wireKind,bend:r3(Math.hypot(B.x-A.x,B.y-A.y)*.22),sheet:cur});
+        wireStart= wireKind==="home"? null : id; changed();
+      } else { wireStart=id; render(); }
+      return;
+    }
+    wireStart=null; render(); pan(); return;
+  }
+  if(tool==="dim"){
+    const snap = kind==="item"? itemById(id) : null;
+    const pt = snap? {x:snap.x,y:snap.y,item:snap.id,px:P(snap)} : (()=>{ const f=toFt(p); return {x:r3(f.x),y:r3(f.y),px:{x:p.x,y:p.y}}; })();
+    if(!pend){ pend=pt; render(); return; }
+    let q=pt;
+    if(!snap&&e.shiftKey){ const o=ortho(pend.px,p,true); const f=toFt(o); q={x:r3(f.x),y:r3(f.y),px:o}; }
+    if(Math.hypot(q.px.x-pend.px.x,q.px.y-pend.px.y)<3) return;
+    commit(); const strip=o=>{ const r={x:o.x,y:o.y}; if(o.item) r.item=o.item; return r; };
+    const d={id:uid(),a:strip(pend),b:strip(q),off:0,sheet:cur}; S.dims.push(d); pend=null; sel=new Set([d.id]); changed(); return;
+  }
+  if(tool==="text" && !tEl){
+    commit(); const f=toFt(p); const n={id:uid(),x:r3(f.x),y:r3(f.y),text:"Note",sheet:cur}; S.notes.push(n); sel=new Set([n.id]); tool="select"; changed();
+    const ta=$("inNote"); if(ta){ ta.focus(); ta.select(); } return;
+  }
+  if(hEl){ commit(); drag={mode:"bend",id:hEl.dataset.handle}; return; }
+  if(dhEl){ commit(); drag={mode:"doff",id:dhEl.dataset.dhandle}; return; }
+  if(tEl){
+    if(e.shiftKey){ sel.has(id)? sel.delete(id) : sel.add(id); refresh(); return; }
+    if(!sel.has(id)) sel=new Set([id]);
+    if(kind==="wire"){ refresh(); return; }
+    const starts=[...sel].map(i=>{ const f=findAny(i); if(!f) return null;
+      if(f.c==="items"||f.c==="notes") return {id:i,c:f.c,x:f.o.x,y:f.o.y};
+      if(f.c==="dims") return {id:i,c:"dims",a:{...f.o.a},b:{...f.o.b}};
+      return null; }).filter(Boolean);
+    drag={mode:"move",p0:p,starts,moved:false}; refresh(); return;
+  }
+  if(sel.size){ sel.clear(); refresh(); }
+  pan();
+});
+cv.addEventListener("pointermove",e=>{
+  if(pointers.has(e.pointerId)) pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const rb=$("rubber"), p=toPlan(e.clientX,e.clientY); lastPtr=p;
+  let from=null, to=p;
+  if(tool==="wire"&&wireStart&&!drag){ const it=itemById(wireStart); if(it) from=P(it); }
+  if((tool==="dim"||tool==="cal")&&pend&&!drag){ from=pend.px; to=ortho(pend.px,p,e.shiftKey); lastPtr=to; renderStatus(); }
+  if(from){ rb.setAttribute("d",`M${from.x} ${from.y}L${to.x} ${to.y}`); rb.setAttribute("stroke-width",(1.5/view.z).toFixed(2)); rb.setAttribute("visibility","visible"); }
+  else rb.setAttribute("visibility","hidden");
+  if(!drag) return;
+  if(drag.mode==="pinch"){
+    if(pointers.size<2) return; const [a,b]=[...pointers.values()];
+    const d=Math.hypot(a.x-b.x,a.y-b.y), r=cv.getBoundingClientRect();
+    const nz=Math.min(16,Math.max(.03,drag.z*d/drag.d)), k=nz/drag.z, px=drag.cx-r.left, py=drag.cy-r.top;
+    view.z=nz; view.x=px-(px-drag.vx)*k+((a.x+b.x)/2-drag.cx); view.y=py-(py-drag.vy)*k+((a.y+b.y)/2-drag.cy); render(); return;
+  }
+  if(drag.mode==="pan"){ view.x=drag.vx+e.clientX-drag.sx; view.y=drag.vy+e.clientY-drag.sy; render(); return; }
+  if(drag.mode==="move"){
+    if(!drag.moved){ commit(); drag.moved=true; }
+    const dx=(p.x-drag.p0.x)/ppf(), dy=(p.y-drag.p0.y)/ppf();
+    for(const s of drag.starts){
+      const o=S[s.c].find(x=>x.id===s.id); if(!o) continue;
+      if(s.c==="dims"){ o.a= s.a.item? s.a : {x:r3(s.a.x+dx),y:r3(s.a.y+dy)}; o.b= s.b.item? s.b : {x:r3(s.b.x+dx),y:r3(s.b.y+dy)}; }
+      else { o.x=r3(s.x+dx); o.y=r3(s.y+dy); }
+    }
+    render(); return;
+  }
+  if(drag.mode==="bend"){
+    const w=S.wires.find(x=>x.id===drag.id), g=w&&wireGeom(w); if(!g) return;
+    const cx=2*p.x-.5*g.A.x-.5*g.B.x, cy=2*p.y-.5*g.A.y-.5*g.B.y;
+    w.bend=r3(((cx-g.mx)*g.nx+(cy-g.my)*g.ny)/ppf()); render(); return;
+  }
+  if(drag.mode==="doff"){
+    const d=S.dims.find(x=>x.id===drag.id); if(!d) return; const g=dimGeom(d);
+    d.off=r3(((p.x-g.p.x)*g.nx+(p.y-g.p.y)*g.ny)/ppf()); render();
+  }
+});
+function endPtr(e){
+  pointers.delete(e.pointerId);
+  if(!drag) return;
+  const m=drag.mode, moved=drag.moved; drag=null; cv.classList.remove("panning");
+  if((m==="move"&&moved)||m==="bend"||m==="doff") changed(); else render();
+}
+cv.addEventListener("pointerup",endPtr); cv.addEventListener("pointercancel",endPtr);
+
+/* ---------- commands ---------- */
+function setTool(t,k){
+  armed=null; $("pal").querySelectorAll(".tile.armed").forEach(x=>x.classList.remove("armed"));
+  tool=t; if(k) wireKind=k; wireStart=null; pend=null; updateButtons(); render();
+}
+function rotateSel(d){ const its=S.items.filter(i=>sel.has(i.id)); if(!its.length) return; commit(); its.forEach(i=>i.rot=(((i.rot||0)+d)%360+360)%360); changed(); }
+function delSel(){
+  if(!sel.size) return; commit();
+  const gone=new Set(S.items.filter(i=>sel.has(i.id)).map(i=>i.id));
+  for(const d of S.dims) for(const k of ["a","b"]) if(d[k].item&&gone.has(d[k].item)){ const it=itemById(d[k].item); d[k]={x:it.x,y:it.y}; }
+  S.items=S.items.filter(i=>!sel.has(i.id)); S.notes=S.notes.filter(n=>!sel.has(n.id)); S.dims=S.dims.filter(d=>!sel.has(d.id));
+  S.wires=S.wires.filter(w=>!sel.has(w.id) && itemById(w.a) && itemById(w.b));
+  sel.clear(); changed();
+}
+function dupSel(){
+  const off=0.9*1.6, ns=new Set(), map={}; let any=false;
+  const start=()=>{ if(!any){ commit(); any=true; } };
+  for(const id of sel){
+    const f=findAny(id); if(!f) continue;
+    if(f.c==="items"){ start(); const c={...f.o,id:uid(),x:r3(f.o.x+off),y:r3(f.o.y+off)}; if(c.fx) c.num=nextNum(c.fx); map[id]=c.id; S.items.push(c); ns.add(c.id); }
+    else if(f.c==="notes"){ start(); const c={...f.o,id:uid(),x:r3(f.o.x+off),y:r3(f.o.y+off)}; S.notes.push(c); ns.add(c.id); }
+  }
+  for(const w of [...S.wires]) if(map[w.a]&&map[w.b]){ const c={...w,id:uid(),a:map[w.a],b:map[w.b]}; S.wires.push(c); ns.add(c.id); }
+  if(any){ sel=ns; changed(); }
+}
+function nudge(dx,dy){
+  const objs=[...sel].map(id=>findAny(id)).filter(f=>f&&(f.c==="items"||f.c==="notes"));
+  if(!objs.length) return; commit(); objs.forEach(f=>{ f.o.x=r3(f.o.x+dx/ppf()); f.o.y=r3(f.o.y+dy/ppf()); }); changed();
+}
+let clearArm=null;
+$("bClear").addEventListener("click",()=>{
+  const b=$("bClear");
+  if(!clearArm){ b.textContent="Click again to clear"; clearArm=setTimeout(()=>{ clearArm=null; b.textContent="Clear this sheet"; },3500); return; }
+  clearTimeout(clearArm); clearArm=null; b.textContent="Clear this sheet";
+  commit();
+  const gone=new Set(vis("items").map(i=>i.id));
+  S.items=S.items.filter(i=>!gone.has(i.id)); S.wires=S.wires.filter(w=>w.sheet!==cur&&!gone.has(w.a)&&!gone.has(w.b));
+  S.notes=S.notes.filter(n=>n.sheet!==cur); S.dims=S.dims.filter(d=>d.sheet!==cur);
+  sel.clear(); changed(); toast("Sheet cleared. Undo restores it.");
+});
+function askScale(L){
+  const m=modal(`<h3>Set scale</h3><p class="empty">How long is the line you just measured?</p>
+    <div class="row2"><label class="f">Feet<input id="calFt" type="number" min="0" step="1" value="10"></label><label class="f">Inches<input id="calIn" type="number" min="0" max="11.99" step="0.5" value="0"></label></div>
+    <div class="row"><button class="btn primary" data-ok>Set scale</button><button class="btn" data-x>Cancel</button></div>`,true);
+  const f=m.querySelector("#calFt"); f.focus(); f.select();
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  m.querySelector("[data-ok]").onclick=()=>{
+    const ft=(parseFloat(f.value)||0)+(parseFloat(m.querySelector("#calIn").value)||0)/12;
+    if(ft<=0){ toast("Enter a length greater than zero."); return; }
+    const b=SH().base, first=!b.ppf;
+    b.ppf=+(L/ft).toFixed(4);
+    if(first && !M().ref && S.sheets.filter(s=>s.base&&s.base.ppf).length<=1){ b.ox=0; b.oy=0; }
+    m.remove(); setTool("select"); metaTouch(); refresh();
+    toast(`Scale set: ${b.ppf.toFixed(2)} pixels per foot.`);
+  };
+}
+
+$("tSel").onclick=()=>setTool("select");
+for(const k of Object.keys(WIRES)) $("tW_"+k).onclick=()=>setTool("wire",k);
+$("tText").onclick=()=>setTool("text");
+$("tDim").onclick=()=>setTool("dim");
+$("tCal").onclick=()=>setTool("cal");
+$("tRef").onclick=()=>setTool("ref");
+$("tAlign").onclick=()=>setTool("align");
+$("bRot").onclick=()=>rotateSel(45);
+$("bDup").onclick=dupSel; $("bDel").onclick=delSel;
+$("bUndo").onclick=undo; $("bRedo").onclick=redo;
+$("bZi").onclick=()=>{ const r=cv.getBoundingClientRect(); zoomAt(1.25,r.left+r.width/2,r.top+r.height/2); };
+$("bZo").onclick=()=>{ const r=cv.getBoundingClientRect(); zoomAt(0.8,r.left+r.width/2,r.top+r.height/2); };
+$("bFit").onclick=fit;
+$("bRefresh").onclick=async()=>{ await load(false); toast("Up to date."); };
+
+document.addEventListener("keydown",e=>{
+  if($("app").hidden) return;
+  const tg=e.target.tagName; if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT") return;
+  if(document.querySelector(".modal")) { if(e.key==="Escape") document.querySelector(".modal").remove(); return; }
+  const mod=e.ctrlKey||e.metaKey, k=e.key.toLowerCase();
+  if(mod&&k==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); return; }
+  if(mod&&k==="y"){ e.preventDefault(); redo(); return; }
+  if(mod&&k==="d"){ e.preventDefault(); dupSel(); return; }
+  if(mod) return;
+  if(k==="delete"||k==="backspace"){ e.preventDefault(); delSel(); }
+  else if(k==="escape"){ if(armed) arm(armed); else if(wireStart||pend){ wireStart=null; pend=null; render(); } else if(tool!=="select") setTool("select"); else { sel.clear(); refresh(); } }
+  else if(!ppf()) return;
+  else if(k==="r") rotateSel(e.shiftKey?-45:45);
+  else if(k==="v") setTool("select");
+  else if(k==="l") setTool("wire","switch");
+  else if(k==="t") setTool("text");
+  else if(k==="d") setTool("dim");
+  else if(k.startsWith("arrow")){ e.preventDefault(); const d=e.shiftKey?10:2; nudge(k==="arrowleft"?-d:k==="arrowright"?d:0,k==="arrowup"?-d:k==="arrowdown"?d:0); }
+});
+
+/* ---------- sheets ---------- */
+function nextSheetNo(){ let m=100; for(const s of S.sheets){ const n=parseInt(String(s.no).replace(/\D+/g,"")); if(n>m) m=n; } return "A-"+(m+1); }
+function newSheetObj(o){
+  const kind=o.kind||"plan";
+  return {id:uid(),order:S.sheets.length,no:o.no||nextSheetNo(),title:o.title||(kind==="rcp"?"Reflected Ceiling Plan":"Lighting & Switching Plan"),kind,
+    base:o.base||null, notes:clone(DEFAULT_NOTES[kind]||DEFAULT_NOTES.plan),
+    print:{sheet:"D",scale:"1/4",dtitle:o.title||(kind==="rcp"?"Reflected Ceiling Plan":"Lighting & Switching Plan"),black:false},
+    display:{symScale:100,planOp:kind==="rcp"?55:60}};
+}
+$("bSheetNew").onclick=openNewSheet; $("bFirstSheet").onclick=openNewSheet;
+function openNewSheet(){
+  const others=S.sheets.filter(s=>s.base&&s.base.asset);
+  const m=modal(`<h3>New sheet</h3>
+    <div class="row2"><label class="f">Sheet no.<input id="ns_no" value="${esc(nextSheetNo())}"></label>
+    <label class="f">Type<select id="ns_kind"><option value="plan">Plan (looking down)</option><option value="rcp">Reflected ceiling plan</option><option value="other">Other</option></select></label></div>
+    <label class="f">Title<input id="ns_title" value="Lighting & Switching Plan"></label>
+    <label class="f">Drawing<select id="ns_src"><option value="upload">Upload an image or PDF page…</option>${others.map(s=>`<option value="${s.id}">Same drawing as ${esc(s.no)} — ${esc(s.title)}</option>`).join("")}</select></label>
+    <p class="empty">Shared fixtures appear on the new sheet automatically. After uploading, you’ll set the scale and click the reference corner so it lines up.</p>
+    <div class="row"><button class="btn primary" data-ok>Create sheet</button><button class="btn" data-x>Cancel</button></div>`,true);
+  m.querySelector("#ns_kind").onchange=e=>{ m.querySelector("#ns_title").value= e.target.value==="rcp"? "Reflected Ceiling Plan" : e.target.value==="plan"? "Lighting & Switching Plan" : ""; };
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  m.querySelector("[data-ok]").onclick=async()=>{
+    const src=m.querySelector("#ns_src").value;
+    const sh=newSheetObj({no:m.querySelector("#ns_no").value.trim()||nextSheetNo(),title:m.querySelector("#ns_title").value.trim(),kind:m.querySelector("#ns_kind").value});
+    if(src!=="upload"){ const o=S.sheets.find(s=>s.id===src); sh.base=clone(o.base); }
+    m.remove(); S.sheets.push(sh); metaTouch(); await switchSheet(sh.id);
+    if(src==="upload") replaceDrawing();
+  };
+}
+$("bSheetEdit").onclick=()=>{
+  const sh=SH(); if(!sh) return;
+  const m=modal(`<h3>Edit sheet</h3>
+    <div class="row2"><label class="f">Sheet no.<input id="es_no" value="${esc(sh.no)}"></label>
+    <label class="f">Order in list<input id="es_order" type="number" value="${sh.order||0}"></label></div>
+    <label class="f">Title<input id="es_title" value="${esc(sh.title)}"></label>
+    <div class="row"><button class="btn primary" data-ok>Save</button><button class="btn" data-x>Cancel</button><span style="flex:1"></span><button class="btn warn" data-del>Delete sheet…</button></div>`,true);
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  m.querySelector("[data-ok]").onclick=()=>{ const oldT=sh.title; sh.no=m.querySelector("#es_no").value.trim()||sh.no; sh.title=m.querySelector("#es_title").value.trim(); sh.order=+m.querySelector("#es_order").value||0; if(!sh.print.dtitle||sh.print.dtitle===oldT) sh.print.dtitle=sh.title; m.remove(); buildSheetSel(); metaTouch(); updateButtons(); };
+  let armedDel=false;
+  m.querySelector("[data-del]").onclick=e=>{
+    if(!armedDel){ armedDel=true; e.target.textContent="Click again to delete"; return; }
+    commit();
+    const id=sh.id;
+    S.items=S.items.filter(i=>i.sheet!==id); S.wires=S.wires.filter(w=>w.sheet!==id); S.notes=S.notes.filter(n=>n.sheet!==id); S.dims=S.dims.filter(d=>d.sheet!==id);
+    S.sheets=S.sheets.filter(s=>s.id!==id); m.remove();
+    changed(); switchSheet(S.sheets.length? sortedSheets()[0].id : "");
+    toast("Sheet deleted. Shared fixtures remain on the other sheets.");
+  };
+};
+
+/* ---------- drawings: upload ---------- */
+$("bPlan").onclick=replaceDrawing;
+function replaceDrawing(){ if(!SH()){ toast("Add a sheet first."); return; } $("fPlan").click(); }
+$("fPlan").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    if(f.type==="application/pdf"||/\.pdf$/i.test(f.name)) await usePdf(f);
+    else{ const url=URL.createObjectURL(f); const im=await loadImg(url); const c=document.createElement("canvas"); const k=Math.min(1,4000/Math.max(im.naturalWidth,im.naturalHeight)); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k); const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url); await setDrawing(c,f.name); }
+  }catch(err){ toast("Couldn't read that file: "+(err.message||"try a PNG, JPG or PDF")); }
+};
+async function canvasToJpeg(c){
+  for(const q of [.85,.75,.65,.55]){ const b=await new Promise(r=>c.toBlob(r,"image/jpeg",q)); if(b.size<4_000_000) return b; }
+  const k=.7, d=document.createElement("canvas"); d.width=Math.round(c.width*k); d.height=Math.round(c.height*k); d.getContext("2d").drawImage(c,0,0,d.width,d.height); return canvasToJpeg(d);
+}
+async function uploadCanvas(c){ const blob=await canvasToJpeg(c); const {id}=await api(SLUG+"/assets",{method:"POST",key:KEY,body:blob,raw:"upload",type:"image/jpeg"}); return {id,w:c.width,h:c.height}; }
+async function setDrawing(c,name){
+  const sh=SH(); const had=sh.base&&sh.base.asset;
+  toast("Uploading drawing…");
+  const a=await uploadCanvas(c);
+  sh.base={asset:a.id,w:a.w,h:a.h,name,ppf:0,ox:0,oy:0,aligned:false};
+  metaTouch(); await loadBase(); fit(); setTool("cal");
+  toast(had? "Drawing replaced. Set its scale, then align it to the reference corner." : "Now set the scale: click two ends of a known length.");
+}
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+async function usePdf(f){
+  toast("Reading PDF…");
+  if(!window.pdfjsLib){
+    await loadScript("/client/vendor/pdf.min.js");
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc="/client/vendor/pdf.worker.min.js";
+  }
+  const doc=await window.pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+  const pick=async(n)=>{
+    const page=await doc.getPage(n); const vp0=page.getViewport({scale:1});
+    const sc=Math.min(4,3800/Math.max(vp0.width,vp0.height)); const vp=page.getViewport({scale:sc});
+    const c=document.createElement("canvas"); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+    const ctx=c.getContext("2d"); ctx.fillStyle="#fff"; ctx.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    await setDrawing(c,f.name+" p."+n);
+  };
+  if(doc.numPages===1) return pick(1);
+  const m=modal(`<h3>Choose a page</h3><p class="empty">${esc(f.name)} has ${doc.numPages} pages.</p><label class="f">Page<input id="pgNo" type="number" min="1" max="${doc.numPages}" value="1"></label><div class="row"><button class="btn primary" data-u>Use page</button><button class="btn" data-x>Cancel</button></div>`,true);
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  m.querySelector("[data-u]").onclick=async()=>{ const n=Math.min(doc.numPages,Math.max(1,parseInt(m.querySelector("#pgNo").value)||1)); m.remove(); try{ await pick(n); }catch(err){ toast("Couldn't upload: "+err.message); } };
+}
+
+/* ---------- fixture schedule ---------- */
+const FX_FIELDS=[["mark","Type",70],["desc","Description",220],["mfr","Manufacturer",130],["cat","Catalog no.",140],["lamp","Lamp / lumens / CCT",150],["watts","Watts",60],["volts","Volts",60],["mount","Mounting",120],["notes","Remarks",170]];
+function nextMarkLetter(){
+  const used=new Set(S.fixtures.map(f=>f.mark));
+  for(let i=0;i<26*27;i++){ const m= i<26? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26); if(!used.has(m)) return m; }
+  return "X"+S.fixtures.length;
+}
+const fxSort = () => [...S.fixtures].sort((a,b)=>String(a.mark).localeCompare(String(b.mark),undefined,{numeric:true}));
+const fxQty = id => S.items.filter(i=>i.fx===id).length;
+function addFixture(sym){
+  commit(); const f={id:uid(),mark:nextMarkLetter(),sym:sym||"",desc:"",mfr:"",cat:"",lamp:"",watts:"",volts:"120",mount:"",notes:""};
+  S.fixtures.push(f); changed(); return f;
+}
+function renderFxSummary(){
+  const el=$("fxSummary");
+  if(!S.fixtures.length){ el.innerHTML=`<p class="empty">No type marks yet. Add one here, or choose “New type mark” for a selected symbol. Quantities count themselves.</p>`; return; }
+  el.innerHTML=fxSort().map(f=>`<div class="fxrow"><span class="mark">${esc(f.mark)}</span><span class="d" title="${esc(f.desc)}">${esc(f.desc||"(no description)")}</span><span class="ct">${fxQty(f.id)}</span></div>`).join("");
+}
+let schedOpen=null;
+function openSchedule(){
+  const m=modal(`<div class="row" style="justify-content:space-between"><h3>Lighting fixture schedule</h3><div class="row">
+      <button class="btn sm" data-add>Add type mark</button>
+      <button class="btn sm" data-renum title="Renumber tags top-to-bottom, left-to-right within each type">Renumber tags</button>
+      <button class="btn sm" data-x>Done</button></div></div>
+    <p class="empty">Shared by every sheet. Quantity and tag range are counted from the drawings; fill in the rest and it prints on each sheet.</p>
+    <div class="tablewrap"><table class="sched"><thead><tr>${FX_FIELDS.map(f=>`<th style="width:${f[2]}px">${f[1]}</th>`).join("")}<th style="width:70px">Symbol</th><th style="width:50px">Qty</th><th style="width:80px">Tags</th><th style="width:40px"></th></tr></thead><tbody id="schedBody"></tbody></table></div>`);
+  schedOpen=m;
+  m.querySelector("[data-x]").onclick=()=>{ schedOpen=null; m.remove(); };
+  m.addEventListener("pointerdown",e=>{ if(e.target===m) schedOpen=null; });
+  m.querySelector("[data-add]").onclick=()=>addFixture();
+  m.querySelector("[data-renum]").onclick=()=>{ renumberAll(); toast("Tags renumbered."); };
+  renderSchedRows(true);
+}
+function renderSchedRows(force){
+  const body=document.getElementById("schedBody"); if(!body) return;
+  if(!force && body.contains(document.activeElement)){
+    body.querySelectorAll("tr[data-id]").forEach(tr=>{ const id=tr.dataset.id; tr.querySelector("[data-qty]").textContent=fxQty(id); tr.querySelector("[data-tags]").textContent=tagRange(id); });
+    return;
+  }
+  const rows=fxSort();
+  body.innerHTML= rows.length? rows.map(f=>`<tr data-id="${f.id}">${FX_FIELDS.map(([k])=>`<td>${k==="desc"||k==="notes"?`<textarea data-f="${k}" rows="1">${esc(f[k]||"")}</textarea>`:`<input data-f="${k}" value="${esc(f[k]||"")}">`}</td>`).join("")}
+    <td><select data-f="sym"><option value="">—</option>${SYMS.map(s=>`<option value="${s.id}" ${s.id===f.sym?"selected":""}>${s.name}</option>`).join("")}</select></td>
+    <td class="num" data-qty>${fxQty(f.id)}</td><td class="num" data-tags>${tagRange(f.id)}</td>
+    <td><button class="btn sm warn" data-del title="Delete type ${esc(f.mark)}">✕</button></td></tr>`).join("")
+    : `<tr><td colspan="13" class="empty" style="padding:14px">No fixture types yet. Add a type mark to start the schedule.</td></tr>`;
+  body.querySelectorAll("[data-f]").forEach(inp=>{
+    const ev= inp.tagName==="SELECT"? "change" : "input";
+    inp.addEventListener(ev,()=>{ const f=fxById(inp.closest("tr").dataset.id); if(!f) return; let v=inp.value; if(inp.dataset.f==="mark") v=v.trim().toUpperCase().slice(0,4); f[inp.dataset.f]=v; render(); renderFxSummary(); renderInspector(); scheduleFlush(); });
+  });
+  body.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    const id=b.closest("tr").dataset.id; commit();
+    S.fixtures=S.fixtures.filter(f=>f.id!==id); S.items.forEach(i=>{ if(i.fx===id){ i.fx=""; i.num=0; } }); changed(); renderSchedRows(true);
+  });
+}
+function tagRange(id){ const n=S.items.filter(i=>i.fx===id).map(i=>i.num||0).filter(Boolean).sort((a,b)=>a-b); const f=fxById(id); if(!n.length||!f) return "—"; return n.length===1? f.mark+n[0] : `${f.mark}${n[0]}–${f.mark}${n[n.length-1]}`; }
+function renumberAll(){
+  commit();
+  const by={}; S.items.forEach(i=>{ if(i.fx){ (by[i.fx]=by[i.fx]||[]).push(i); } });
+  for(const k in by) by[k].sort((a,b)=>(a.y-b.y)||(a.x-b.x)).forEach((it,i)=>it.num=i+1);
+  changed();
+}
+$("bSched").onclick=openSchedule;
+$("bAddFx").onclick=()=>{ addFixture(); openSchedule(); };
+
+/* ---------- inspector ---------- */
+function fxOptions(cur){ return `<option value="">— none —</option>`+fxSort().map(f=>`<option value="${f.id}" ${f.id===cur?"selected":""}>${esc(f.mark)}${f.desc?" — "+esc(f.desc.slice(0,28)):""}</option>`).join("")+`<option value="__new">+ New type mark…</option>`; }
+function renderInspector(){
+  const b=$("inspBody");
+  if(b.contains(document.activeElement) && document.activeElement.id==="inNote") return;
+  if(!sel.size){ b.innerHTML=`<p class="empty">Nothing selected. Click a symbol, run, dimension or note to edit it. Shift-click adds to the selection.</p>`; return; }
+  if(sel.size>1){
+    const its=S.items.filter(i=>sel.has(i.id));
+    b.innerHTML=`<p class="empty">${sel.size} objects selected.</p>`+(its.length?`<label class="f">Set type mark for ${its.length} symbol${its.length>1?"s":""}<select id="inFxMulti">${fxOptions("")}</select></label>`:"");
+    const s=$("inFxMulti"); if(s) s.onchange=()=>{ let v=s.value; if(v==="__new") v=addFixture(its[0].type).id; commit(); its.forEach(i=>{ if(i.fx!==v){ i.fx=v; i.num=v?nextNum(v):0; } rememberMark(i.type,v); }); changed(); };
+    return;
+  }
+  const id=[...sel][0], f=findAny(id); if(!f) return;
+  if(f.c==="items"){
+    const it=f.o;
+    b.innerHTML=`<label class="f">Symbol<select id="inType">${CATS.map(c=>`<optgroup label="${c}">`+SYMS.filter(s=>s.cat===c).map(s=>`<option value="${s.id}" ${s.id===it.type?"selected":""}>${s.name}</option>`).join("")+`</optgroup>`).join("")}</select></label>
+    <div class="row2"><label class="f">Type mark<select id="inFx">${fxOptions(it.fx)}</select></label>
+    <label class="f">Tag no.<input id="inNum" type="number" min="1" step="1" value="${it.fx?it.num||"":""}" ${it.fx?"":"disabled"}></label>
+    <label class="f">Switch letter<input id="inTag" maxlength="6" placeholder="a, b…" value="${esc(it.tag||"")}"></label>
+    <label class="f">Rotation°<input id="inRot" type="number" step="15" value="${it.rot||0}"></label></div>
+    <label class="f">Shown on<select id="inShare"><option value="" ${!it.sheet?"selected":""}>Every sheet (shared position)</option><option value="${cur}" ${it.sheet?"selected":""}>This sheet only</option></select></label>
+    <p class="empty">${it.fx? `Tagged ${esc(tagText(it))}. New ${esc(SYM[it.type].name.toLowerCase())}s you drop take type ${esc((fxById(it.fx)||{}).mark||"")} and the next number.` : "Give this symbol a type mark to tag it and count it in the fixture schedule. Switch letters tie switches to what they control."}</p>`;
+    $("inType").onchange=e=>{ commit(); it.type=e.target.value; changed(); };
+    $("inFx").onchange=e=>{ let v=e.target.value; if(v==="__new") v=addFixture(it.type).id; commit(); it.fx=v; it.num=v?nextNum(v):0; rememberMark(it.type,v); changed(); };
+    $("inNum").onchange=e=>{ commit(); it.num=Math.max(1,parseInt(e.target.value)||1); changed(); };
+    $("inTag").onchange=e=>{ commit(); it.tag=e.target.value.trim(); changed(); };
+    $("inRot").onchange=e=>{ commit(); it.rot=((parseFloat(e.target.value)||0)%360+360)%360; changed(); };
+    $("inShare").onchange=e=>{ commit(); it.sheet=e.target.value; changed(); };
+  } else if(f.c==="wires"){
+    const w=f.o;
+    b.innerHTML=`<label class="f">Run type<select id="inWire">${Object.entries(WIRES).map(([k,v])=>`<option value="${k}" ${k===w.kind?"selected":""}>${v.name}</option>`).join("")}</select></label>
+    <div class="row"><button class="btn sm" id="inFlip">Flip curve</button><button class="btn sm" id="inStraight">Straighten</button></div>
+    <p class="empty">Drag the orange handle to reshape the arc.</p>`;
+    $("inWire").onchange=e=>{ commit(); w.kind=e.target.value; changed(); };
+    $("inFlip").onclick=()=>{ commit(); w.bend=-w.bend; changed(); };
+    $("inStraight").onclick=()=>{ commit(); w.bend=0; changed(); };
+  } else if(f.c==="dims"){
+    const d=f.o, g=dimGeom(d);
+    b.innerHTML=`<p class="empty"><b style="font-family:var(--mono);color:var(--fg)">${esc(dimLabel(g.L))}</b><br>Measured from where you clicked at this sheet’s scale. It is approximate and prints as VIF (verify in field).${d.a.item||d.b.item?" The end tied to a fixture follows it when the fixture moves.":""}</p>
+    <div class="row"><button class="btn sm" id="inDFlip">Flip side</button><button class="btn sm" id="inDZero">Remove offset</button></div>
+    <p class="empty">Drag the orange handle to offset the dimension line.</p>`;
+    $("inDFlip").onclick=()=>{ commit(); d.off=-(d.off||0)||1; changed(); };
+    $("inDZero").onclick=()=>{ commit(); d.off=0; changed(); };
+  } else if(f.c==="notes"){
+    const n=f.o;
+    b.innerHTML=`<label class="f">Note text<textarea id="inNote" rows="3">${esc(n.text)}</textarea></label>`;
+    const ta=$("inNote"); let first=true;
+    ta.oninput=()=>{ if(first){ commit(); first=false; } n.text=ta.value; recordAfter(); render(); scheduleFlush(); };
+  } else b.innerHTML="";
+}
+
+/* ---------- legend ---------- */
+function usedTypes(){ const c={}; vis("items").forEach(i=>c[i.type]=(c[i.type]||0)+1); return SYMS.filter(s=>c[s.id]).map(s=>({s,n:c[s.id]})); }
+function usedWires(){ const c={}; vis("wires").forEach(w=>{ if(wireGeom(w)) c[w.kind]=(c[w.kind]||0)+1; }); return Object.keys(WIRES).filter(k=>c[k]).map(k=>({k,n:c[k]})); }
+function wireIcon(k,color){ const v=WIRES[k]; return `<path d="M-18 8Q0-14 18 8" fill="none" stroke="${color||"currentColor"}" stroke-width="2.2" ${v.dash?'stroke-dasharray="6 4"':""}/>`+(v.arrow?`<path d="M12 0L19 9L9 9Z" fill="${color||"currentColor"}"/>`:""); }
+function renderLegend(){
+  if(!SH()){ $("legend").innerHTML=""; return; }
+  const u=usedTypes(), uw=usedWires();
+  if(!u.length&&!uw.length){ $("legend").innerHTML=`<p class="empty">The legend fills in as symbols are placed on this sheet.</p>`; return; }
+  $("legend").innerHTML=u.map(({s,n})=>`<div class="li">${iconSVG(s.id)}<span>${s.name}</span><span class="ct">${n}</span></div>`).join("")+
+    uw.map(({k,n})=>`<div class="li"><svg viewBox="-24 -24 48 48">${wireIcon(k)}</svg><span>${WIRES[k].name}</span><span class="ct">${n}</span></div>`).join("");
+}
+
+/* ---------- title block, notes, revisions, display ---------- */
+function getPath(o,p){ return p.split(".").reduce((a,k)=>a&&a[k],o); }
+function setPath(o,p,v){ const ks=p.split("."); let a=o; for(let i=0;i<ks.length-1;i++) a=a[ks[i]]=a[ks[i]]||{}; a[ks[ks.length-1]]=v; }
+document.querySelectorAll("[data-m]").forEach(el=>el.addEventListener("input",()=>{ setPath(S.meta,el.dataset.m,el.value); metaTouch(); }));
+function bindMetaFields(){
+  if(!S.meta) return;
+  document.querySelectorAll("[data-m]").forEach(el=>{ if(document.activeElement!==el) el.value=getPath(S.meta,el.dataset.m)||""; });
+  const ae=document.activeElement;
+  if(!$("notesList").contains(ae)) renderNotesList();
+  if(!$("revList").contains(ae)) renderRevs();
+  syncDisplay();
+}
+function renderNotesList(){
+  const sh=SH(); if(!sh){ $("notesList").innerHTML=""; return; }
+  const L=sh.notes||(sh.notes=[]);
+  $("notesList").innerHTML= L.length? L.map((t,i)=>`<div class="nrow"><span class="n">${i+1}.</span><textarea class="inp" data-i="${i}" rows="2">${esc(t)}</textarea><span class="acts"><button data-up="${i}" title="Move up">↑</button><button data-dn="${i}" title="Move down">↓</button><button data-rm="${i}" title="Remove">✕</button></span></div>`).join("") : `<p class="empty">No notes on this sheet.</p>`;
+  $("notesList").querySelectorAll("textarea").forEach(ta=>ta.addEventListener("input",()=>{ L[+ta.dataset.i]=ta.value; metaTouch(); }));
+  $("notesList").querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.up; if(i>0){ [L[i-1],L[i]]=[L[i],L[i-1]]; renderNotesList(); metaTouch(); } });
+  $("notesList").querySelectorAll("[data-dn]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.dn; if(i<L.length-1){ [L[i+1],L[i]]=[L[i],L[i+1]]; renderNotesList(); metaTouch(); } });
+  $("notesList").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ L.splice(+b.dataset.rm,1); renderNotesList(); metaTouch(); });
+}
+$("bAddNote").onclick=()=>{ const sh=SH(); if(!sh) return; (sh.notes=sh.notes||[]).push(""); renderNotesList(); metaTouch(); const t=$("notesList").querySelectorAll("textarea"); t[t.length-1].focus(); };
+function renderRevs(){
+  const R=M().revisions||(M().revisions=[]);
+  $("revList").innerHTML= R.length? R.map((r,i)=>`<div class="rev"><input data-r="${i}" data-k="no" value="${esc(r.no||"")}" placeholder="No."><input data-r="${i}" data-k="desc" value="${esc(r.desc||"")}" placeholder="Description"><input data-r="${i}" data-k="date" value="${esc(r.date||"")}" placeholder="Date"><button data-rr="${i}" title="Remove">✕</button></div>`).join("") : `<p class="empty">No revisions yet.</p>`;
+  $("revList").querySelectorAll("input").forEach(inp=>inp.addEventListener("input",()=>{ R[+inp.dataset.r][inp.dataset.k]=inp.value; metaTouch(); }));
+  $("revList").querySelectorAll("[data-rr]").forEach(b=>b.onclick=()=>{ R.splice(+b.dataset.rr,1); renderRevs(); metaTouch(); });
+}
+$("bAddRev").onclick=()=>{ const R=M().revisions; const n=R.length? (parseInt(R[R.length-1].no)||R.length)+1 : 1; R.push({no:String(n),desc:"",date:today()}); renderRevs(); metaTouch(); };
+function syncDisplay(){ const d=(SH()&&SH().display)||{symScale:100,planOp:60}; $("rSym").value=d.symScale; $("oSym").textContent=d.symScale+"%"; $("rOp").value=d.planOp; $("oOp").textContent=d.planOp+"%"; $("cTagNo").checked=!!M().display.tagNo; $("cLive").checked=live; }
+$("rSym").oninput=e=>{ if(!SH()) return; SH().display.symScale=+e.target.value; syncDisplay(); render(); metaTouch(); };
+$("rOp").oninput=e=>{ if(!SH()) return; SH().display.planOp=+e.target.value; syncDisplay(); render(); metaTouch(); };
+$("cTagNo").onchange=e=>{ M().display.tagNo=e.target.checked; render(); metaTouch(); };
+$("cLive").onchange=e=>{ live=e.target.checked; lsSet("pos-live",live?"1":"0"); schedulePoll(); updateButtons(); if(live) load(false); };
+
+/* ---------- project: backup, import, passcode, sign out ---------- */
+async function blobToDataURL(b){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(b); }); }
+$("bBackup").onclick=async()=>{
+  try{
+    toast("Preparing backup…");
+    const doc={meta:S.meta}; for(const c of SYNC){ doc[c]={}; S[c].forEach(o=>doc[c][o.id]=o); }
+    const assets={};
+    for(const s of S.sheets) if(s.base&&s.base.asset&&!assets[s.base.asset]) assets[s.base.asset]=await blobToDataURL(await api(SLUG+"/assets/"+s.base.asset,{key:KEY,raw:true}));
+    const blob=new Blob([JSON.stringify({app:"sireneum-client-plans",v:3,slug:SLUG,saved:new Date().toISOString(),doc,assets})],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`${SLUG}-plans-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
+  }catch(err){ toast("Backup failed: "+err.message); }
+};
+$("bImport").onclick=()=>$("fProj").click();
+$("fProj").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  let o; try{ o=JSON.parse(await f.text()); if(!o.doc) throw 0; }catch(_){ toast("That file isn't a backup from this tool."); return; }
+  const m=modal(`<h3>Import ${esc(f.name)}?</h3><p class="empty">This replaces every sheet, symbol, schedule row and title-block field in this project for everyone. Download a backup first if you might want the current version.</p><div class="row"><button class="btn primary" data-ok>Replace project</button><button class="btn" data-x>Cancel</button></div>`,true);
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  m.querySelector("[data-ok]").onclick=async()=>{
+    m.remove(); toast("Importing…");
+    try{
+      const map={};
+      for(const [oldId,data] of Object.entries(o.assets||{})){ const blob=await (await fetch(data)).blob(); const {id}=await api(SLUG+"/assets",{method:"POST",key:KEY,body:blob,raw:"upload",type:blob.type||"image/jpeg"}); map[oldId]=id; }
+      for(const c of SYNC){ S[c]=Object.entries(o.doc[c]||{}).map(([id,v])=>({...v,id})); }
+      S.sheets.forEach(s=>{ if(s.base&&map[s.base.asset]) s.base.asset=map[s.base.asset]; });
+      S.meta=defaultMeta(clone(o.doc.meta||{}));
+      undoStack.length=0; redoStack.length=0; sel.clear();
+      await flush();
+      cur=sortedSheets()[0]?sortedSheets()[0].id:""; bindMetaFields(); buildSheetSel(); refresh(); await loadBase(); fit();
+      toast("Imported.");
+    }catch(err){ toast("Import failed: "+err.message); }
+  };
+};
+$("bSetPass").onclick=async()=>{
+  const p=$("newPass").value.trim(); if(p.length<8){ toast("Use at least 8 characters."); return; }
+  try{ await api(SLUG+"/passcode",{method:"POST",key:KEY,body:{passcode:p}}); $("newPass").value=""; toast("Passcode changed. Send the new one to your client."); }catch(err){ toast(err.message); }
+};
+$("bSignOut").onclick=()=>{ lsSet("pos-key-"+SLUG,null); if(ROLE==="admin") lsSet("pos-admin",null); location.reload(); };
+
+/* ---------- print engine (inches) ---------- */
+function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("image failed to load")); i.src=src; }); }
+const fname = ext => `${SH().no||""} ${SH().title||"Plan"}`.replace(/[\\/:*?"<>|]+/g,"").trim()+"."+ext;
+function overlaySVG(color,k){
+  const b=BASE(); k=k||1;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(b.w*k)}" height="${Math.round(b.h*k)}" viewBox="0 0 ${b.w} ${b.h}" color="${color}">`+
+    vis("wires").map(w=>wireSVG(w,color,true)).join("")+vis("dims").map(d=>dimSVG(d,color,true)).join("")+vis("items").map(i=>itemSVG(i,true)).join("")+vis("notes").map(n=>noteSVG(n,true)).join("")+`</svg>`;
+}
+async function prepare(){
+  const sh=SH(), b=BASE(), color=sh.print.black?"#000":INK;
+  const ok=Math.max(1,Math.min(3,5000/Math.max(b.w,b.h)));
+  const base=await loadImg(await assetURL(b.asset));
+  const ov=await loadImg("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(overlaySVG(color,ok)));
+  const icons={};
+  const mk=async(key,inner)=>{ const im=await loadImg("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="-24 -24 48 48" color="${color}">${inner}</svg>`)); const c=document.createElement("canvas"); c.width=c.height=96; c.getContext("2d").drawImage(im,0,0); icons[key]=c; };
+  await Promise.all([...usedTypes().map(({s})=>mk(s.id,symGroup(s.id))), ...usedWires().map(({k})=>mk("w_"+k,wireIcon(k,color)))]);
+  return {icons, plan(pxW,pxH){
+    const cap=15e6, k=Math.min(1,Math.sqrt(cap/(pxW*pxH)));
+    const c=document.createElement("canvas"); c.width=Math.max(1,Math.round(pxW*k)); c.height=Math.max(1,Math.round(pxH*k));
+    const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height);
+    x.globalAlpha=(sh.display.planOp||60)/100; x.drawImage(base,0,0,c.width,c.height); x.globalAlpha=1; x.drawImage(ov,0,0,c.width,c.height);
+    return c;
+  }};
+}
+function pdfBackend(pdf){
+  const font=(b)=>pdf.setFont("helvetica",b?"bold":"normal");
+  return {
+    line(x1,y1,x2,y2,w,c){ pdf.setDrawColor(c||"#000000"); pdf.setLineWidth(w/72); pdf.line(x1,y1,x2,y2); },
+    rect(x,y,w,h,lw,fill,c){ pdf.setDrawColor(c||"#000000"); pdf.setLineWidth((lw||0.1)/72); if(fill){ pdf.setFillColor(fill); pdf.rect(x,y,w,h,lw?"FD":"F"); } else pdf.rect(x,y,w,h,"S"); },
+    circle(x,y,r,lw,fill){ pdf.setDrawColor("#000000"); pdf.setLineWidth(lw/72); if(fill){ pdf.setFillColor(fill); pdf.circle(x,y,r,"FD"); } else pdf.circle(x,y,r,"S"); },
+    text(s,x,y,o){ font(o.bold); pdf.setFontSize(o.size); pdf.setTextColor(o.color||"#000000"); pdf.text(String(s),x,y,{align:o.align||"left",baseline:"alphabetic"}); },
+    measure(s,size,bold){ font(bold); pdf.setFontSize(size); return pdf.getTextWidth(String(s)); },
+    image(c,x,y,w,h,png){ pdf.addImage(png? c.toDataURL("image/png") : c.toDataURL("image/jpeg",.9), png?"PNG":"JPEG", x,y,w,h, undefined, "FAST"); },
+    planDpi:220
+  };
+}
+function canvasBackend(ctx,dpi){
+  const X=v=>v*dpi, F=(size,b)=>`${b?"700 ":""}${(size/72*dpi).toFixed(2)}px Helvetica, Arial, sans-serif`;
+  return {
+    line(x1,y1,x2,y2,w,c){ ctx.strokeStyle=c||"#000"; ctx.lineWidth=Math.max(.5,w/72*dpi); ctx.beginPath(); ctx.moveTo(X(x1),X(y1)); ctx.lineTo(X(x2),X(y2)); ctx.stroke(); },
+    rect(x,y,w,h,lw,fill,c){ if(fill){ ctx.fillStyle=fill; ctx.fillRect(X(x),X(y),X(w),X(h)); } if(lw||!fill){ ctx.strokeStyle=c||"#000"; ctx.lineWidth=Math.max(.5,(lw||.1)/72*dpi); ctx.strokeRect(X(x),X(y),X(w),X(h)); } },
+    circle(x,y,r,lw,fill){ ctx.beginPath(); ctx.arc(X(x),X(y),X(r),0,Math.PI*2); if(fill){ ctx.fillStyle=fill; ctx.fill(); } ctx.strokeStyle="#000"; ctx.lineWidth=Math.max(.5,lw/72*dpi); ctx.stroke(); },
+    text(s,x,y,o){ ctx.font=F(o.size,o.bold); ctx.fillStyle=o.color||"#000"; ctx.textAlign=o.align||"left"; ctx.textBaseline="alphabetic"; ctx.fillText(String(s),X(x),X(y)); },
+    measure(s,size,bold){ ctx.font=F(size,bold); return ctx.measureText(String(s)).width/dpi; },
+    image(c,x,y,w,h){ ctx.drawImage(c,X(x),X(y),X(w),X(h)); },
+    planDpi:dpi
+  };
+}
+function wrap(B,text,size,bold,maxW){
+  const out=[];
+  for(const para of String(text||"").split("\n")){
+    let line="";
+    for(const w of para.split(/\s+/).filter(Boolean)){
+      const t=line? line+" "+w : w;
+      if(B.measure(t,size,bold)<=maxW||!line) line=t; else { out.push(line); line=w; }
+    }
+    out.push(line);
+  }
+  return out;
+}
+function drawSheet(B, prep){
+  const sh=SH(), Pp=sh.print, sz=SHEETS[Pp.sheet]||SHEETS.D, Wd=sz.w, Ht=sz.h, warns=[];
+  const base=BASE(), pf=ppf();
+  B.rect(0,0,Wd,Ht,0,"#ffffff");
+  const m= Ht>=24? .5 : Ht>=18? .4 : .3, mL=m*1.75;
+  const fs = Ht>=30? 9 : Ht>=24? 8 : Ht>=18? 7.5 : Ht>=12? 6.5 : 6;
+  const lh = fs/72*1.3;
+  B.rect(mL,m,Wd-mL-m,Ht-2*m,2.2);
+  const tbW = Math.min(4, Math.max(1.85, Wd*0.095)), tbX=Wd-m-tbW;
+  B.line(tbX,m,tbX,Ht-m,1.4);
+  const sc = SCALES.find(s=>s[0]===Pp.scale)||SCALES[2];
+  const pad= Ht>=18? .35 : .22;
+  const dx0=mL+pad, dy0=m+pad, dx1=tbX-pad, dy1=Ht-m-pad;
+  const spW = Math.min(9.5, Math.max(Wd>=24?3.6:2.6, (dx1-dx0)*0.31)), spX=dx1-spW;
+  const band = fs/72*5.2;
+  const ax0=dx0, ax1=spX-pad*1.2, ay0=dy0, ay1=dy1-band;
+  let inPerUnit, sLabel;
+  if(sc[1]){ inPerUnit=sc[1]/pf; sLabel=scaleLabel(sc[0]); }
+  else { inPerUnit=Math.min((ax1-ax0)/base.w,(ay1-ay0)/base.h); sLabel="NOT TO SCALE"; }
+  const pw=base.w*inPerUnit, ph=base.h*inPerUnit;
+  if(pw>ax1-ax0+.01||ph>ay1-ay0+.01) warns.push(`At ${sLabel} the drawing image is ${pw.toFixed(1)}″ × ${ph.toFixed(1)}″, larger than the ${(ax1-ax0).toFixed(1)}″ × ${(ay1-ay0).toFixed(1)}″ drawing area on ${sz.name.split(" —")[0]}. Edges will be cropped — pick a smaller scale or larger sheet.`);
+  const pxL=ax0+Math.max(0,(ax1-ax0-pw)/2), pyT=ay0+Math.max(0,(ay1-ay0-ph)/2)*0.25;
+  const v={x0:Math.max(pxL,ax0),y0:Math.max(pyT,ay0),x1:Math.min(pxL+pw,ax1+pad*.6),y1:Math.min(pyT+ph,ay1)};
+  if(v.x1>v.x0&&v.y1>v.y0){
+    const dpi=B.planDpi, full=prep.plan(pw*dpi,ph*dpi);
+    const sx=(v.x0-pxL)/pw*full.width, sy=(v.y0-pyT)/ph*full.height, sw2=(v.x1-v.x0)/pw*full.width, sh2=(v.y1-v.y0)/ph*full.height;
+    const c=document.createElement("canvas"); c.width=Math.max(1,Math.round(sw2)); c.height=Math.max(1,Math.round(sh2));
+    c.getContext("2d").drawImage(full,sx,sy,sw2,sh2,0,0,c.width,c.height);
+    B.image(c,v.x0,v.y0,v.x1-v.x0,v.y1-v.y0);
+  }
+  // drawing title
+  const ty=Math.min(v.y1,ay1)+fs/72*2.6, bx=ax0+fs/72*2.2, br=fs/72*1.6;
+  B.circle(bx,ty,br,1.1,"#ffffff"); B.line(bx-br,ty,bx+br,ty,.8);
+  B.text("1",bx,ty-br*.25,{size:fs*1.15,bold:true,align:"center"}); B.text(sh.no||"",bx,ty+br*.72,{size:fs*.8,align:"center"});
+  const tx=bx+br+fs/72*1.2, dt=(Pp.dtitle||sh.title||"Plan").toUpperCase();
+  B.text(dt,tx,ty-fs/72*.25,{size:fs*1.55,bold:true});
+  const tw=B.measure(dt,fs*1.55,true);
+  B.line(tx,ty+fs/72*.35,tx+Math.max(tw,2),ty+fs/72*.35,1.6);
+  B.text("SCALE: "+sLabel,tx,ty+fs/72*1.6,{size:fs*.95});
+  if(sLabel!=="NOT TO SCALE"){
+    const ftIn=sc[1]; let n=[1,2,4,5,8,10,16,20,40].filter(q=>q*ftIn<=2.2).pop()||1;
+    const len=n*ftIn, x0=tx+Math.max(tw,2)+fs/72*3, y0=ty-fs/72*.9, hh=fs/72*.55, seg=4;
+    if(x0+len<ax1){
+      for(let i=0;i<seg;i++) B.rect(x0+len/seg*i,y0,len/seg,hh,.6,i%2?"#ffffff":"#000000");
+      B.text("0",x0,y0+hh+fs/72*1.1,{size:fs*.75,align:"center"}); B.text(n/2+"'",x0+len/2,y0+hh+fs/72*1.1,{size:fs*.75,align:"center"}); B.text(n+"'",x0+len,y0+hh+fs/72*1.1,{size:fs*.75,align:"center"});
+      const nx=x0+len+fs/72*4, ny=ty-fs/72*.6, nr=fs/72*1.4;
+      B.circle(nx,ny,nr,.9,"#ffffff"); B.line(nx,ny+nr,nx,ny-nr*1.5,1.2); B.text("N",nx,ny-nr*1.65,{size:fs*.9,bold:true,align:"center"});
+    }
+  }
+  // side panel
+  let y=dy0+fs/72*1.1; const H1=fs*1.2, gap=lh*.9;
+  const head=(t)=>{ B.text(t,spX,y,{size:H1,bold:true}); y+=fs/72*.55; B.line(spX,y,dx1,y,1); y+=lh*1.15; };
+  const notes=(sh.notes||[]).filter(t=>String(t).trim());
+  if(notes.length){
+    head("GENERAL NOTES");
+    const ind=fs/72*2.2;
+    notes.forEach((t,i)=>{ B.text((i+1)+".",spX,y,{size:fs}); wrap(B,t,fs,false,spW-ind).forEach(l=>{ B.text(l,spX+ind,y,{size:fs}); y+=lh; }); y+=lh*.3; });
+    y+=gap;
+  }
+  const ut=usedTypes(), uw=usedWires();
+  if(ut.length||uw.length){
+    head("LEGEND");
+    const rows=[...ut.map(({s})=>({ic:prep.icons[s.id],t:s.name})), ...uw.map(({k})=>({ic:prep.icons["w_"+k],t:WIRES[k].name}))];
+    const cols= spW>=5? 2 : 1, cw=spW/cols, ic=fs/72*2.4, rh=Math.max(ic*1.05,lh*1.3);
+    rows.forEach((r,i)=>{ const c=i%cols, rr=Math.floor(i/cols), x=spX+c*cw, yy=y+rr*rh; if(r.ic) B.image(r.ic,x,yy-ic*.68,ic,ic,true); B.text(r.t,x+ic+fs/72*.8,yy,{size:fs}); });
+    y+=Math.ceil(rows.length/cols)*rh+gap;
+  }
+  if(S.fixtures.length){
+    head("LIGHTING FIXTURE SCHEDULE");
+    const cols=[["TYPE",.55,f=>f.mark],["DESCRIPTION",2.1,f=>f.desc],["MANUFACTURER / CATALOG",1.9,f=>[f.mfr,f.cat].filter(Boolean).join(" / ")],["LAMP / LUMENS / CCT",1.5,f=>f.lamp],["W",.45,f=>f.watts],["V",.45,f=>f.volts],["MOUNTING",1.1,f=>f.mount],["QTY",.45,f=>String(fxQty(f.id))],["REMARKS",1.5,f=>f.notes]];
+    const tot=cols.reduce((a,c)=>a+c[1],0), cs=fs*.88, cl=cs/72*1.25, cp=fs/72*.35;
+    const widths=cols.map(c=>c[1]/tot*spW);
+    let x=spX; const hh=cl*2.3;
+    B.rect(spX,y-cl*1.0,spW,hh,.8,"#eeeeee");
+    cols.forEach((c,i)=>{ const ls=wrap(B,c[0],cs*.85,true,widths[i]-cp*2); ls.slice(0,2).forEach((l,j)=>B.text(l,x+cp,y+cl*j*.95,{size:cs*.85,bold:true})); x+=widths[i]; });
+    let ry=y-cl+hh;
+    for(const f of fxSort()){
+      const cells=cols.map((c,i)=>wrap(B,c[2](f)||"",cs,i===0,widths[i]-cp*2));
+      const n=Math.max(1,...cells.map(c=>c.length)), rh=n*cl+cp*2;
+      x=spX;
+      cells.forEach((ls,i)=>{ ls.forEach((l,j)=>B.text(l,x+cp,ry+cp+cl*(j+.8),{size:cs,bold:i===0})); x+=widths[i]; });
+      B.line(spX,ry+rh,dx1,ry+rh,.5);
+      ry+=rh;
+    }
+    x=spX; B.rect(spX,y-cl,spW,ry-(y-cl),.9); widths.slice(0,-1).forEach(w=>{ x+=w; B.line(x,y-cl,x,ry,.5); });
+    y=ry+gap;
+  }
+  if(y>dy1) warns.push("Sheet notes, legend and fixture schedule run past the bottom of the sheet. Choose a larger sheet or shorten the notes.");
+  drawTitleBlock(B,tbX,m,tbW,Ht-2*m,sLabel,warns);
+  return {warns, sLabel};
+}
+function drawTitleBlock(B,x,y,w,h,sLabel,warns){
+  const tb=M().tb, f=M().firm, sh=SH(), k=Math.max(.62,w/3.4), p=.12*k+.04, iw=w-2*p;
+  const L=(t,yy,size,o)=>B.text(t,x+p,yy,{size,...(o||{})});
+  const pt=v=>v*k;
+  let yy=y+p+pt(14)/72;
+  wrap(B,(f.name||"").toUpperCase(),pt(13),true,iw).forEach(l=>{ L(l,yy,pt(13),{bold:true}); yy+=pt(13)/72*1.15; });
+  yy+=pt(2)/72;
+  for(const v of [f.addr1,f.addr2,f.phone,f.email,f.web]) if(v){ L(v,yy,pt(7)); yy+=pt(7)/72*1.35; }
+  yy+=pt(4)/72; B.line(x,yy,x+w,yy,1); yy+=pt(10)/72;
+  L("PROJECT",yy,pt(5.5),{color:"#555555"}); yy+=pt(10)/72;
+  wrap(B,tb.project||"",pt(9),true,iw).forEach(l=>{ L(l,yy,pt(9),{bold:true}); yy+=pt(9)/72*1.2; });
+  wrap(B,tb.addr||"",pt(7),false,iw).forEach(l=>{ L(l,yy,pt(7)); yy+=pt(7)/72*1.3; });
+  if(tb.client){ yy+=pt(4)/72; L("CLIENT",yy,pt(5.5),{color:"#555555"}); yy+=pt(9)/72; L(tb.client,yy,pt(7.5)); yy+=pt(7)/72*1.3; }
+  yy+=pt(3)/72; B.line(x,yy,x+w,yy,1); yy+=pt(10)/72;
+  const topEnd=yy;
+  let by=y+h;
+  const numH=pt(46)/72;
+  B.line(x,by-numH,x+w,by-numH,1.4);
+  B.text("SHEET",x+p,by-numH+pt(8)/72,{size:pt(5.5),color:"#555555"});
+  B.text(sh.no||"",x+w/2,by-pt(10)/72,{size:pt(30),bold:true,align:"center"});
+  by-=numH;
+  const ttl=wrap(B,(sh.title||"").toUpperCase(),pt(9),true,iw).slice(0,3);
+  const ttH=pt(10)/72+ttl.length*pt(9)/72*1.2+pt(6)/72;
+  B.line(x,by-ttH,x+w,by-ttH,1);
+  B.text("SHEET TITLE",x+p,by-ttH+pt(8)/72,{size:pt(5.5),color:"#555555"});
+  ttl.forEach((l,i)=>B.text(l,x+p,by-ttH+pt(17)/72+i*pt(9)/72*1.2,{size:pt(9),bold:true}));
+  by-=ttH;
+  const cells=[["PROJECT NO.",tb.projno],["DATE",tb.date],["DRAWN BY",tb.drawn],["CHECKED BY",tb.checked],["SCALE",sLabel],["ISSUE",tb.issue]];
+  const ch=pt(19)/72, gridH=ch*3;
+  B.line(x,by-gridH,x+w,by-gridH,1);
+  cells.forEach((c,i)=>{ const col=i%2, row=Math.floor(i/2), cx=x+col*w/2, cy=by-gridH+row*ch;
+    if(row) B.line(x,cy,x+w,cy,.5);
+    B.text(c[0],cx+p*.7,cy+pt(7)/72,{size:pt(5),color:"#555555"});
+    B.text((wrap(B,c[1]||"",pt(6.8),false,w/2-p*1.2)[0]||""),cx+p*.7,cy+pt(15)/72,{size:pt(6.8)});
+  });
+  B.line(x+w/2,by-gridH,x+w/2,by,.5);
+  by-=gridH;
+  const fn=f.name||"Sireneum Designs";
+  const cp=wrap(B,`© ${new Date().getFullYear()} ${fn}. All rights reserved. These drawings are instruments of service and remain the property of ${fn}. Reuse or reproduction without written permission is prohibited.`,pt(5),false,iw);
+  const cpH=cp.length*pt(5)/72*1.3+pt(8)/72;
+  cp.forEach((l,i)=>B.text(l,x+p,by-cpH+pt(9)/72+i*pt(5)/72*1.3,{size:pt(5),color:"#333333"}));
+  by-=cpH; B.line(x,by,x+w,by,1);
+  const sealS=Math.min(iw*.8, 2.2*k), sealY=by-sealS-pt(8)/72;
+  B.rect(x+(w-sealS)/2,sealY,sealS,sealS,.5,null,"#999999");
+  B.text("SEAL / STAMP",x+w/2,sealY+pt(9)/72,{size:pt(5.5),color:"#777777",align:"center"});
+  let ry=topEnd+pt(10)/72;
+  B.text("REVISIONS",x+p,ry,{size:pt(5.5),color:"#555555"}); ry+=pt(4)/72;
+  const R=(M().revisions||[]), rh=pt(7)/72*1.7, c1=iw*.14, c3=iw*.28;
+  const fitRows=Math.floor((sealY-pt(12)/72-ry)/rh), rows=Math.max(Math.min(R.length,fitRows), Math.min(12,Math.max(3,fitRows)));
+  B.text("NO.",x+p,ry+rh*.7,{size:pt(5),color:"#555555"}); B.text("DESCRIPTION",x+p+c1,ry+rh*.7,{size:pt(5),color:"#555555"}); B.text("DATE",x+w-p,ry+rh*.7,{size:pt(5),color:"#555555",align:"right"});
+  ry+=rh; B.line(x+p,ry,x+w-p,ry,.6);
+  for(let i=0;i<rows;i++){
+    const r=R[i], ly=ry+rh*(i+1);
+    if(r){ B.text(r.no||"",x+p,ly-rh*.3,{size:pt(6.5)}); B.text((wrap(B,r.desc||"",pt(6.5),false,iw-c1-c3-.05)[0]||""),x+p+c1,ly-rh*.3,{size:pt(6.5)}); B.text(r.date||"",x+w-p,ly-rh*.3,{size:pt(6.5),align:"right"}); }
+    B.line(x+p,ly,x+w-p,ly,.4);
+  }
+  B.line(x+p+c1-.03,ry-rh,x+p+c1-.03,ry+rh*rows,.4); B.line(x+w-p-c3,ry-rh,x+w-p-c3,ry+rh*rows,.4);
+  if(R.length>rows) warns.push("Some revisions don't fit in the title block.");
+}
+$("bPrint").onclick=openPrint;
+function openPrint(){
+  const Pp=SH().print;
+  const m=modal(`<div class="row" style="justify-content:space-between"><h3>Print / export ${esc(SH().no)}</h3><button class="btn sm" data-x>Close</button></div>
+  <div class="printdlg">
+    <div class="pv"><canvas id="pvC" width="10" height="10"></canvas></div>
+    <div>
+      <label class="f">Sheet size<select id="pSheet">${Object.entries(SHEETS).map(([k,v])=>`<option value="${k}" ${k===Pp.sheet?"selected":""}>${v.name}</option>`).join("")}</select></label>
+      <label class="f">Scale<select id="pScale">${SCALES.map(([k])=>`<option value="${k}" ${k===Pp.scale?"selected":""}>${k==="fit"?"Fit to sheet (NTS)":scaleLabel(k)}</option>`).join("")}</select></label>
+      <label class="f">Drawing title<input id="pTitle" value="${esc(Pp.dtitle||"")}"></label>
+      <label class="chk"><input type="checkbox" id="pBlack" ${Pp.black?"checked":""}> Symbols in black</label>
+      <div class="warns" id="pWarn"></div>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="pPdf">Download PDF</button><button class="btn" id="pPng">Download PNG</button></div>
+      <p class="empty">The PDF prints at true scale when the print dialog is set to 100% / Actual size on the matching sheet.</p>
+    </div>
+  </div>`);
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  let tmr=null, token=0;
+  const redraw=()=>{ clearTimeout(tmr); tmr=setTimeout(async()=>{
+    const my=++token;
+    try{
+      const prep=await prepare(); if(my!==token) return;
+      const sz=SHEETS[SH().print.sheet]||SHEETS.D, c=m.querySelector("#pvC"); if(!c) return;
+      const avail=Math.min(860,(m.querySelector(".pv").clientWidth-20)||600), dpi=avail/sz.w;
+      c.width=Math.round(sz.w*dpi); c.height=Math.round(sz.h*dpi);
+      const res=drawSheet(canvasBackend(c.getContext("2d"),dpi),prep);
+      m.querySelector("#pWarn").innerHTML= res.warns.length? res.warns.map(w=>`<p>${esc(w)}</p>`).join("") : `<p class="ok">Drawing fits at ${esc(res.sLabel)} on ${esc(sz.name)}.</p>`;
+    }catch(e){ m.querySelector("#pWarn").innerHTML=`<p>Preview failed: ${esc(e.message||"unknown error")}</p>`; }
+  },120); };
+  const upd=(k,v)=>{ SH().print[k]=v; metaTouch(); redraw(); };
+  m.querySelector("#pSheet").onchange=e=>upd("sheet",e.target.value);
+  m.querySelector("#pScale").onchange=e=>upd("scale",e.target.value);
+  m.querySelector("#pTitle").oninput=e=>upd("dtitle",e.target.value);
+  m.querySelector("#pBlack").onchange=e=>upd("black",e.target.checked);
+  m.querySelector("#pPdf").onclick=e=>busy(e.currentTarget,exportPdf);
+  m.querySelector("#pPng").onclick=e=>busy(e.currentTarget,exportPng);
+  requestAnimationFrame(redraw);
+}
+async function busy(btn,fn){ const t=btn.textContent; btn.disabled=true; btn.textContent="Working…"; try{ await fn(); } catch(e){ toast("Export failed: "+(e&&e.message||"the sheet could not be drawn")); } finally{ btn.disabled=false; btn.textContent=t; } }
+function download(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000); }
+async function exportPdf(){
+  if(!window.jspdf){ try{ await loadScript("/client/vendor/jspdf.umd.min.js"); }catch(e){} }
+  if(!window.jspdf){ toast("The PDF library didn't load. Download PNG instead."); return; }
+  const sz=SHEETS[SH().print.sheet]||SHEETS.D, prep=await prepare();
+  const pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"in",format:[sz.h,sz.w]});
+  const res=drawSheet(pdfBackend(pdf),prep);
+  pdf.setProperties({title:`${SH().no} ${SH().title}`,subject:M().tb.project||"",author:M().firm.name||"",creator:"Sireneum Designs client plans"});
+  if(res.warns.length) toast(res.warns[0]);
+  download(pdf.output("blob"),fname("pdf"));
+}
+async function exportPng(){
+  const sz=SHEETS[SH().print.sheet]||SHEETS.D, prep=await prepare();
+  const dpi=Math.min(150,Math.sqrt(15e6/(sz.w*sz.h)));
+  const c=document.createElement("canvas"); c.width=Math.round(sz.w*dpi); c.height=Math.round(sz.h*dpi);
+  drawSheet(canvasBackend(c.getContext("2d"),dpi),prep);
+  download(await new Promise(r=>c.toBlob(r,"image/png")),fname("png"));
+}
+
+/* ---------- boot ---------- */
+async function startApp(){
+  $("gate").hidden=true; $("app").hidden=false;
+  try{ lastMark=JSON.parse(lsGet("pos-lastmark-"+SLUG,"{}"))||{}; }catch(e){ lastMark={}; }
+  buildPalette(); setSync("ok");
+  await load(true);
+  if(!S.meta) S.meta=defaultMeta({});
+  bindMetaFields(); buildSheetSel(); refresh();
+  let fitted=false; new ResizeObserver(()=>{ if(!fitted&&BASE()){ fit(); fitted=true; } }).observe($("stage"));
+  schedulePoll();
+}
+})();
+</script>
+</body>
+</html>
