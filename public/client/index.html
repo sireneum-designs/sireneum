@@ -746,7 +746,8 @@ function itemSVG(it, forExport){
   let out=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g transform="rotate(${it.rot||0}) scale(${k.toFixed(4)})">${symGroup(it.type, forExport?"":'<circle r="21" fill="transparent" stroke="none"/>')}</g>`;
   const tt=tagText(it);
   if(tt){
-    const fs=s*.3, w=Math.max(s*.42, fs*.62*tt.length+s*.16), h=fs*1.35, cx=-s*.62-w/2+s*.2, cy=-s*.62;
+    const fs=s*.28, w=Math.max(s*.4, fs*.62*tt.length+s*.14), h=fs*1.3, pos=it.tagPos||"ul";
+    const cx=(pos[1]==="l"? -1 : 1)*(w/2-s*.02), cy=(pos[0]==="u"? -1 : 1)*s*.36;
     out+=`<rect x="${(cx-w/2).toFixed(1)}" y="${(cy-h/2).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${(h/2).toFixed(1)}" fill="#fff" stroke="currentColor" stroke-width="${(s*.04).toFixed(2)}"/>`+
          `<text x="${cx.toFixed(1)}" y="${(cy+fs*.36).toFixed(1)}" font-size="${fs.toFixed(1)}" font-family="Arial,Helvetica,sans-serif" font-weight="700" text-anchor="middle" fill="currentColor">${esc(tt)}</text>`;
   }
@@ -1514,8 +1515,9 @@ function renderInspector(){
   if(!sel.size){ b.innerHTML=`<p class="empty">Nothing selected. Click a symbol, run, dimension or note to edit it. Shift-click adds to the selection.</p>`; return; }
   if(sel.size>1){
     const its=S.items.filter(i=>sel.has(i.id));
-    b.innerHTML=`<p class="empty">${sel.size} objects selected.</p>`+(its.length?`<label class="f">Set type mark for ${its.length} symbol${its.length>1?"s":""}<select id="inFxMulti">${fxOptions("")}</select></label>`:"");
+    b.innerHTML=`<p class="empty">${sel.size} objects selected.</p>`+(its.length?`<label class="f">Set type mark for ${its.length} symbol${its.length>1?"s":""}<select id="inFxMulti">${fxOptions("")}</select></label>`+`<label class="f">Tag position<select id="inTagPos">${[["ul","Upper left"],["ur","Upper right"],["ll","Lower left"],["lr","Lower right"]].map(([v,l])=>`<option value="${v}" ${(its[0].tagPos||"ul")===v?"selected":""}>${l}</option>`).join("")}</select></label>`:"");
     const s=$("inFxMulti"); if(s) s.onchange=()=>{ let v=s.value; if(v==="__new") v=addFixture(its[0].type).id; commit(); its.forEach(i=>{ if(i.fx!==v){ i.fx=v; i.num=v?nextNum(v):0; } rememberMark(i.type,v); }); changed(); };
+    const tpm=$("inTagPos"); if(tpm) tpm.onchange=e=>{ commit(); its.forEach(i=>i.tagPos=e.target.value); changed(); };
     return;
   }
   const id=[...sel][0], f=findAny(id); if(!f) return;
@@ -1526,6 +1528,7 @@ function renderInspector(){
     <label class="f">Tag no.<input id="inNum" type="number" min="1" step="1" value="${it.fx?it.num||"":""}" ${it.fx?"":"disabled"}></label>
     <label class="f">Switch letter<input id="inTag" maxlength="6" placeholder="a, b…" value="${esc(it.tag||"")}"></label>
     <label class="f">Rotation°<input id="inRot" type="number" step="15" value="${it.rot||0}"></label></div>
+    ${it.fx?`<label class="f">Tag position<select id="inTagPos">${[["ul","Upper left"],["ur","Upper right"],["ll","Lower left"],["lr","Lower right"]].map(([v,l])=>`<option value="${v}" ${(it.tagPos||"ul")===v?"selected":""}>${l}</option>`).join("")}</select></label>`:""}
     <label class="f">Shown on<select id="inShare"><option value="" ${!it.sheet?"selected":""}>Every sheet (shared position)</option><option value="${cur}" ${it.sheet?"selected":""}>This sheet only</option></select></label>
     <p class="empty">${it.fx? `Tagged ${esc(tagText(it))}. New ${esc(SYM[it.type].name.toLowerCase())}s you drop take type ${esc((fxById(it.fx)||{}).mark||"")} and the next number.` : "Give this symbol a type mark to tag it and count it in the fixture schedule. Switch letters tie switches to what they control."}</p>`;
     $("inType").onchange=e=>{ commit(); it.type=e.target.value; changed(); };
@@ -1534,6 +1537,7 @@ function renderInspector(){
     $("inTag").onchange=e=>{ commit(); it.tag=e.target.value.trim(); changed(); };
     $("inRot").onchange=e=>{ commit(); it.rot=((parseFloat(e.target.value)||0)%360+360)%360; changed(); };
     $("inShare").onchange=e=>{ commit(); it.sheet=e.target.value; changed(); };
+    const tp=$("inTagPos"); if(tp) tp.onchange=e=>{ commit(); it.tagPos=e.target.value; changed(); };
   } else if(f.c==="wires"){
     const w=f.o;
     b.innerHTML=`<label class="f">Run type<select id="inWire">${Object.entries(WIRES).map(([k,v])=>`<option value="${k}" ${k===w.kind?"selected":""}>${v.name}</option>`).join("")}</select></label>
