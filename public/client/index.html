@@ -300,7 +300,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
       <div class="range"><span>Symbol size</span><output id="oSym"></output><input type="range" id="rSym" min="40" max="250" step="5"></div>
       <div class="range"><span>Drawing strength</span><output id="oOp"></output><input type="range" id="rOp" min="15" max="100" step="5"></div>
       <label class="chk"><input type="checkbox" id="cTagNo"> Show tag numbers (A1, A2…)</label>
-      <label class="chk"><input type="checkbox" id="cLive"> Live updates (check for others’ changes every few seconds)</label>
+      <label class="chk"><input type="checkbox" id="cLive"> Live updates: check for others’ changes every few seconds. Turns itself off after 10 minutes with no changes.</label>
     </details>
     <details id="dProject"><summary>Project</summary>
       <div class="row" style="margin-bottom:8px"><button class="btn sm" id="bBackup">Download backup</button><button class="btn sm" id="bImport" hidden>Import backup…</button></div>
@@ -513,7 +513,9 @@ let wireKind = "switch", wireStart=null, pend=null, armed=null;
 let view = {x:0,y:0,z:1};
 const undoStack=[], redoStack=[];
 let lastMark={};
-let live = lsGet("pos-live","1")==="1";
+let live = false;                 // off by default every visit
+const LIVE_IDLE_MS = 10*60*1000;  // live switches itself off after 10 min with no changes from anyone
+let lastChangeAt = Date.now();
 const synced={}; SYNC.forEach(c=>synced[c]={}); let metaSynced=null;
 
 const M = () => S.meta;
@@ -576,6 +578,7 @@ async function flush(){
     if(ops.length){
       for(let i=0;i<ops.length;i+=400) await api(SLUG+"/ops",{method:"POST",key:KEY,body:{ops:ops.slice(i,i+400)}});
       for(const [c,id,j] of done){ if(c==="meta") metaSynced=j; else if(j===undefined) delete synced[c][id]; else synced[c][id]=j; }
+      lastChangeAt=Date.now();
     }
     setSync("ok");
   }catch(err){
@@ -614,7 +617,7 @@ async function load(first){
   try{
     const r=await api(SLUG+(rev&&!first?"?rev="+rev:""),{key:KEY});
     if(r.unchanged) return;
-    const d=r.doc; rev=d.rev;
+    const d=r.doc; if(rev&&d.rev!==rev) lastChangeAt=Date.now(); rev=d.rev;
     const before=canon(BASE());
     for(const c of SYNC) applyRemote(c,d[c]);
     const rj=canon(d.meta||{}), lj=S.meta? canon(S.meta) : null;
@@ -632,7 +635,10 @@ async function load(first){
 }
 function schedulePoll(){
   clearInterval(pollT);
-  if(live) pollT=setInterval(()=>{ if(document.visibilityState==="visible"&&!flushing&&!drag) load(false); },8000);
+  if(live) pollT=setInterval(()=>{
+    if(Date.now()-lastChangeAt>LIVE_IDLE_MS){ live=false; schedulePoll(); updateButtons(); syncDisplay(); toast("Live updates turned off: no changes in the last 10 minutes. Turn it back on under Display."); return; }
+    if(document.visibilityState==="visible"&&!flushing&&!drag) load(false);
+  },8000);
   setSync();
 }
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&live) load(false); });
@@ -1338,7 +1344,7 @@ function syncDisplay(){ const d=(SH()&&SH().display)||{symScale:100,planOp:60}; 
 $("rSym").oninput=e=>{ if(!SH()) return; SH().display.symScale=+e.target.value; syncDisplay(); render(); metaTouch(); };
 $("rOp").oninput=e=>{ if(!SH()) return; SH().display.planOp=+e.target.value; syncDisplay(); render(); metaTouch(); };
 $("cTagNo").onchange=e=>{ M().display.tagNo=e.target.checked; render(); metaTouch(); };
-$("cLive").onchange=e=>{ live=e.target.checked; lsSet("pos-live",live?"1":"0"); schedulePoll(); updateButtons(); if(live) load(false); };
+$("cLive").onchange=e=>{ live=e.target.checked; if(live) lastChangeAt=Date.now(); schedulePoll(); updateButtons(); if(live) load(false); };
 
 /* ---------- project: backup, import, passcode, sign out ---------- */
 async function blobToDataURL(b){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(b); }); }
