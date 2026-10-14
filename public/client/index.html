@@ -144,6 +144,11 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 .flist .snip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .flist .meta{font-size:11px;color:var(--muted);font-family:var(--mono)}
 #noteEd{position:absolute;z-index:5;margin:0;padding:1px 3px;border:1.5px dashed #e0661f;border-radius:2px;background:rgba(255,255,255,.92);color:#1d47b8;font-family:Arial,Helvetica,sans-serif;font-weight:700;line-height:1.2;resize:none;overflow:hidden;white-space:pre;outline:none;min-width:60px}
+.kbox{font-family:var(--mono);font-weight:500;font-size:12px;border:1.5px solid #1d47b8;color:#1d47b8;background:#fff;border-radius:999px;min-width:22px;height:22px;line-height:19px;text-align:center;padding:0 3px;align-self:start;margin-top:6px}
+.krow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:start}
+.krow .acts{display:flex;flex-direction:column;gap:2px}
+.krow .acts button{border:1px solid var(--line);background:transparent;border-radius:3px;font-size:11px;min-width:24px;height:20px;padding:0 4px;cursor:pointer;color:var(--muted)}
+.krow .acts button.place{color:var(--ink);border-color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:4px;font-size:13px;z-index:70;max-width:90vw}
 /* login & dashboard */
 .gate{min-height:100%;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
@@ -241,6 +246,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
         <button class="btn" id="tW_home" title="Home run toward the panel">Home run</button>
       </span>
       <button class="btn" id="tText" title="Place a text note (T)">Note</button>
+      <button class="btn" id="tKey" title="Place a key note tag (K)">Key note</button>
       <button class="btn" id="tDim" title="Dimension, marked VIF (D)">Dimension</button>
       <span class="sep"></span>
       <button class="btn" id="tFlag" title="Place a comment flag (C)">Comment flag</button>
@@ -262,7 +268,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
         <g id="view">
           <rect id="paper" fill="#fff"></rect>
           <image id="baseImg" preserveAspectRatio="none"></image>
-          <g id="gWires"></g><g id="gDims"></g><g id="gItems"></g><g id="gNotes"></g><g id="gFlags"></g><g id="gRef"></g><g id="gSel"></g>
+          <g id="gWires"></g><g id="gDims"></g><g id="gItems"></g><g id="gNotes"></g><g id="gKeys"></g><g id="gFlags"></g><g id="gRef"></g><g id="gSel"></g>
           <path id="rubber" fill="none" stroke="#e0661f" stroke-dasharray="6 5" visibility="hidden"></path>
         </g>
       </svg>
@@ -277,6 +283,11 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
     <details open><summary>Fixture schedule</summary>
       <div id="fxSummary"></div>
       <div class="row"><button class="btn sm" id="bSched">Edit schedule…</button><button class="btn sm" id="bAddFx">Add type mark</button></div>
+    </details>
+    <details open id="dKeys"><summary>Key notes</summary>
+      <p class="empty">Click “Key note” in the toolbar (or press K), click the drawing, and type the note: it gets the next number automatically. Use + to place another tag for an existing note. Reordering renumbers every tag.</p>
+      <div class="nlist" id="keyList"></div>
+      <button class="btn sm" id="bAddKey">Add key note</button>
     </details>
     <details><summary>Sheet notes</summary>
       <p class="empty">Numbered general notes for this sheet.</p>
@@ -353,7 +364,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 (function(){
 "use strict";
 const INK = "#1d47b8";
-const COLS = ["items","wires","notes","dims","fixtures"];      // undoable, per-object synced
+const COLS = ["items","wires","notes","dims","fixtures","keys"];      // undoable, per-object synced
 const SYNC = ["sheets",...COLS,"flags"];   // flags: comments, synced but not undoable                               // per-object synced
 const API = "/api/client/";
 
@@ -530,7 +541,8 @@ async function bootProject(){
 function notFound(){ $("gate").hidden=false; $("gateTitle").textContent="Not found"; $("gateText").textContent="There is no project at this address. Check the link Sireneum Designs sent you."; $("gateForm").querySelectorAll("label,button,.msg").forEach(e=>e.hidden=true); }
 
 /* ================= plan tool ================= */
-let S = {sheets:[],items:[],wires:[],notes:[],dims:[],fixtures:[],flags:[],meta:null};
+let S = {sheets:[],items:[],wires:[],notes:[],dims:[],fixtures:[],keys:[],flags:[],meta:null};
+let armedKey = null;              // key note id to place with the Key note tool
 let selFlag = null;                // selected comment flag id
 let cur = "";                 // current sheet id
 let rev = 0;
@@ -844,6 +856,56 @@ function closeNoteEditor(){
   changed();
 }
 
+/* ---------- key notes ---------- */
+const keyList = () => { const sh=SH(); if(!sh) return []; return sh.keynotes||(sh.keynotes=[]); };
+const keyNo = kid => { const i=keyList().findIndex(k=>k.id===kid); return i<0? "?" : String(i+1); };
+function keyTagSVG(t, forExport){
+  const s=size(), q=P(t), no=keyNo(t.k), fs=s*(no.length>1?.34:.4), r=s*.36, swd=Math.max(1,s*.055);
+  const out=`<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="${r.toFixed(1)}" fill="#fff" stroke="currentColor" stroke-width="${swd.toFixed(2)}"/>`+
+       `<text x="${q.x.toFixed(1)}" y="${(q.y+fs*.36).toFixed(1)}" font-size="${fs.toFixed(1)}" font-family="Arial,Helvetica,sans-serif" font-weight="700" text-anchor="middle" fill="currentColor">${esc(no)}</text>`;
+  return forExport? out : `<g data-id="${t.id}" data-kind="key" style="cursor:move">${out}<circle cx="${q.x}" cy="${q.y}" r="${r*1.3}" fill="transparent"/></g>`;
+}
+function placeKey(kid, ft){
+  commit();
+  const t={id:uid(),sheet:cur,k:kid,x:r3(ft.x),y:r3(ft.y)};
+  S.keys.push(t); sel=new Set([t.id]); changed();
+}
+function chooseKeyAt(ft){
+  const L=keyList(), next=L.length+1;
+  const m=modal(`<h3>Key note ${next}</h3>
+    <label class="f">Note text<textarea id="kNew" rows="3" placeholder="e.g. Dedicated 20 A circuit for microwave, receptacle ~48 in. AFF"></textarea></label>
+    <p class="empty">It is added to this sheet’s key note list as number ${next}; the tag keeps pointing at it if the list is reordered.</p>
+    ${L.length?`<label class="f">Or reuse an existing note for this tag<select id="kSel"><option value="">— no, add the new note above —</option>${L.map((k,i)=>`<option value="${k.id}">${i+1}. ${esc(String(k.text||"").slice(0,70))}</option>`).join("")}</select></label>`:""}
+    <div class="row"><button class="btn primary" data-ok>Place key note</button><button class="btn" data-x>Cancel</button></div>`,true);
+  const ta=m.querySelector("#kNew"), sel_=m.querySelector("#kSel"), h3=m.querySelector("h3");
+  ta.focus();
+  if(sel_) sel_.onchange=()=>{ const reuse=!!sel_.value; ta.disabled=reuse; h3.textContent= reuse? `Key note ${keyNo(sel_.value)}` : `Key note ${next}`; };
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  const ok=()=>{
+    let kid=sel_&&sel_.value? sel_.value : null;
+    if(!kid){ const t=ta.value.trim(); if(!t){ ta.focus(); return; } const k={id:uid(),text:t}; keyList().push(k); kid=k.id; }
+    m.remove(); placeKey(kid, ft); metaTouch(); renderKeyList();
+  };
+  m.querySelector("[data-ok]").onclick=ok;
+  ta.addEventListener("keydown",e=>{ if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); ok(); } });
+}
+function renderKeyList(){
+  const el=$("keyList"); if(!el) return; if(el.contains(document.activeElement)&&document.activeElement.tagName==="TEXTAREA") return;
+  const sh=SH(); if(!sh){ el.innerHTML=""; return; }
+  const L=keyList();
+  el.innerHTML= L.length? L.map((k,i)=>{ const n=S.keys.filter(t=>t.k===k.id).length;
+    return `<div class="krow"><span class="kbox" title="${n} tag${n===1?"":"s"} on this sheet">${i+1}</span><textarea class="inp" data-k="${k.id}" rows="2">${esc(k.text||"")}</textarea><span class="acts"><button class="place" data-place="${k.id}" title="Place a tag for note ${i+1}">+</button><button data-kup="${i}" title="Move up">↑</button><button data-kdn="${i}" title="Move down">↓</button><button data-krm="${k.id}" title="Delete note ${i+1} and its tags">✕</button></span></div>`; }).join("")
+    : `<p class="empty">No key notes on this sheet yet.</p>`;
+  el.querySelectorAll("textarea").forEach(ta=>ta.addEventListener("input",()=>{ const k=L.find(x=>x.id===ta.dataset.k); if(k){ k.text=ta.value; metaTouch(); if(sel.size) renderInspector(); } }));
+  el.querySelectorAll("[data-kup]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.kup; if(i>0){ [L[i-1],L[i]]=[L[i],L[i-1]]; renderKeyList(); render(); metaTouch(); } });
+  el.querySelectorAll("[data-kdn]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.kdn; if(i<L.length-1){ [L[i+1],L[i]]=[L[i],L[i+1]]; renderKeyList(); render(); metaTouch(); } });
+  el.querySelectorAll("[data-place]").forEach(b=>b.onclick=()=>{ if(!ppf()){ toast("Set this sheet’s scale first."); return; } setTool("key"); armedKey=b.dataset.place; renderStatus(); });
+  el.querySelectorAll("[data-krm]").forEach(b=>{ let armed=false; b.onclick=()=>{
+    const kid=b.dataset.krm, n=S.keys.filter(t=>t.k===kid).length;
+    if(n&&!armed){ armed=true; b.textContent="?"; b.title=`Click again to delete this note and its ${n} tag${n===1?"":"s"}`; toast(`Click ✕ again to delete this note and its ${n} tag${n===1?"":"s"}.`); return; }
+    commit(); S.keys=S.keys.filter(t=>t.k!==kid); sh.keynotes=L.filter(k=>k.id!==kid); changed(); metaTouch(); renderKeyList(); }; });
+}
+
 /* ---------- render ---------- */
 function render(){
   const sh=SH(), b=BASE();
@@ -852,11 +914,12 @@ function render(){
   if(b){ img.setAttribute("width",b.w); img.setAttribute("height",b.h); img.setAttribute("opacity",(sh.display.planOp||60)/100); p.setAttribute("width",b.w); p.setAttribute("height",b.h); }
   else { p.setAttribute("width",0); p.setAttribute("height",0); }
   vg.setAttribute("transform",`translate(${view.x} ${view.y}) scale(${view.z})`);
-  if(!sh||!ppf()){ ["gWires","gDims","gItems","gNotes","gFlags","gRef","gSel"].forEach(g=>$(g).innerHTML=""); renderStatus(); renderBanner(); return; }
+  if(!sh||!ppf()){ ["gWires","gDims","gItems","gNotes","gKeys","gFlags","gRef","gSel"].forEach(g=>$(g).innerHTML=""); renderStatus(); renderBanner(); return; }
   $("gWires").innerHTML=vis("wires").map(w=>wireSVG(w,INK)).join("");
   $("gDims").innerHTML=vis("dims").map(d=>dimSVG(d,INK)).join("");
   $("gItems").setAttribute("color",INK); $("gItems").innerHTML=vis("items").map(i=>itemSVG(i)).join("");
   $("gNotes").setAttribute("color",INK); $("gNotes").innerHTML=vis("notes").filter(n=>n.id!==editingNote).map(n=>noteSVG(n)).join("");
+  $("gKeys").setAttribute("color",INK); $("gKeys").innerHTML=vis("keys").map(t=>keyTagSVG(t)).join("");
   if(editingNote) placeNoteEditor();
   $("gFlags").innerHTML= showFlags? visFlags().map(f=>flagSVG(f)).join("") : "";
   const s=size(), swd=(2/view.z).toFixed(2), da=`${(6/view.z).toFixed(1)} ${(4/view.z).toFixed(1)}`, hr=(7/view.z).toFixed(1);
@@ -870,6 +933,7 @@ function render(){
     if(f.c==="items"){ const q=P(f.o), h=s*.62; sm+=`<rect x="${q.x-h}" y="${q.y-h}" width="${2*h}" height="${2*h}" fill="none" stroke="#e0661f" stroke-width="${swd}" stroke-dasharray="${da}"/>`; }
     else if(f.c==="wires"){ const g=wireGeom(f.o); if(g) sm+=`<circle data-handle="${id}" cx="${g.hx}" cy="${g.hy}" r="${hr}" fill="#e0661f" stroke="#fff" stroke-width="${swd}" style="cursor:grab"/>`; }
     else if(f.c==="dims"){ const g=dimGeom(f.o); sm+=`<path d="M${g.P.x} ${g.P.y}L${g.Q.x} ${g.Q.y}" stroke="#e0661f" stroke-width="${swd}" stroke-dasharray="${da}"/><circle data-dhandle="${id}" cx="${g.mid.x}" cy="${g.mid.y}" r="${hr}" fill="#e0661f" stroke="#fff" stroke-width="${swd}" style="cursor:grab"/>`; }
+    else if(f.c==="keys"){ const q=P(f.o), h=s*.48; sm+=`<circle cx="${q.x}" cy="${q.y}" r="${h}" fill="none" stroke="#e0661f" stroke-width="${swd}" stroke-dasharray="${da}"/>`; }
     else if(f.c==="notes"){ const el=$("gNotes").querySelector(`[data-id="${id}"]`); if(el){ const bb=el.getBBox(); sm+=`<rect x="${bb.x-4}" y="${bb.y-4}" width="${bb.width+8}" height="${bb.height+8}" fill="none" stroke="#e0661f" stroke-width="${swd}" stroke-dasharray="${da}"/>`; } }
   }
   if(wireStart){ const it=itemById(wireStart); if(it){ const q=P(it); sm+=`<circle cx="${q.x}" cy="${q.y}" r="${s*.6}" fill="none" stroke="#e0661f" stroke-width="${swd}"/>`; } }
@@ -894,7 +958,7 @@ function renderBanner(){
 function refresh(){
   for(const id of [...sel]) if(!findAny(id)) sel.delete(id);
   if(selFlag&&(!flagById(selFlag)||flagById(selFlag).sheet!==cur)) selFlag=null;
-  render(); renderInspector(); renderLegend(); renderFxSummary(); renderFlagList(); updateButtons();
+  render(); renderInspector(); renderLegend(); renderFxSummary(); renderFlagList(); renderKeyList(); updateButtons();
   if(schedOpen) renderSchedRows();
 }
 function changed(){ recordAfter(); refresh(); scheduleFlush(); }
@@ -913,17 +977,19 @@ function renderStatus(){
   else if(tool==="wire") t= wireStart? `${WIRES[wireKind].name}: click the next symbol (Esc to finish)` : `${WIRES[wireKind].name}: click a symbol to start`;
   else if(tool==="text") t="Note: click the drawing to place a note";
   else if(tool==="flag") t="Comment flag: click the drawing where your comment applies";
+  else if(tool==="key") t= armedKey? `Key note ${keyNo(armedKey)}: click to place its tag (Esc to stop)` : "Key note: click the drawing to place a numbered tag";
   else if(tool==="dim"){ t= pend&&lastPtr? `Dimension: ${fmtFtIn(Math.hypot(lastPtr.x-pend.px.x,lastPtr.y-pend.px.y)/ppf())} VIF — click the end point (Shift = square)` : "Dimension: click a fixture or point to start"; }
   else t=`${vis("items").length} symbols · ${vis("wires").length} runs · ${vis("dims").length} dims · zoom ${Math.round(view.z*100)}%`;
   $("status").textContent=t;
   cv.classList.toggle("placing",!!armed);
   cv.classList.toggle("wiring",tool==="wire"&&!armed);
-  cv.classList.toggle("texting",(tool==="text"||tool==="flag")&&!armed);
+  cv.classList.toggle("texting",(tool==="text"||tool==="flag"||tool==="key")&&!armed);
   cv.classList.toggle("measuring",["dim","cal","ref","align"].includes(tool)&&!armed);
 }
 function updateButtons(){
   $("tSel").classList.toggle("on",tool==="select"&&!armed);
   for(const k of Object.keys(WIRES)) $("tW_"+k).classList.toggle("on",tool==="wire"&&wireKind===k);
+  $("tKey").classList.toggle("on",tool==="key"); $("tKey").disabled=!(SH()&&ppf()); $("bAddKey").disabled=!SH();
   $("tFlag").classList.toggle("on",tool==="flag"); $("bFlags").textContent="Flags: "+(showFlags?"on":"off"); $("bFlags").setAttribute("aria-pressed",String(showFlags)); $("bFlags").classList.toggle("on",showFlags);
   $("tText").classList.toggle("on",tool==="text"); $("tDim").classList.toggle("on",tool==="dim");
   $("tCal").classList.toggle("on",tool==="cal"); $("tRef").classList.toggle("on",tool==="ref"); $("tAlign").classList.toggle("on",tool==="align");
@@ -952,7 +1018,7 @@ $("sheetSel").onchange=async e=>{ switchSheet(e.target.value); };
 async function switchSheet(id){
   cur=id; lsSet("pos-sheet-"+SLUG,id); sel.clear(); wireStart=null; pend=null; armed=null; tool="select";
   $("pal").querySelectorAll(".tile.armed").forEach(x=>x.classList.remove("armed"));
-  buildSheetSel(); bindMetaFields(); refresh(); await loadBase(); fit();
+  buildSheetSel(); bindMetaFields(); refresh(); renderKeyList(); await loadBase(); fit();
 }
 
 /* ---------- palette ---------- */
@@ -1062,6 +1128,9 @@ cv.addEventListener("pointerdown",e=>{
   if(tool==="text" && !tEl){
     const f=toFt(p); const n={id:uid(),x:r3(f.x),y:r3(f.y),text:"Note",sheet:cur}; S.notes.push(n); tool="select"; updateButtons(); render(); setTimeout(()=>openNoteEditor(n.id),0); return;
   }
+  const khEl=e.target.closest("[data-khandle]");
+  if(tool==="key" && !khEl && !(tEl&&kind==="key")){ const ft=toFt(p); if(armedKey) placeKey(armedKey,ft); else chooseKeyAt(ft); return; }
+  if(khEl){ commit(); drag={mode:"kleader",id:khEl.dataset.khandle}; return; }
   const flEl=e.target.closest("[data-flag]");
   if(tool==="flag" && !flEl){ newFlagAt(toFt(p)); return; }
   if(flEl && showFlags){ selFlag=flEl.dataset.flag; sel.clear(); const f=flagById(selFlag); drag={mode:"flag",id:selFlag,p0:p,x:f.x,y:f.y,moved:false}; refresh(); return; }
@@ -1073,7 +1142,7 @@ cv.addEventListener("pointerdown",e=>{
     if(!sel.has(id)) sel=new Set([id]);
     if(kind==="wire"){ refresh(); return; }
     const starts=[...sel].map(i=>{ const f=findAny(i); if(!f) return null;
-      if(f.c==="items"||f.c==="notes") return {id:i,c:f.c,x:f.o.x,y:f.o.y};
+      if(f.c==="items"||f.c==="notes"||f.c==="keys") return {id:i,c:f.c,x:f.o.x,y:f.o.y};
       if(f.c==="dims") return {id:i,c:"dims",a:{...f.o.a},b:{...f.o.b}};
       return null; }).filter(Boolean);
     drag={mode:"move",p0:p,starts,moved:false,editNote: kind==="note"&&wasOnly? id : null}; refresh(); return;
@@ -1112,6 +1181,9 @@ cv.addEventListener("pointermove",e=>{
     const cx=2*p.x-.5*g.A.x-.5*g.B.x, cy=2*p.y-.5*g.A.y-.5*g.B.y;
     w.bend=r3(((cx-g.mx)*g.nx+(cy-g.my)*g.ny)/ppf()); render(); return;
   }
+  if(drag.mode==="kleader"){
+    const t=S.keys.find(x=>x.id===drag.id); if(!t) return; const f=toFt(p); t.lx=r3(f.x); t.ly=r3(f.y); render(); return;
+  }
   if(drag.mode==="flag"){
     const f=flagById(drag.id); if(!f) return;
     if(!drag.moved && Math.hypot(p.x-drag.p0.x,p.y-drag.p0.y)*view.z<4) return;
@@ -1127,7 +1199,7 @@ function endPtr(e){
   if(!drag) return;
   const m=drag.mode, moved=drag.moved, editNote=drag.editNote; drag=null; cv.classList.remove("panning");
   if(m==="move"&&!moved&&editNote){ setTimeout(()=>openNoteEditor(editNote),0); return; }
-  if((m==="move"&&moved)||m==="bend"||m==="doff") changed(); else if(m==="flag"&&moved) touch(); else render();
+  if((m==="move"&&moved)||m==="bend"||m==="doff"||m==="kleader") changed(); else if(m==="flag"&&moved) touch(); else render();
 }
 cv.addEventListener("pointerup",endPtr);
 cv.addEventListener("dblclick",e=>{ const t=e.target.closest("[data-kind=note]"); if(t) openNoteEditor(t.dataset.id); }); cv.addEventListener("pointercancel",endPtr);
@@ -1135,14 +1207,14 @@ cv.addEventListener("dblclick",e=>{ const t=e.target.closest("[data-kind=note]")
 /* ---------- commands ---------- */
 function setTool(t,k){
   armed=null; $("pal").querySelectorAll(".tile.armed").forEach(x=>x.classList.remove("armed"));
-  tool=t; if(k) wireKind=k; wireStart=null; pend=null; updateButtons(); render();
+  tool=t; if(k) wireKind=k; wireStart=null; pend=null; armedKey=null; updateButtons(); render();
 }
 function rotateSel(d){ const its=S.items.filter(i=>sel.has(i.id)); if(!its.length) return; commit(); its.forEach(i=>i.rot=(((i.rot||0)+d)%360+360)%360); changed(); }
 function delSel(){
   if(!sel.size) return; commit();
   const gone=new Set(S.items.filter(i=>sel.has(i.id)).map(i=>i.id));
   for(const d of S.dims) for(const k of ["a","b"]) if(d[k].item&&gone.has(d[k].item)){ const it=itemById(d[k].item); d[k]={x:it.x,y:it.y}; }
-  S.items=S.items.filter(i=>!sel.has(i.id)); S.notes=S.notes.filter(n=>!sel.has(n.id)); S.dims=S.dims.filter(d=>!sel.has(d.id));
+  S.items=S.items.filter(i=>!sel.has(i.id)); S.notes=S.notes.filter(n=>!sel.has(n.id)); S.dims=S.dims.filter(d=>!sel.has(d.id)); S.keys=S.keys.filter(t=>!sel.has(t.id));
   S.wires=S.wires.filter(w=>!sel.has(w.id) && itemById(w.a) && itemById(w.b));
   sel.clear(); changed();
 }
@@ -1153,12 +1225,13 @@ function dupSel(){
     const f=findAny(id); if(!f) continue;
     if(f.c==="items"){ start(); const c={...f.o,id:uid(),x:r3(f.o.x+off),y:r3(f.o.y+off)}; if(c.fx) c.num=nextNum(c.fx); map[id]=c.id; S.items.push(c); ns.add(c.id); }
     else if(f.c==="notes"){ start(); const c={...f.o,id:uid(),x:r3(f.o.x+off),y:r3(f.o.y+off)}; S.notes.push(c); ns.add(c.id); }
+    else if(f.c==="keys"){ start(); const c={...f.o,id:uid(),x:r3(f.o.x+off),y:r3(f.o.y+off)}; S.keys.push(c); ns.add(c.id); }
   }
   for(const w of [...S.wires]) if(map[w.a]&&map[w.b]){ const c={...w,id:uid(),a:map[w.a],b:map[w.b]}; S.wires.push(c); ns.add(c.id); }
   if(any){ sel=ns; changed(); }
 }
 function nudge(dx,dy){
-  const objs=[...sel].map(id=>findAny(id)).filter(f=>f&&(f.c==="items"||f.c==="notes"));
+  const objs=[...sel].map(id=>findAny(id)).filter(f=>f&&(f.c==="items"||f.c==="notes"||f.c==="keys"));
   if(!objs.length) return; commit(); objs.forEach(f=>{ f.o.x=r3(f.o.x+dx/ppf()); f.o.y=r3(f.o.y+dy/ppf()); }); changed();
 }
 let clearArm=null;
@@ -1169,7 +1242,7 @@ $("bClear").addEventListener("click",()=>{
   commit();
   const gone=new Set(vis("items").map(i=>i.id));
   S.items=S.items.filter(i=>!gone.has(i.id)); S.wires=S.wires.filter(w=>w.sheet!==cur&&!gone.has(w.a)&&!gone.has(w.b));
-  S.notes=S.notes.filter(n=>n.sheet!==cur); S.dims=S.dims.filter(d=>d.sheet!==cur);
+  S.notes=S.notes.filter(n=>n.sheet!==cur); S.dims=S.dims.filter(d=>d.sheet!==cur); S.keys=S.keys.filter(t=>t.sheet!==cur);
   sel.clear(); changed(); toast("Sheet cleared. Undo restores it.");
 });
 function askScale(L){
@@ -1193,6 +1266,8 @@ $("tSel").onclick=()=>setTool("select");
 for(const k of Object.keys(WIRES)) $("tW_"+k).onclick=()=>setTool("wire",k);
 $("tText").onclick=()=>setTool("text");
 $("tDim").onclick=()=>setTool("dim");
+$("tKey").onclick=()=>setTool("key");
+$("bAddKey").onclick=()=>{ if(!SH()) return; keyList().push({id:uid(),text:""}); metaTouch(); renderKeyList(); const t=$("keyList").querySelectorAll("textarea"); if(t.length) t[t.length-1].focus(); };
 $("tFlag").onclick=()=>{ showFlags=true; setTool("flag"); };
 $("bFlags").onclick=()=>{ showFlags=!showFlags; if(!showFlags){ selFlag=null; if(tool==="flag") tool="select"; } refresh(); };
 $("flFilter").onchange=e=>{ flagFilter=e.target.value; renderFlagList(); };
@@ -1223,6 +1298,7 @@ document.addEventListener("keydown",e=>{
   else if(!ppf()) return;
   else if(k==="r"||k===" "){ if(S.items.some(i=>sel.has(i.id))){ e.preventDefault(); rotateSel(e.shiftKey?-45:45); } }
   else if(k==="c") setTool("flag");
+  else if(k==="k") setTool("key");
   else if(k==="v") setTool("select");
   else if(k==="l") setTool("wire","switch");
   else if(k==="t") setTool("text");
@@ -1235,7 +1311,7 @@ function nextSheetNo(){ let m=100; for(const s of S.sheets){ const n=parseInt(St
 function newSheetObj(o){
   const kind=o.kind||"plan";
   return {id:uid(),order:S.sheets.length,no:o.no||nextSheetNo(),title:o.title||(kind==="rcp"?"Reflected Ceiling Plan":"Lighting & Switching Plan"),kind,
-    base:o.base||null, notes:clone(DEFAULT_NOTES[kind]||DEFAULT_NOTES.plan),
+    base:o.base||null, notes:clone(DEFAULT_NOTES[kind]||DEFAULT_NOTES.plan), keynotes:[],
     print:{sheet:"D",scale:"1/4",dtitle:o.title||(kind==="rcp"?"Reflected Ceiling Plan":"Lighting & Switching Plan"),black:false},
     display:{symScale:100,planOp:kind==="rcp"?55:60}};
 }
@@ -1273,7 +1349,7 @@ $("bSheetEdit").onclick=()=>{
     if(!armedDel){ armedDel=true; e.target.textContent="Click again to delete"; return; }
     commit();
     const id=sh.id;
-    S.items=S.items.filter(i=>i.sheet!==id); S.wires=S.wires.filter(w=>w.sheet!==id); S.notes=S.notes.filter(n=>n.sheet!==id); S.dims=S.dims.filter(d=>d.sheet!==id);
+    S.items=S.items.filter(i=>i.sheet!==id); S.wires=S.wires.filter(w=>w.sheet!==id); S.notes=S.notes.filter(n=>n.sheet!==id); S.dims=S.dims.filter(d=>d.sheet!==id); S.keys=S.keys.filter(t=>t.sheet!==id);
     S.sheets=S.sheets.filter(s=>s.id!==id); m.remove();
     changed(); switchSheet(S.sheets.length? sortedSheets()[0].id : "");
     toast("Sheet deleted. Shared fixtures remain on the other sheets.");
@@ -1393,7 +1469,7 @@ $("bAddFx").onclick=()=>{ addFixture(); openSchedule(); };
 function fxOptions(cur){ return `<option value="">— none —</option>`+fxSort().map(f=>`<option value="${f.id}" ${f.id===cur?"selected":""}>${esc(f.mark)}${f.desc?" — "+esc(f.desc.slice(0,28)):""}</option>`).join("")+`<option value="__new">+ New type mark…</option>`; }
 function renderInspector(){
   const b=$("inspBody");
-  if(b.contains(document.activeElement) && (document.activeElement.id==="inNote"||document.activeElement.id==="flReply")) return;
+  if(b.contains(document.activeElement) && (document.activeElement.id==="inNote"||document.activeElement.id==="flReply"||document.activeElement.id==="inKeyText")) return;
   if(selFlag){
     const f=flagById(selFlag); if(!f){ selFlag=null; return renderInspector(); }
     const closed=f.status==="closed";
@@ -1448,6 +1524,13 @@ function renderInspector(){
     <p class="empty">Drag the orange handle to offset the dimension line.</p>`;
     $("inDFlip").onclick=()=>{ commit(); d.off=-(d.off||0)||1; changed(); };
     $("inDZero").onclick=()=>{ commit(); d.off=0; changed(); };
+  } else if(f.c==="keys"){
+    const t=f.o, L=keyList(), k=L.find(x=>x.id===t.k);
+    b.innerHTML=`<label class="f">Key note<select id="inKey">${L.map((x,i)=>`<option value="${x.id}" ${x.id===t.k?"selected":""}>${i+1}. ${esc(String(x.text||"").slice(0,48))}</option>`).join("")}</select></label>
+      ${k?`<label class="f">Text of note ${keyNo(k.id)} (shared by all its tags)<textarea id="inKeyText" rows="3">${esc(k.text||"")}</textarea></label>`:""}
+      <p class="empty">Drag the circle to move it. Changing the text here changes it for every tag of note ${keyNo(t.k)}.</p>`;
+    $("inKey").onchange=e=>{ commit(); t.k=e.target.value; changed(); };
+    const tx=$("inKeyText"); if(tx) tx.oninput=()=>{ k.text=tx.value; metaTouch(); renderKeyList(); };
   } else if(f.c==="notes"){
     const n=f.o;
     b.innerHTML=`<label class="f">Note text<textarea id="inNote" rows="3">${esc(n.text)}</textarea></label><p class="empty">Tip: click a selected note again (or double-click it) to type right on the drawing. Ctrl+Enter or Esc to finish.</p>`;
@@ -1550,7 +1633,7 @@ function printFlags(){ const Pp=SH().print; if(!Pp.flags) return []; return visF
 function overlaySVG(color,k){
   const b=BASE(); k=k||1;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(b.w*k)}" height="${Math.round(b.h*k)}" viewBox="0 0 ${b.w} ${b.h}" color="${color}">`+
-    vis("wires").map(w=>wireSVG(w,color,true)).join("")+vis("dims").map(d=>dimSVG(d,color,true)).join("")+vis("items").map(i=>itemSVG(i,true)).join("")+vis("notes").map(n=>noteSVG(n,true)).join("")+printFlags().map(f=>flagSVG(f,true)).join("")+`</svg>`;
+    vis("wires").map(w=>wireSVG(w,color,true)).join("")+vis("dims").map(d=>dimSVG(d,color,true)).join("")+vis("items").map(i=>itemSVG(i,true)).join("")+vis("notes").map(n=>noteSVG(n,true)).join("")+vis("keys").map(t=>keyTagSVG(t,true)).join("")+printFlags().map(f=>flagSVG(f,true)).join("")+`</svg>`;
 }
 async function prepare(){
   const sh=SH(), b=BASE(), color=sh.print.black?"#000":INK;
@@ -1661,6 +1744,14 @@ function drawSheet(B, prep){
     head("GENERAL NOTES");
     const ind=fs/72*2.2;
     notes.forEach((t,i)=>{ B.text((i+1)+".",spX,y,{size:fs}); wrap(B,t,fs,false,spW-ind).forEach(l=>{ B.text(l,spX+ind,y,{size:fs}); y+=lh; }); y+=lh*.3; });
+    y+=gap;
+  }
+  const kl=(sh.keynotes||[]).map((k,i)=>({n:i+1,text:String(k.text||"").trim()})).filter(k=>k.text);
+  if(kl.length){
+    head("KEY NOTES");
+    const ind=fs/72*2.6, bx=fs/72*1.7, bh=fs/72*1.25;
+    kl.forEach(k=>{ B.circle(spX+bh*.55,y-fs/72*.32,bh*.58,.8,"#ffffff"); B.text(String(k.n),spX+bh*.55,y,{size:fs*.8,bold:true,align:"center"});
+      wrap(B,k.text,fs,false,spW-ind).forEach(l=>{ B.text(l,spX+ind,y,{size:fs}); y+=lh; }); y+=lh*.35; });
     y+=gap;
   }
   const ut=usedTypes(), uw=usedWires();

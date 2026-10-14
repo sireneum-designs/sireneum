@@ -19,7 +19,7 @@ import type { Config, Context } from "@netlify/functions"
 const store = () => getStore({ name: "client-plans", consistency: "strong" })
 const SLUG = /^[a-z0-9][a-z0-9-]{1,40}$/
 const ID = /^[A-Za-z0-9_-]{1,40}$/
-const COLLS = ["sheets", "items", "wires", "notes", "dims", "fixtures", "flags"]
+const COLLS = ["sheets", "items", "wires", "notes", "dims", "fixtures", "keys", "flags"]
 const MAX_ASSET = 4_200_000
 
 const json = (data: unknown, status = 200) =>
@@ -59,7 +59,7 @@ function emptyProject(slug: string, b: Record<string, string>) {
       firm: { name: "Sireneum Designs", addr1: "", addr2: "", phone: "", email: "design@sireneum.com", web: "sireneum.com" },
       revisions: [], ref: null, display: { tagNo: true }
     },
-    sheets: {}, items: {}, wires: {}, notes: {}, dims: {}, fixtures: {}, flags: {}
+    sheets: {}, items: {}, wires: {}, notes: {}, dims: {}, fixtures: {}, keys: {}, flags: {}
   }
 }
 
