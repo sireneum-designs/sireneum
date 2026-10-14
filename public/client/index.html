@@ -605,6 +605,7 @@ function scheduleFlush(){ clearTimeout(flushT); flushT=setTimeout(flush,350); se
 async function flush(){
   if(flushing){ flushAgain=true; return; }
   flushing=true;
+  try{ await load(false); }catch(e){}     // pull first, so we merge with anything others saved
   const ops=[], done=[];
   for(const c of SYNC){
     const lm={}; for(const o of S[c]) lm[o.id]=canon(o);
@@ -628,6 +629,22 @@ async function flush(){
     if(flushAgain){ flushAgain=false; flush(); }
   }
 }
+/* Three-way merge: keep the fields this browser changed since its last sync, take
+   everything else from the server — so a stale tab only overwrites what it edited. */
+const isObj = v => v && typeof v==="object" && !Array.isArray(v);
+function merge3(base, local, remote){
+  if(!isObj(base)||!isObj(local)||!isObj(remote)) return local;
+  const out={};
+  for(const k of new Set([...Object.keys(local),...Object.keys(remote),...Object.keys(base)])){
+    const b=canon(base[k]), l=canon(local[k]), r=canon(remote[k]);
+    let v;
+    if(l===b) v=remote[k];
+    else if(r===b) v=local[k];
+    else v= isObj(local[k])&&isObj(remote[k])&&isObj(base[k]) ? merge3(base[k],local[k],remote[k]) : local[k];
+    if(v!==undefined) out[k]=v;
+  }
+  return out;
+}
 function applyRemote(c, remoteMap){
   const remote={}; for(const id in (remoteMap||{})) remote[id]={...remoteMap[id],id};
   const lmObj={}; S[c].forEach(o=>lmObj[o.id]=o);
@@ -638,7 +655,7 @@ function applyRemote(c, remoteMap){
     const l=lmObj[id]? canon(lmObj[id]) : undefined;
     const dirty = l!==synced[c][id];
     if(!dirty){ if(r!==undefined) next.push(l===r? lmObj[id] : remote[id]); }
-    else if(lmObj[id]) next.push(lmObj[id]);
+    else if(lmObj[id]) next.push( r!==undefined && synced[c][id]!==undefined && r!==synced[c][id] ? merge3(JSON.parse(synced[c][id]), lmObj[id], remote[id]) : lmObj[id] );
     if(r===undefined) delete synced[c][id]; else synced[c][id]=r;
   }
   const order=new Map(S[c].map((o,i)=>[o.id,i]));
@@ -661,6 +678,7 @@ async function load(first){
     for(const c of SYNC) applyRemote(c,d[c]);
     const rj=canon(d.meta||{}), lj=S.meta? canon(S.meta) : null;
     if(!S.meta || lj===metaSynced) S.meta=defaultMeta(clone(d.meta||{}));
+    else if(metaSynced && rj!==metaSynced) S.meta=defaultMeta(merge3(JSON.parse(metaSynced), S.meta, clone(d.meta||{})));
     metaSynced=rj;
     if(canon(S.meta)!==rj) scheduleFlush();
     if(!SH()) cur=lsGet("pos-sheet-"+SLUG,"")||"";
@@ -857,7 +875,8 @@ function closeNoteEditor(){
 }
 
 /* ---------- key notes ---------- */
-const keyList = () => { const sh=SH(); if(!sh) return []; return sh.keynotes||(sh.keynotes=[]); };
+const keyList = () => { const sh=SH(); return (sh&&sh.keynotes)||[]; };
+const keyListW = () => { const sh=SH(); return sh.keynotes||(sh.keynotes=[]); };   // only when adding
 const keyNo = kid => { const i=keyList().findIndex(k=>k.id===kid); return i<0? "?" : String(i+1); };
 function keyTagSVG(t, forExport){
   const s=size(), q=P(t), no=keyNo(t.k), fs=s*(no.length>1?.34:.4), r=s*.36, swd=Math.max(1,s*.055);
@@ -883,7 +902,7 @@ function chooseKeyAt(ft){
   m.querySelector("[data-x]").onclick=()=>m.remove();
   const ok=()=>{
     let kid=sel_&&sel_.value? sel_.value : null;
-    if(!kid){ const t=ta.value.trim(); if(!t){ ta.focus(); return; } const k={id:uid(),text:t}; keyList().push(k); kid=k.id; }
+    if(!kid){ const t=ta.value.trim(); if(!t){ ta.focus(); return; } const k={id:uid(),text:t}; keyListW().push(k); kid=k.id; }
     m.remove(); placeKey(kid, ft); metaTouch(); renderKeyList();
   };
   m.querySelector("[data-ok]").onclick=ok;
@@ -1267,7 +1286,7 @@ for(const k of Object.keys(WIRES)) $("tW_"+k).onclick=()=>setTool("wire",k);
 $("tText").onclick=()=>setTool("text");
 $("tDim").onclick=()=>setTool("dim");
 $("tKey").onclick=()=>setTool("key");
-$("bAddKey").onclick=()=>{ if(!SH()) return; keyList().push({id:uid(),text:""}); metaTouch(); renderKeyList(); const t=$("keyList").querySelectorAll("textarea"); if(t.length) t[t.length-1].focus(); };
+$("bAddKey").onclick=()=>{ if(!SH()) return; keyListW().push({id:uid(),text:""}); metaTouch(); renderKeyList(); const t=$("keyList").querySelectorAll("textarea"); if(t.length) t[t.length-1].focus(); };
 $("tFlag").onclick=()=>{ showFlags=true; setTool("flag"); };
 $("bFlags").onclick=()=>{ showFlags=!showFlags; if(!showFlags){ selFlag=null; if(tool==="flag") tool="select"; } refresh(); };
 $("flFilter").onchange=e=>{ flagFilter=e.target.value; renderFlagList(); };
