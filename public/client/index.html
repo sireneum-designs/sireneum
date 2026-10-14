@@ -128,6 +128,22 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 .warns{display:grid;gap:6px}
 .warns p{margin:0;font-size:12.5px;line-height:1.4;color:var(--warn);border-left:3px solid var(--warn);padding-left:8px}
 .warns p.ok{color:var(--ok);border-color:var(--ok)}
+.flagbar{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.flagno{font-family:var(--mono);font-weight:500;font-size:12px;color:#fff;background:#d4561a;border-radius:3px;padding:1px 6px}
+.flagno.closed{background:#6b7680}
+.thread{display:grid;gap:8px;margin:8px 0}
+.cmt{border-left:3px solid #d4561a;padding:2px 0 2px 8px}
+.cmt.reply{border-color:var(--ink)}
+.cmt.sys{border-color:var(--line);color:var(--muted);font-size:12px}
+.cmt .who{font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+.cmt .txt{font-size:13.5px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
+.flist{display:grid;gap:2px;margin:6px 0}
+.flist button{all:unset;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;padding:5px 4px;border-radius:4px;font-size:13px}
+.flist button:hover,.flist button.on{background:var(--ink-soft)}
+.flist button:focus-visible{outline:2px solid var(--ink)}
+.flist .snip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flist .meta{font-size:11px;color:var(--muted);font-family:var(--mono)}
+#noteEd{position:absolute;z-index:5;margin:0;padding:1px 3px;border:1.5px dashed #e0661f;border-radius:2px;background:rgba(255,255,255,.92);color:#1d47b8;font-family:Arial,Helvetica,sans-serif;font-weight:700;line-height:1.2;resize:none;overflow:hidden;white-space:pre;outline:none;min-width:60px}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:4px;font-size:13px;z-index:70;max-width:90vw}
 /* login & dashboard */
 .gate{min-height:100%;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
@@ -227,6 +243,9 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
       <button class="btn" id="tText" title="Place a text note (T)">Note</button>
       <button class="btn" id="tDim" title="Dimension, marked VIF (D)">Dimension</button>
       <span class="sep"></span>
+      <button class="btn" id="tFlag" title="Place a comment flag (C)">Comment flag</button>
+      <button class="btn" id="bFlags" aria-pressed="true" title="Show or hide comment flags">Flags: on</button>
+      <span class="sep"></span>
       <button class="btn" id="bRot" title="Rotate selection 45° (R)">Rotate</button>
       <button class="btn" id="bDup" title="Duplicate (Ctrl+D)">Duplicate</button>
       <button class="btn warn" id="bDel" title="Delete (Del)">Delete</button>
@@ -243,7 +262,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
         <g id="view">
           <rect id="paper" fill="#fff"></rect>
           <image id="baseImg" preserveAspectRatio="none"></image>
-          <g id="gWires"></g><g id="gDims"></g><g id="gItems"></g><g id="gNotes"></g><g id="gRef"></g><g id="gSel"></g>
+          <g id="gWires"></g><g id="gDims"></g><g id="gItems"></g><g id="gNotes"></g><g id="gFlags"></g><g id="gRef"></g><g id="gSel"></g>
           <path id="rubber" fill="none" stroke="#e0661f" stroke-dasharray="6 5" visibility="hidden"></path>
         </g>
       </svg>
@@ -264,11 +283,17 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
       <div class="nlist" id="notesList"></div>
       <button class="btn sm" id="bAddNote">Add note</button>
     </details>
+    <details open id="dComments"><summary>Comments</summary>
+      <div class="row" style="justify-content:space-between"><select class="inp" id="flFilter" style="width:auto"><option value="open">Open flags</option><option value="all">All flags</option></select><span class="ct" id="flCount"></span></div>
+      <div class="flist" id="flList"></div>
+      <p class="empty">Use “Comment flag” in the toolbar, then click the drawing where the comment applies.</p>
+    </details>
     <details><summary>Legend</summary><div class="legend" id="legend"></div></details>
     <details id="dScale"><summary>Drawing &amp; alignment</summary>
       <p class="empty" id="scaleInfo"></p>
       <div class="row" style="margin-bottom:8px"><button class="btn sm" id="tCal">Set scale</button><button class="btn sm" id="tRef">Mark reference point</button><button class="btn sm" id="tAlign">Align to reference</button></div>
       <p class="empty">Fixtures sit at one real position shared by every sheet. Mark a reference point (a building corner, say) once, then on each other sheet click the same corner with “Align to reference”.</p>
+      <label class="chk"><input type="checkbox" id="cRef"> Show the reference point (never printed)</label>
       <div class="row"><button class="btn sm" id="bPlan">Replace this sheet’s drawing…</button></div>
     </details>
     <details><summary>Title block</summary>
@@ -300,6 +325,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
       <div class="range"><span>Symbol size</span><output id="oSym"></output><input type="range" id="rSym" min="40" max="250" step="5"></div>
       <div class="range"><span>Drawing strength</span><output id="oOp"></output><input type="range" id="rOp" min="15" max="100" step="5"></div>
       <label class="chk"><input type="checkbox" id="cTagNo"> Show tag numbers (A1, A2…)</label>
+      <label class="f">Your name on comments<input id="myName" placeholder="Name"></label>
       <label class="chk"><input type="checkbox" id="cLive"> Live updates: check for others’ changes every few seconds. Turns itself off after 10 minutes with no changes.</label>
     </details>
     <details id="dProject"><summary>Project</summary>
@@ -328,7 +354,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 "use strict";
 const INK = "#1d47b8";
 const COLS = ["items","wires","notes","dims","fixtures"];      // undoable, per-object synced
-const SYNC = ["sheets",...COLS];                               // per-object synced
+const SYNC = ["sheets",...COLS,"flags"];   // flags: comments, synced but not undoable                               // per-object synced
 const API = "/api/client/";
 
 /* ---------- symbol library (unit box -20..20) ---------- */
@@ -504,7 +530,8 @@ async function bootProject(){
 function notFound(){ $("gate").hidden=false; $("gateTitle").textContent="Not found"; $("gateText").textContent="There is no project at this address. Check the link Sireneum Designs sent you."; $("gateForm").querySelectorAll("label,button,.msg").forEach(e=>e.hidden=true); }
 
 /* ================= plan tool ================= */
-let S = {sheets:[],items:[],wires:[],notes:[],dims:[],fixtures:[],meta:null};
+let S = {sheets:[],items:[],wires:[],notes:[],dims:[],fixtures:[],flags:[],meta:null};
+let selFlag = null;                // selected comment flag id
 let cur = "";                 // current sheet id
 let rev = 0;
 let sel = new Set();
@@ -724,6 +751,99 @@ function dimSVG(d, color, forExport){
   return out;
 }
 
+/* ---------- comment flags ---------- */
+let showFlags = true, flagFilter = "open";
+let showRef = true;   // per browser: lsGet("pos-ref-<slug>") after sign-in
+const flagById = id => S.flags.find(f=>f.id===id);
+const visFlags = () => S.flags.filter(f=>f.sheet===cur);
+const fmtWhen = iso => { try{ const d=new Date(iso); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }catch(e){ return iso; } };
+function myName(){ return lsGet("pos-name-"+SLUG,"") || lsGet("pos-name",""); }
+function ensureName(then){
+  const n=myName(); if(n) return then(n);
+  const m=modal(`<h3>Your name</h3><p class="empty">Comments show who wrote them. This browser remembers your name for this project.</p><label class="f">Name<input id="nmIn" value="${esc(ROLE==="admin"?"Rachel (Sireneum Designs)":"")}"></label><div class="row"><button class="btn primary" data-ok>Continue</button><button class="btn" data-x>Cancel</button></div>`,true);
+  const i=m.querySelector("#nmIn"); i.focus(); i.select();
+  m.querySelector("[data-x]").onclick=()=>m.remove();
+  const ok=()=>{ const v=i.value.trim(); if(!v){ i.focus(); return; } lsSet("pos-name-"+SLUG,v); $("myName").value=v; m.remove(); then(v); };
+  m.querySelector("[data-ok]").onclick=ok; i.addEventListener("keydown",e=>{ if(e.key==="Enter") ok(); });
+}
+const entryId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function flagSVG(f, forExport){
+  const s=size(), q=P(f), h=s*1.15, w=s*.95, fs=s*.42, closed=f.status==="closed";
+  const col=closed?"#6b7680":"#d4561a", sel=!forExport&&selFlag===f.id;
+  let out=`<g transform="translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})">`+
+    (sel?`<circle r="${(s*.55).toFixed(1)}" fill="none" stroke="#e0661f" stroke-width="${(s*.07).toFixed(2)}" stroke-dasharray="${(s*.15).toFixed(1)} ${(s*.1).toFixed(1)}"/>`:"")+
+    `<path d="M0 0V${(-h).toFixed(1)}" stroke="${col}" stroke-width="${(s*.07).toFixed(2)}"/>`+
+    `<path d="M0 ${(-h).toFixed(1)}H${w.toFixed(1)}L${(w*.78).toFixed(1)} ${(-h+w*.32).toFixed(1)}L${w.toFixed(1)} ${(-h+w*.64).toFixed(1)}H0Z" fill="${col}"/>`+
+    `<circle r="${(s*.09).toFixed(1)}" fill="${col}"/>`+
+    `<text x="${(w*.38).toFixed(1)}" y="${(-h+w*.32+fs*.36).toFixed(1)}" font-size="${fs.toFixed(1)}" font-family="Arial,Helvetica,sans-serif" font-weight="700" text-anchor="middle" fill="#fff">${closed?"✓":f.no}</text></g>`;
+  if(forExport) return out.replace("✓",String(f.no));
+  return `<g data-flag="${f.id}" style="cursor:pointer">${out}<rect x="${(q.x-s*.3).toFixed(1)}" y="${(q.y-h-s*.1).toFixed(1)}" width="${(w+s*.4).toFixed(1)}" height="${(h+s*.3).toFixed(1)}" fill="transparent"/></g>`;
+}
+function newFlagAt(ft){
+  ensureName(name=>{
+    const m=modal(`<h3>New comment</h3><label class="f">Comment<textarea id="flNew" rows="4" placeholder="What should we look at here?"></textarea></label><p class="empty">Posted by ${esc(name)}.</p><div class="row"><button class="btn primary" data-ok>Post comment</button><button class="btn" data-x>Cancel</button></div>`,true);
+    const t=m.querySelector("#flNew"); t.focus();
+    m.querySelector("[data-x]").onclick=()=>m.remove();
+    m.querySelector("[data-ok]").onclick=()=>{
+      const text=t.value.trim(); if(!text){ t.focus(); return; }
+      const no=S.flags.reduce((a,f)=>Math.max(a,f.no||0),0)+1, now=new Date().toISOString();
+      const f={id:uid(),no,sheet:cur,x:r3(ft.x),y:r3(ft.y),status:"open",created:now,by:name,thread:[{id:entryId(),kind:"comment",who:name,at:now,text}]};
+      S.flags.push(f); m.remove(); setTool("select"); selFlag=f.id; sel.clear(); showFlags=true; touch();
+    };
+  });
+}
+function flagAction(f,kind,text){
+  ensureName(name=>{
+    const now=new Date().toISOString();
+    f.thread=(f.thread||[]).concat([{id:entryId(),kind,who:name,at:now,text:text||""}]);
+    if(kind==="closed"){ f.status="closed"; f.closedBy=name; f.closedAt=now; }
+    if(kind==="reopened"){ f.status="open"; delete f.closedBy; delete f.closedAt; }
+    touch();
+  });
+}
+function renderFlagList(){
+  const all=visFlags(), list=flagFilter==="open"? all.filter(f=>f.status!=="closed") : all;
+  const open=all.filter(f=>f.status!=="closed").length;
+  $("flCount").textContent=`${open} open · ${all.length} total`;
+  $("flList").innerHTML= list.length? [...list].sort((a,b)=>(a.status==="closed")-(b.status==="closed")||a.no-b.no).map(f=>{ const first=(f.thread||[])[0]||{}, last=(f.thread||[]).slice(-1)[0]||{};
+    return `<button data-fl="${f.id}" class="${selFlag===f.id?"on":""}"><span class="flagno ${f.status==="closed"?"closed":""}">${f.no}</span><span style="min-width:0"><span class="snip" style="display:block">${esc(first.text||"")}</span><span class="meta">${esc(last.who||"")} · ${esc(fmtWhen(last.at))}${(f.thread||[]).length>1?` · ${(f.thread||[]).filter(e=>e.kind!=="closed"&&e.kind!=="reopened").length} messages`:""}</span></span></button>`; }).join("")
+    : `<p class="empty">${all.length? "No open flags on this sheet." : "No comment flags on this sheet yet."}</p>`;
+  $("flList").querySelectorAll("[data-fl]").forEach(b=>b.onclick=()=>{ selFlag=b.dataset.fl; sel.clear(); showFlags=true; centerOn(P(flagById(selFlag))); refresh(); });
+}
+function centerOn(q){ const r=cv.getBoundingClientRect(); view.x=r.width/2-q.x*view.z; view.y=r.height/2-q.y*view.z; }
+
+/* ---------- inline note editing ---------- */
+let editingNote = null;
+function placeNoteEditor(){
+  const ta=$("noteEd"), n=editingNote&&S.notes.find(x=>x.id===editingNote); if(!ta||!n) return;
+  const fs=size()*.44*view.z, lines=String(ta.value).split("\n");
+  ta.style.fontSize=fs+"px";
+  ta.style.left=(view.x+X(n)*view.z-4)+"px";
+  ta.style.top=(view.y+Y(n)*view.z-fs*0.95-2)+"px";
+  ta.rows=Math.max(1,lines.length);
+  ta.style.width=Math.max(60,Math.max(...lines.map(l=>l.length),4)*fs*.66+14)+"px";
+  ta.style.height=(Math.max(1,lines.length)*fs*1.2+6)+"px";
+}
+function openNoteEditor(id){
+  const n=S.notes.find(x=>x.id===id); if(!n) return;
+  if(editingNote) closeNoteEditor();
+  commit(); editingNote=id; sel=new Set([id]);
+  const ta=document.createElement("textarea"); ta.id="noteEd"; ta.value=n.text||""; ta.spellcheck=true;
+  ta.setAttribute("aria-label","Note text");
+  $("stage").appendChild(ta);
+  ta.addEventListener("input",()=>{ n.text=ta.value; placeNoteEditor(); recordAfter(); });
+  ta.addEventListener("keydown",e=>{ if(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey))){ e.preventDefault(); ta.blur(); } });
+  ta.addEventListener("blur",closeNoteEditor);
+  render(); placeNoteEditor(); ta.focus(); ta.select();
+}
+function closeNoteEditor(){
+  const ta=$("noteEd"), id=editingNote; if(!id) return;
+  editingNote=null; if(ta){ ta.removeEventListener("blur",closeNoteEditor); ta.remove(); }
+  const n=S.notes.find(x=>x.id===id);
+  if(n && !String(n.text).trim()){ S.notes=S.notes.filter(x=>x.id!==id); sel.delete(id); }
+  changed();
+}
+
 /* ---------- render ---------- */
 function render(){
   const sh=SH(), b=BASE();
@@ -732,15 +852,17 @@ function render(){
   if(b){ img.setAttribute("width",b.w); img.setAttribute("height",b.h); img.setAttribute("opacity",(sh.display.planOp||60)/100); p.setAttribute("width",b.w); p.setAttribute("height",b.h); }
   else { p.setAttribute("width",0); p.setAttribute("height",0); }
   vg.setAttribute("transform",`translate(${view.x} ${view.y}) scale(${view.z})`);
-  if(!sh||!ppf()){ ["gWires","gDims","gItems","gNotes","gRef","gSel"].forEach(g=>$(g).innerHTML=""); renderStatus(); renderBanner(); return; }
+  if(!sh||!ppf()){ ["gWires","gDims","gItems","gNotes","gFlags","gRef","gSel"].forEach(g=>$(g).innerHTML=""); renderStatus(); renderBanner(); return; }
   $("gWires").innerHTML=vis("wires").map(w=>wireSVG(w,INK)).join("");
   $("gDims").innerHTML=vis("dims").map(d=>dimSVG(d,INK)).join("");
   $("gItems").setAttribute("color",INK); $("gItems").innerHTML=vis("items").map(i=>itemSVG(i)).join("");
-  $("gNotes").setAttribute("color",INK); $("gNotes").innerHTML=vis("notes").map(n=>noteSVG(n)).join("");
+  $("gNotes").setAttribute("color",INK); $("gNotes").innerHTML=vis("notes").filter(n=>n.id!==editingNote).map(n=>noteSVG(n)).join("");
+  if(editingNote) placeNoteEditor();
+  $("gFlags").innerHTML= showFlags? visFlags().map(f=>flagSVG(f)).join("") : "";
   const s=size(), swd=(2/view.z).toFixed(2), da=`${(6/view.z).toFixed(1)} ${(4/view.z).toFixed(1)}`, hr=(7/view.z).toFixed(1);
   // reference point marker
   let rf="";
-  if(M().ref){ const q=P(M().ref), r=s*.55; rf=`<g stroke="#e0661f" stroke-width="${swd}" fill="none"><circle cx="${q.x}" cy="${q.y}" r="${r}"/><path d="M${q.x-r*1.6} ${q.y}H${q.x+r*1.6}M${q.x} ${q.y-r*1.6}V${q.y+r*1.6}"/></g><text x="${q.x+r*1.2}" y="${q.y-r*1.2}" font-size="${s*.32}" font-family="Arial" font-weight="700" fill="#e0661f">REF</text>`; }
+  if(M().ref && (showRef||tool==="ref"||tool==="align")){ const q=P(M().ref), r=s*.55; rf=`<g stroke="#e0661f" stroke-width="${swd}" fill="none"><circle cx="${q.x}" cy="${q.y}" r="${r}"/><path d="M${q.x-r*1.6} ${q.y}H${q.x+r*1.6}M${q.x} ${q.y-r*1.6}V${q.y+r*1.6}"/></g><text x="${q.x+r*1.2}" y="${q.y-r*1.2}" font-size="${s*.32}" font-family="Arial" font-weight="700" fill="#e0661f">REF</text>`; }
   $("gRef").innerHTML=rf;
   let sm="";
   for(const id of sel){
@@ -771,7 +893,8 @@ function renderBanner(){
 }
 function refresh(){
   for(const id of [...sel]) if(!findAny(id)) sel.delete(id);
-  render(); renderInspector(); renderLegend(); renderFxSummary(); updateButtons();
+  if(selFlag&&(!flagById(selFlag)||flagById(selFlag).sheet!==cur)) selFlag=null;
+  render(); renderInspector(); renderLegend(); renderFxSummary(); renderFlagList(); updateButtons();
   if(schedOpen) renderSchedRows();
 }
 function changed(){ recordAfter(); refresh(); scheduleFlush(); }
@@ -789,17 +912,19 @@ function renderStatus(){
   else if(armed){ const f=lastMark[armed]&&fxById(lastMark[armed]); t=`Placing ${SYM[armed].name}${f?` as type ${f.mark}`:""}${SHARED_DEFAULT.has(armed)?" (shared with all sheets)":""} — click the drawing, Esc to stop`; }
   else if(tool==="wire") t= wireStart? `${WIRES[wireKind].name}: click the next symbol (Esc to finish)` : `${WIRES[wireKind].name}: click a symbol to start`;
   else if(tool==="text") t="Note: click the drawing to place a note";
+  else if(tool==="flag") t="Comment flag: click the drawing where your comment applies";
   else if(tool==="dim"){ t= pend&&lastPtr? `Dimension: ${fmtFtIn(Math.hypot(lastPtr.x-pend.px.x,lastPtr.y-pend.px.y)/ppf())} VIF — click the end point (Shift = square)` : "Dimension: click a fixture or point to start"; }
   else t=`${vis("items").length} symbols · ${vis("wires").length} runs · ${vis("dims").length} dims · zoom ${Math.round(view.z*100)}%`;
   $("status").textContent=t;
   cv.classList.toggle("placing",!!armed);
   cv.classList.toggle("wiring",tool==="wire"&&!armed);
-  cv.classList.toggle("texting",tool==="text"&&!armed);
+  cv.classList.toggle("texting",(tool==="text"||tool==="flag")&&!armed);
   cv.classList.toggle("measuring",["dim","cal","ref","align"].includes(tool)&&!armed);
 }
 function updateButtons(){
   $("tSel").classList.toggle("on",tool==="select"&&!armed);
   for(const k of Object.keys(WIRES)) $("tW_"+k).classList.toggle("on",tool==="wire"&&wireKind===k);
+  $("tFlag").classList.toggle("on",tool==="flag"); $("bFlags").textContent="Flags: "+(showFlags?"on":"off"); $("bFlags").setAttribute("aria-pressed",String(showFlags)); $("bFlags").classList.toggle("on",showFlags);
   $("tText").classList.toggle("on",tool==="text"); $("tDim").classList.toggle("on",tool==="dim");
   $("tCal").classList.toggle("on",tool==="cal"); $("tRef").classList.toggle("on",tool==="ref"); $("tAlign").classList.toggle("on",tool==="align");
   const ready=!!(SH()&&ppf());
@@ -935,22 +1060,25 @@ cv.addEventListener("pointerdown",e=>{
     const d={id:uid(),a:strip(pend),b:strip(q),off:0,sheet:cur}; S.dims.push(d); pend=null; sel=new Set([d.id]); changed(); return;
   }
   if(tool==="text" && !tEl){
-    commit(); const f=toFt(p); const n={id:uid(),x:r3(f.x),y:r3(f.y),text:"Note",sheet:cur}; S.notes.push(n); sel=new Set([n.id]); tool="select"; changed();
-    const ta=$("inNote"); if(ta){ ta.focus(); ta.select(); } return;
+    const f=toFt(p); const n={id:uid(),x:r3(f.x),y:r3(f.y),text:"Note",sheet:cur}; S.notes.push(n); tool="select"; updateButtons(); render(); setTimeout(()=>openNoteEditor(n.id),0); return;
   }
+  const flEl=e.target.closest("[data-flag]");
+  if(tool==="flag" && !flEl){ newFlagAt(toFt(p)); return; }
+  if(flEl && showFlags){ selFlag=flEl.dataset.flag; sel.clear(); const f=flagById(selFlag); drag={mode:"flag",id:selFlag,p0:p,x:f.x,y:f.y,moved:false}; refresh(); return; }
   if(hEl){ commit(); drag={mode:"bend",id:hEl.dataset.handle}; return; }
   if(dhEl){ commit(); drag={mode:"doff",id:dhEl.dataset.dhandle}; return; }
   if(tEl){
     if(e.shiftKey){ sel.has(id)? sel.delete(id) : sel.add(id); refresh(); return; }
+    const wasOnly = sel.size===1 && sel.has(id);
     if(!sel.has(id)) sel=new Set([id]);
     if(kind==="wire"){ refresh(); return; }
     const starts=[...sel].map(i=>{ const f=findAny(i); if(!f) return null;
       if(f.c==="items"||f.c==="notes") return {id:i,c:f.c,x:f.o.x,y:f.o.y};
       if(f.c==="dims") return {id:i,c:"dims",a:{...f.o.a},b:{...f.o.b}};
       return null; }).filter(Boolean);
-    drag={mode:"move",p0:p,starts,moved:false}; refresh(); return;
+    drag={mode:"move",p0:p,starts,moved:false,editNote: kind==="note"&&wasOnly? id : null}; refresh(); return;
   }
-  if(sel.size){ sel.clear(); refresh(); }
+  if(sel.size||selFlag){ sel.clear(); selFlag=null; refresh(); }
   pan();
 });
 cv.addEventListener("pointermove",e=>{
@@ -984,6 +1112,11 @@ cv.addEventListener("pointermove",e=>{
     const cx=2*p.x-.5*g.A.x-.5*g.B.x, cy=2*p.y-.5*g.A.y-.5*g.B.y;
     w.bend=r3(((cx-g.mx)*g.nx+(cy-g.my)*g.ny)/ppf()); render(); return;
   }
+  if(drag.mode==="flag"){
+    const f=flagById(drag.id); if(!f) return;
+    if(!drag.moved && Math.hypot(p.x-drag.p0.x,p.y-drag.p0.y)*view.z<4) return;
+    drag.moved=true; f.x=r3(drag.x+(p.x-drag.p0.x)/ppf()); f.y=r3(drag.y+(p.y-drag.p0.y)/ppf()); render(); return;
+  }
   if(drag.mode==="doff"){
     const d=S.dims.find(x=>x.id===drag.id); if(!d) return; const g=dimGeom(d);
     d.off=r3(((p.x-g.p.x)*g.nx+(p.y-g.p.y)*g.ny)/ppf()); render();
@@ -992,10 +1125,12 @@ cv.addEventListener("pointermove",e=>{
 function endPtr(e){
   pointers.delete(e.pointerId);
   if(!drag) return;
-  const m=drag.mode, moved=drag.moved; drag=null; cv.classList.remove("panning");
-  if((m==="move"&&moved)||m==="bend"||m==="doff") changed(); else render();
+  const m=drag.mode, moved=drag.moved, editNote=drag.editNote; drag=null; cv.classList.remove("panning");
+  if(m==="move"&&!moved&&editNote){ setTimeout(()=>openNoteEditor(editNote),0); return; }
+  if((m==="move"&&moved)||m==="bend"||m==="doff") changed(); else if(m==="flag"&&moved) touch(); else render();
 }
-cv.addEventListener("pointerup",endPtr); cv.addEventListener("pointercancel",endPtr);
+cv.addEventListener("pointerup",endPtr);
+cv.addEventListener("dblclick",e=>{ const t=e.target.closest("[data-kind=note]"); if(t) openNoteEditor(t.dataset.id); }); cv.addEventListener("pointercancel",endPtr);
 
 /* ---------- commands ---------- */
 function setTool(t,k){
@@ -1058,9 +1193,14 @@ $("tSel").onclick=()=>setTool("select");
 for(const k of Object.keys(WIRES)) $("tW_"+k).onclick=()=>setTool("wire",k);
 $("tText").onclick=()=>setTool("text");
 $("tDim").onclick=()=>setTool("dim");
+$("tFlag").onclick=()=>{ showFlags=true; setTool("flag"); };
+$("bFlags").onclick=()=>{ showFlags=!showFlags; if(!showFlags){ selFlag=null; if(tool==="flag") tool="select"; } refresh(); };
+$("flFilter").onchange=e=>{ flagFilter=e.target.value; renderFlagList(); };
+$("myName").addEventListener("change",e=>{ const v=e.target.value.trim(); lsSet("pos-name-"+SLUG,v||null); });
 $("tCal").onclick=()=>setTool("cal");
 $("tRef").onclick=()=>setTool("ref");
 $("tAlign").onclick=()=>setTool("align");
+$("cRef").onchange=e=>{ showRef=e.target.checked; lsSet("pos-ref-"+SLUG,showRef?"1":"0"); render(); };
 $("bRot").onclick=()=>rotateSel(45);
 $("bDup").onclick=dupSel; $("bDel").onclick=delSel;
 $("bUndo").onclick=undo; $("bRedo").onclick=redo;
@@ -1079,9 +1219,10 @@ document.addEventListener("keydown",e=>{
   if(mod&&k==="d"){ e.preventDefault(); dupSel(); return; }
   if(mod) return;
   if(k==="delete"||k==="backspace"){ e.preventDefault(); delSel(); }
-  else if(k==="escape"){ if(armed) arm(armed); else if(wireStart||pend){ wireStart=null; pend=null; render(); } else if(tool!=="select") setTool("select"); else { sel.clear(); refresh(); } }
+  else if(k==="escape"){ if(armed) arm(armed); else if(wireStart||pend){ wireStart=null; pend=null; render(); } else if(tool!=="select") setTool("select"); else { sel.clear(); selFlag=null; refresh(); } }
   else if(!ppf()) return;
-  else if(k==="r") rotateSel(e.shiftKey?-45:45);
+  else if(k==="r"||k===" "){ if(S.items.some(i=>sel.has(i.id))){ e.preventDefault(); rotateSel(e.shiftKey?-45:45); } }
+  else if(k==="c") setTool("flag");
   else if(k==="v") setTool("select");
   else if(k==="l") setTool("wire","switch");
   else if(k==="t") setTool("text");
@@ -1252,7 +1393,23 @@ $("bAddFx").onclick=()=>{ addFixture(); openSchedule(); };
 function fxOptions(cur){ return `<option value="">— none —</option>`+fxSort().map(f=>`<option value="${f.id}" ${f.id===cur?"selected":""}>${esc(f.mark)}${f.desc?" — "+esc(f.desc.slice(0,28)):""}</option>`).join("")+`<option value="__new">+ New type mark…</option>`; }
 function renderInspector(){
   const b=$("inspBody");
-  if(b.contains(document.activeElement) && document.activeElement.id==="inNote") return;
+  if(b.contains(document.activeElement) && (document.activeElement.id==="inNote"||document.activeElement.id==="flReply")) return;
+  if(selFlag){
+    const f=flagById(selFlag); if(!f){ selFlag=null; return renderInspector(); }
+    const closed=f.status==="closed";
+    b.innerHTML=`<div class="flagbar"><span><span class="flagno ${closed?"closed":""}">${f.no}</span> <b>${closed?"Closed":"Open"}</b></span><span class="ct">Comment flag</span></div>
+      <div class="thread">${(f.thread||[]).map(e=> e.kind==="closed"||e.kind==="reopened"
+        ? `<div class="cmt sys"><div class="who">${esc(e.who)} · ${esc(fmtWhen(e.at))}</div><div class="txt">${e.kind==="closed"?"Marked resolved and closed":"Reopened"}${e.text?": "+esc(e.text):""}</div></div>`
+        : `<div class="cmt ${e.kind==="reply"?"reply":""}"><div class="who">${esc(e.who)} · ${esc(fmtWhen(e.at))}${e.kind==="comment"?" · comment":" · response"}</div><div class="txt">${esc(e.text)}</div></div>`).join("")}</div>
+      ${closed?"":`<label class="f">Response<textarea id="flReply" rows="3" placeholder="Write a response…"></textarea></label>`}
+      <div class="row">${closed?`<button class="btn sm" id="flReopen">Reopen</button>`:`<button class="btn sm primary" id="flPost">Post response</button><button class="btn sm" id="flClose">Close as resolved</button>`}<span style="flex:1"></span><button class="btn sm warn" id="flDel">Delete</button></div>
+      <p class="empty">Drag the flag to move it.</p>`;
+    const post=$("flPost"); if(post) post.onclick=()=>{ const t=$("flReply").value.trim(); if(!t){ $("flReply").focus(); return; } $("flReply").value=""; flagAction(f,"reply",t); };
+    const cl=$("flClose"); if(cl) cl.onclick=()=>{ const t=$("flReply")?$("flReply").value.trim():""; flagAction(f,"closed",t); };
+    const ro=$("flReopen"); if(ro) ro.onclick=()=>flagAction(f,"reopened","");
+    let armed=false; $("flDel").onclick=e=>{ if(!armed){ armed=true; e.target.textContent="Click again to delete"; return; } S.flags=S.flags.filter(x=>x.id!==f.id); selFlag=null; touch(); toast("Flag deleted."); };
+    return;
+  }
   if(!sel.size){ b.innerHTML=`<p class="empty">Nothing selected. Click a symbol, run, dimension or note to edit it. Shift-click adds to the selection.</p>`; return; }
   if(sel.size>1){
     const its=S.items.filter(i=>sel.has(i.id));
@@ -1293,7 +1450,7 @@ function renderInspector(){
     $("inDZero").onclick=()=>{ commit(); d.off=0; changed(); };
   } else if(f.c==="notes"){
     const n=f.o;
-    b.innerHTML=`<label class="f">Note text<textarea id="inNote" rows="3">${esc(n.text)}</textarea></label>`;
+    b.innerHTML=`<label class="f">Note text<textarea id="inNote" rows="3">${esc(n.text)}</textarea></label><p class="empty">Tip: click a selected note again (or double-click it) to type right on the drawing. Ctrl+Enter or Esc to finish.</p>`;
     const ta=$("inNote"); let first=true;
     ta.oninput=()=>{ if(first){ commit(); first=false; } n.text=ta.value; recordAfter(); render(); scheduleFlush(); };
   } else b.innerHTML="";
@@ -1340,7 +1497,8 @@ function renderRevs(){
   $("revList").querySelectorAll("[data-rr]").forEach(b=>b.onclick=()=>{ R.splice(+b.dataset.rr,1); renderRevs(); metaTouch(); });
 }
 $("bAddRev").onclick=()=>{ const R=M().revisions; const n=R.length? (parseInt(R[R.length-1].no)||R.length)+1 : 1; R.push({no:String(n),desc:"",date:today()}); renderRevs(); metaTouch(); };
-function syncDisplay(){ const d=(SH()&&SH().display)||{symScale:100,planOp:60}; $("rSym").value=d.symScale; $("oSym").textContent=d.symScale+"%"; $("rOp").value=d.planOp; $("oOp").textContent=d.planOp+"%"; $("cTagNo").checked=!!M().display.tagNo; $("cLive").checked=live; }
+function syncName(){ if(document.activeElement!==$("myName")) $("myName").value=myName(); }
+function syncDisplay(){ syncName(); $("cRef").checked=showRef; const d=(SH()&&SH().display)||{symScale:100,planOp:60}; $("rSym").value=d.symScale; $("oSym").textContent=d.symScale+"%"; $("rOp").value=d.planOp; $("oOp").textContent=d.planOp+"%"; $("cTagNo").checked=!!M().display.tagNo; $("cLive").checked=live; }
 $("rSym").oninput=e=>{ if(!SH()) return; SH().display.symScale=+e.target.value; syncDisplay(); render(); metaTouch(); };
 $("rOp").oninput=e=>{ if(!SH()) return; SH().display.planOp=+e.target.value; syncDisplay(); render(); metaTouch(); };
 $("cTagNo").onchange=e=>{ M().display.tagNo=e.target.checked; render(); metaTouch(); };
@@ -1388,10 +1546,11 @@ $("bSignOut").onclick=()=>{ lsSet("pos-key-"+SLUG,null); if(ROLE==="admin") lsSe
 /* ---------- print engine (inches) ---------- */
 function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("image failed to load")); i.src=src; }); }
 const fname = ext => `${SH().no||""} ${SH().title||"Plan"}`.replace(/[\\/:*?"<>|]+/g,"").trim()+"."+ext;
+function printFlags(){ const Pp=SH().print; if(!Pp.flags) return []; return visFlags().filter(f=>Pp.flagsOpenOnly===false||f.status!=="closed").sort((a,b)=>a.no-b.no); }
 function overlaySVG(color,k){
   const b=BASE(); k=k||1;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(b.w*k)}" height="${Math.round(b.h*k)}" viewBox="0 0 ${b.w} ${b.h}" color="${color}">`+
-    vis("wires").map(w=>wireSVG(w,color,true)).join("")+vis("dims").map(d=>dimSVG(d,color,true)).join("")+vis("items").map(i=>itemSVG(i,true)).join("")+vis("notes").map(n=>noteSVG(n,true)).join("")+`</svg>`;
+    vis("wires").map(w=>wireSVG(w,color,true)).join("")+vis("dims").map(d=>dimSVG(d,color,true)).join("")+vis("items").map(i=>itemSVG(i,true)).join("")+vis("notes").map(n=>noteSVG(n,true)).join("")+printFlags().map(f=>flagSVG(f,true)).join("")+`</svg>`;
 }
 async function prepare(){
   const sh=SH(), b=BASE(), color=sh.print.black?"#000":INK;
@@ -1532,7 +1691,26 @@ function drawSheet(B, prep){
     x=spX; B.rect(spX,y-cl,spW,ry-(y-cl),.9); widths.slice(0,-1).forEach(w=>{ x+=w; B.line(x,y-cl,x,ry,.5); });
     y=ry+gap;
   }
-  if(y>dy1) warns.push("Sheet notes, legend and fixture schedule run past the bottom of the sheet. Choose a larger sheet or shorten the notes.");
+  const pfl=printFlags();
+  if(pfl.length){
+    head("COMMENTS");
+    const ind=fs/72*3.2, cs=fs*.9, cl=cs/72*1.3;
+    for(const f of pfl){
+      B.rect(spX,y-cl*.85,fs/72*2.2,cl*1.05,0,f.status==="closed"?"#6b7680":"#d4561a");
+      B.text(String(f.no),spX+fs/72*1.1,y,{size:cs,bold:true,align:"center",color:"#ffffff"});
+      B.text(f.status==="closed"?"CLOSED":"OPEN",spX+ind,y,{size:cs*.85,bold:true,color:f.status==="closed"?"#6b7680":"#d4561a"}); y+=cl*1.05;
+      for(const e of (f.thread||[])){
+        const head2=`${e.who} · ${fmtWhen(e.at)}`+(e.kind==="closed"?" · closed":e.kind==="reopened"?" · reopened":e.kind==="reply"?" · response":"");
+        B.text(head2,spX+ind,y,{size:cs*.85,color:"#555555"}); y+=cl;
+        const body= e.kind==="closed"? ("Resolved"+(e.text?": "+e.text:"")) : e.kind==="reopened"? "Reopened" : e.text;
+        wrap(B,body,cs,false,spW-ind).forEach(l=>{ B.text(l,spX+ind,y,{size:cs}); y+=cl; });
+        y+=cl*.25;
+      }
+      y+=cl*.4;
+    }
+    y+=gap;
+  }
+  if(y>dy1) warns.push("Sheet notes, legend, schedule and comments run past the bottom of the sheet. Choose a larger sheet, shorten the notes, or print open flags only.");
   drawTitleBlock(B,tbX,m,tbW,Ht-2*m,sLabel,warns);
   return {warns, sLabel};
 }
@@ -1606,6 +1784,8 @@ function openPrint(){
       <label class="f">Scale<select id="pScale">${SCALES.map(([k])=>`<option value="${k}" ${k===Pp.scale?"selected":""}>${k==="fit"?"Fit to sheet (NTS)":scaleLabel(k)}</option>`).join("")}</select></label>
       <label class="f">Drawing title<input id="pTitle" value="${esc(Pp.dtitle||"")}"></label>
       <label class="chk"><input type="checkbox" id="pBlack" ${Pp.black?"checked":""}> Symbols in black</label>
+      <label class="chk"><input type="checkbox" id="pFlags" ${Pp.flags?"checked":""}> Include comment flags (${visFlags().filter(f=>f.status!=="closed").length} open, ${visFlags().length} total)</label>
+      <label class="chk" style="margin-left:24px"><input type="checkbox" id="pFlagsOpen" ${Pp.flagsOpenOnly!==false?"checked":""}> Open flags only</label>
       <div class="warns" id="pWarn"></div>
       <div class="row" style="margin-top:12px"><button class="btn primary" id="pPdf">Download PDF</button><button class="btn" id="pPng">Download PNG</button></div>
       <p class="empty">The PDF prints at true scale when the print dialog is set to 100% / Actual size on the matching sheet.</p>
@@ -1629,6 +1809,8 @@ function openPrint(){
   m.querySelector("#pScale").onchange=e=>upd("scale",e.target.value);
   m.querySelector("#pTitle").oninput=e=>upd("dtitle",e.target.value);
   m.querySelector("#pBlack").onchange=e=>upd("black",e.target.checked);
+  m.querySelector("#pFlags").onchange=e=>upd("flags",e.target.checked);
+  m.querySelector("#pFlagsOpen").onchange=e=>upd("flagsOpenOnly",e.target.checked);
   m.querySelector("#pPdf").onclick=e=>busy(e.currentTarget,exportPdf);
   m.querySelector("#pPng").onclick=e=>busy(e.currentTarget,exportPng);
   requestAnimationFrame(redraw);
@@ -1657,6 +1839,7 @@ async function exportPng(){
 async function startApp(){
   $("gate").hidden=true; $("app").hidden=false;
   try{ lastMark=JSON.parse(lsGet("pos-lastmark-"+SLUG,"{}"))||{}; }catch(e){ lastMark={}; }
+  showRef = lsGet("pos-ref-"+SLUG,"1")==="1";
   buildPalette(); setSync("ok");
   await load(true);
   if(!S.meta) S.meta=defaultMeta({});
