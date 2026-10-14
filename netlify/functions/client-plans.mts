@@ -65,9 +65,25 @@ function emptyProject(slug: string, b: Record<string, string>) {
   }
 }
 
+/* Client comments the studio hasn't opened yet. An entry counts once it is newer than the
+   flag's seenAt; studio entries and older entries without a sender never count. */
+function unseenEntries(doc: any) {
+  const out: { flag: any, entry: any }[] = []
+  for (const f of Object.values(doc.flags || {}) as any[]) {
+    const seen = String(f.seenAt || "")
+    for (const e of (Array.isArray(f.thread) ? f.thread : [])) if (e && e.by === "client" && String(e.at) > seen) out.push({ flag: f, entry: e })
+  }
+  return out
+}
+function flagCounts(doc: any) {
+  const flags = Object.values(doc.flags || {}) as any[]
+  const u = unseenEntries(doc)
+  return { openFlags: flags.filter(f => f.status !== "closed").length, newFlags: new Set(u.map(x => x.flag.id)).size, newEntries: u.length }
+}
+
 /* Apply a batch of edits to the newest stored copy. Each op names one object,
    so two people editing different symbols never overwrite each other. */
-async function applyOps(slug: string, ops: any[]) {
+async function applyOps(slug: string, ops: any[], role: "admin" | "editor" = "editor") {
   const s = store(), key = `projects/${slug}.json`
   for (let attempt = 0; attempt < 6; attempt++) {
     const cur = await s.getWithMetadata(key, { type: "json" })
@@ -83,10 +99,17 @@ async function applyOps(slug: string, ops: any[]) {
         // Comment threads only grow: keep every entry either side has, so two
         // people replying at the same moment both keep their messages.
         const prev = doc[op.c][op.id]
-        if (op.c === "flags" && prev && Array.isArray(prev.thread)) {
-          const seen = new Map<string, any>()
-          for (const e of [...prev.thread, ...(Array.isArray(next.thread) ? next.thread : [])]) if (e && e.id) seen.set(e.id, e)
-          next.thread = [...seen.values()].sort((a, b) => String(a.at).localeCompare(String(b.at)))
+        if (op.c === "flags") {
+          const had = new Map<string, any>()
+          for (const e of (prev && Array.isArray(prev.thread) ? prev.thread : [])) if (e && e.id) had.set(e.id, e)
+          const all = new Map(had)
+          // a new entry is stamped with who sent it (studio or client), from the key used, not the browser
+          for (const e of (Array.isArray(next.thread) ? next.thread : [])) if (e && e.id && !had.has(e.id)) all.set(e.id, { ...e, by: role === "admin" ? (e.by === "client" ? "client" : "studio") : "client" })
+          next.thread = [...all.values()].sort((a, b) => String(a.at).localeCompare(String(b.at)))
+          // "seen by the studio" only moves forward, and only the studio can move it
+          const keep = prev && prev.seenAt ? String(prev.seenAt) : ""
+          const want = role === "admin" && next.seenAt ? String(next.seenAt) : ""
+          if (keep || want) next.seenAt = want > keep ? want : keep; else delete next.seenAt
         }
         doc[op.c][op.id] = next
       }
@@ -115,7 +138,7 @@ export default async (req: Request, context: Context) => {
         const out = []
         for (const b of blobs) {
           const d: any = await s.get(b.key, { type: "json" })
-          if (d) out.push({ slug: d.slug, name: d.meta?.tb?.project || d.slug, client: d.meta?.tb?.client || "", updated: d.updated, sheets: Object.keys(d.sheets || {}).length })
+          if (d) out.push({ slug: d.slug, name: d.meta?.tb?.project || d.slug, client: d.meta?.tb?.client || "", updated: d.updated, sheets: Object.keys(d.sheets || {}).length, ...flagCounts(d) })
         }
         out.sort((a, b) => String(b.updated).localeCompare(String(a.updated)))
         return json({ projects: out })
@@ -180,7 +203,7 @@ export default async (req: Request, context: Context) => {
     if (parts[1] === "ops" && req.method === "POST") {
       const b = await req.json().catch(() => null)
       if (!b || !Array.isArray(b.ops) || b.ops.length > 2000) return err("Bad request.", 400)
-      const rev = await applyOps(slug, b.ops)
+      const rev = await applyOps(slug, b.ops, r)
       if (rev === null) return err("No project at this address.", 404)
       return json({ rev })
     }

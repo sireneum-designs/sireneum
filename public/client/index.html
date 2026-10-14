@@ -147,6 +147,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 .flagbar{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-bottom:6px}
 .flagno{font-family:var(--mono);font-weight:500;font-size:12px;color:#fff;background:#d4561a;border-radius:3px;padding:1px 6px}
 .flagno.closed{background:#6b7680}
+.newdot{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;color:#fff;background:#1d47b8;border-radius:999px;padding:1px 6px;margin-left:6px;vertical-align:1px}
 .thread{display:grid;gap:8px;margin:8px 0}
 .cmt{border-left:3px solid #d4561a;padding:2px 0 2px 8px}
 .cmt.reply{border-color:var(--ink)}
@@ -182,6 +183,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 .prow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
 .prow:last-child{border-bottom:none}
 .prow .t{font-weight:600}
+.prow .newflags{display:inline-block;margin:3px 0 2px;font-size:12px;font-weight:600;color:#fff;background:#d4561a;border-radius:999px;padding:1px 9px}
 .prow .s{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .newp{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:4px}
 .newp .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
@@ -314,6 +316,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
     <details open id="dComments"><summary>Comments</summary>
       <div class="row" style="justify-content:space-between"><select class="inp" id="flFilter" style="width:auto"><option value="open">Open flags</option><option value="all">All flags</option></select><span class="ct" id="flCount"></span></div>
       <div class="flist" id="flList"></div>
+      <div class="row studio-only" id="flSeenRow" hidden><span class="ct" id="flNewCt"></span><button class="btn sm" id="flSeenAll">Mark all seen</button></div>
       <p class="empty">Use “Comment flag” in the toolbar, then click the drawing where the comment applies.</p>
     </details>
     <details><summary>Legend</summary><div class="legend" id="legend"></div></details>
@@ -518,7 +521,7 @@ async function bootDash(){
     $("gate").hidden=true; $("dash").hidden=false;
     try{
       const {projects}=await api("_projects",{key});
-      $("plist").innerHTML= projects.length? projects.map(p=>`<div class="prow"><div><div class="t">${esc(p.name)}${p.client?` · ${esc(p.client)}`:""}</div><div class="s">sireneum.com/client/${esc(p.slug)} · ${p.sheets} sheet${p.sheets===1?"":"s"} · updated ${esc(new Date(p.updated).toLocaleDateString())}</div></div><a class="btn sm" href="/client/${esc(p.slug)}">Open</a><button class="btn sm" data-copy="${esc(p.slug)}">Copy link</button><button class="btn sm" data-bak="${esc(p.slug)}" title="Save the whole project, drawings included, as one file">Download backup</button></div>`).join("")
+      $("plist").innerHTML= projects.length? projects.map(p=>`<div class="prow"><div><div class="t">${esc(p.name)}${p.client?` · ${esc(p.client)}`:""}</div>${p.newFlags?`<div class="newflags">${p.newFlags} flag${p.newFlags===1?"":"s"} with new client comments</div>`:""}<div class="s">sireneum.com/client/${esc(p.slug)} · ${p.sheets} sheet${p.sheets===1?"":"s"}${p.openFlags?` · ${p.openFlags} open flag${p.openFlags===1?"":"s"}`:""} · updated ${esc(new Date(p.updated).toLocaleDateString())}</div></div><a class="btn sm" href="/client/${esc(p.slug)}">Open</a><button class="btn sm" data-copy="${esc(p.slug)}">Copy link</button><button class="btn sm" data-bak="${esc(p.slug)}" title="Save the whole project, drawings included, as one file">Download backup</button></div>`).join("")
         : `<p class="empty" style="padding:12px 14px">No projects yet. Create the first one below.</p>`;
       $("plist").querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyText("https://sireneum.com/client/"+b.dataset.copy));
       $("plist").querySelectorAll("[data-bak]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ await exportProject(b.dataset.bak,key); }catch(err){ toast("Backup failed: "+err.message); } b.disabled=false; });
@@ -869,6 +872,9 @@ function ensureName(then){
   const ok=()=>{ const v=i.value.trim(); if(!v){ i.focus(); return; } lsSet("pos-name-"+SLUG,v); $("myName").value=v; m.remove(); then(v); };
   m.querySelector("[data-ok]").onclick=ok; i.addEventListener("keydown",e=>{ if(e.key==="Enter") ok(); });
 }
+/* client comments the studio hasn't opened yet (the server stamps who sent each entry) */
+const unseenIn = f => { const s=String(f.seenAt||""); return (f.thread||[]).filter(e=>e&&e.by==="client"&&String(e.at)>s).length; };
+function markSeen(list){ if(ROLE!=="admin") return; const now=new Date().toISOString(); let n=0; list.forEach(f=>{ if(unseenIn(f)){ f.seenAt=now; n++; } }); if(n) touch(); return n; }
 const entryId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function flagSVG(f, forExport){
   const s=size(), q=P(f), h=s*1.15, w=s*.95, fs=s*.42, closed=f.status==="closed";
@@ -909,8 +915,11 @@ function renderFlagList(){
   const open=all.filter(f=>f.status!=="closed").length;
   $("flCount").textContent=`${open} open · ${all.length} total`;
   $("flList").innerHTML= list.length? [...list].sort((a,b)=>(a.status==="closed")-(b.status==="closed")||a.no-b.no).map(f=>{ const first=(f.thread||[])[0]||{}, last=(f.thread||[]).slice(-1)[0]||{};
-    return `<button data-fl="${f.id}" class="${selFlag===f.id?"on":""}"><span class="flagno ${f.status==="closed"?"closed":""}">${f.no}</span><span style="min-width:0"><span class="snip" style="display:block">${esc(first.text||"")}</span><span class="meta">${esc(last.who||"")} · ${esc(fmtWhen(last.at))}${(f.thread||[]).length>1?` · ${(f.thread||[]).filter(e=>e.kind!=="closed"&&e.kind!=="reopened").length} messages`:""}</span></span></button>`; }).join("")
+    return `<button data-fl="${f.id}" class="${selFlag===f.id?"on":""}"><span class="flagno ${f.status==="closed"?"closed":""}">${f.no}</span>${ROLE==="admin"&&unseenIn(f)?`<span class="newdot" title="New from the client since you last opened it">NEW</span>`:""}<span style="min-width:0"><span class="snip" style="display:block">${esc(first.text||"")}</span><span class="meta">${esc(last.who||"")} · ${esc(fmtWhen(last.at))}${(f.thread||[]).length>1?` · ${(f.thread||[]).filter(e=>e.kind!=="closed"&&e.kind!=="reopened").length} messages`:""}</span></span></button>`; }).join("")
     : `<p class="empty">${all.length? "No open flags on this sheet." : "No comment flags on this sheet yet."}</p>`;
+  const nNew=ROLE==="admin"? S.flags.filter(unseenIn).length : 0;
+  $("flSeenRow").hidden=!nNew; $("flNewCt").textContent= nNew? `${nNew} flag${nNew===1?"":"s"} with new client comments (all sheets)` : "";
+  $("flSeenAll").onclick=()=>{ const n=markSeen(S.flags); toast(n? `Marked ${n} flag${n===1?"":"s"} as seen.` : "Nothing new."); };
   $("flList").querySelectorAll("[data-fl]").forEach(b=>b.onclick=()=>{ selFlag=b.dataset.fl; sel.clear(); showFlags=true; centerOn(P(flagById(selFlag))); refresh(); });
 }
 function centerOn(q){ const r=cv.getBoundingClientRect(); view.x=r.width/2-q.x*view.z; view.y=r.height/2-q.y*view.z; }
@@ -1592,6 +1601,7 @@ function renderInspector(){
   if(b.contains(document.activeElement) && (document.activeElement.id==="inNote"||document.activeElement.id==="flReply"||document.activeElement.id==="inKeyText")) return;
   if(selFlag){
     const f=flagById(selFlag); if(!f){ selFlag=null; return renderInspector(); }
+    if(ROLE==="admin"&&unseenIn(f)) setTimeout(()=>markSeen([f]),0);   // opening a flag counts as seeing it
     const closed=f.status==="closed";
     b.innerHTML=`<div class="flagbar"><span><span class="flagno ${closed?"closed":""}">${f.no}</span> <b>${closed?"Closed":"Open"}</b></span><span class="ct">Comment flag</span></div>
       <div class="thread">${(f.thread||[]).map(e=> e.kind==="closed"||e.kind==="reopened"
@@ -1809,7 +1819,15 @@ $("bSignOut").onclick=()=>{ lsSet("pos-key-"+SLUG,null); if(ROLE==="admin") lsSe
 
 /* ---------- print engine (inches) ---------- */
 function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("image failed to load")); i.src=src; }); }
-const fname = ext => `${SH().no||""} ${SH().title||"Plan"}`.replace(/[\\/:*?"<>|]+/g,"").trim()+"."+ext;
+/* every print carries the time it was made; client prints (and studio prints with the box ticked) are marked as drafts */
+let printDraft=false, PRINT_AT=new Date();
+const isDraft = () => ROLE!=="admin" || printDraft;
+const pad2 = n => String(n).padStart(2,"0");
+const fmtStamp = d => { let tz=""; try{ tz=(new Intl.DateTimeFormat(undefined,{timeZoneName:"short"}).formatToParts(d).find(p=>p.type==="timeZoneName")||{}).value||""; }catch(e){}
+  const h=d.getHours(), h12=h%12||12; return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()} ${h12}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())} ${h<12?"AM":"PM"}${tz?" "+tz:""}`; };
+const fname = ext => (`${SH().no||""} ${SH().title||"Plan"}`.replace(/[\\/:*?"<>|]+/g,"").trim()
+  +` ${PRINT_AT.getFullYear()}-${pad2(PRINT_AT.getMonth()+1)}-${pad2(PRINT_AT.getDate())} ${pad2(PRINT_AT.getHours())}${pad2(PRINT_AT.getMinutes())}${pad2(PRINT_AT.getSeconds())}`
+  +(isDraft()?" DRAFT":"")+"."+ext);
 function printFlags(){ const Pp=SH().print; if(!Pp.flags) return []; return visFlags().filter(f=>Pp.flagsOpenOnly===false||f.status!=="closed").sort((a,b)=>a.no-b.no); }
 function overlaySVG(color,k){
   const b=BASE(); k=k||1;
@@ -1869,6 +1887,7 @@ function wrap(B,text,size,bold,maxW){
   return out;
 }
 function drawSheet(B, prep){
+  PRINT_AT=new Date();
   const sh=SH(), Pp=sh.print, sz=SHEETS[Pp.sheet]||SHEETS.D, Wd=sz.w, Ht=sz.h, warns=[];
   const base=BASE(), pf=ppf();
   B.rect(0,0,Wd,Ht,0,"#ffffff");
@@ -1896,6 +1915,7 @@ function drawSheet(B, prep){
     const sx=(v.x0-pxL)/pw*full.width, sy=(v.y0-pyT)/ph*full.height, sw2=(v.x1-v.x0)/pw*full.width, sh2=(v.y1-v.y0)/ph*full.height;
     const c=document.createElement("canvas"); c.width=Math.max(1,Math.round(sw2)); c.height=Math.max(1,Math.round(sh2));
     c.getContext("2d").drawImage(full,sx,sy,sw2,sh2,0,0,c.width,c.height);
+    if(isDraft()) draftWatermark(c);
     B.image(c,v.x0,v.y0,v.x1-v.x0,v.y1-v.y0);
   }
   // drawing title
@@ -1987,6 +2007,15 @@ function drawSheet(B, prep){
   drawTitleBlock(B,tbX,m,tbW,Ht-2*m,sLabel,warns);
   return {warns, sLabel};
 }
+function draftWatermark(c){
+  const g=c.getContext("2d"), W=c.width, H=c.height, L="UNAPPROVED DRAFT";
+  const fsz=Math.max(24,Math.min(W,H)*.09);
+  g.save(); g.globalAlpha=.16; g.fillStyle="#c0392b"; g.font=`700 ${fsz}px Helvetica, Arial, sans-serif`; g.textAlign="center"; g.textBaseline="middle";
+  g.translate(W/2,H/2); g.rotate(-Math.atan2(H,W));
+  const step=fsz*3.2, span=Math.hypot(W,H)/2;
+  for(let yy=-span; yy<=span; yy+=step) for(let xx=-span; xx<=span; xx+=g.measureText(L).width+fsz*2) g.fillText(L,xx,yy);
+  g.restore();
+}
 function drawTitleBlock(B,x,y,w,h,sLabel,warns){
   const tb=M().tb, f=M().firm, sh=SH(), k=Math.max(.62,w/3.4), p=.12*k+.04, iw=w-2*p;
   const L=(t,yy,size,o)=>B.text(t,x+p,yy,{size,...(o||{})});
@@ -2024,6 +2053,19 @@ function drawTitleBlock(B,x,y,w,h,sLabel,warns){
   });
   B.line(x+w/2,by-gridH,x+w/2,by,.5);
   by-=gridH;
+  // when this sheet was printed, to the second, so same-day prints can be told apart
+  const stH=pt(16)/72;
+  B.line(x,by-stH,x+w,by-stH,.5);
+  B.text("PRINTED",x+p*.7,by-stH+pt(7)/72,{size:pt(5),color:"#555555"});
+  B.text(fmtStamp(PRINT_AT),x+p*.7,by-stH+pt(13.5)/72,{size:pt(6.5)});
+  by-=stH;
+  if(isDraft()){
+    const dH=pt(16)/72;
+    B.rect(x,by-dH,w,dH,0,"#c0392b");
+    B.text("UNAPPROVED DRAFT",x+w/2,by-dH+pt(8.2)/72,{size:pt(8),bold:true,color:"#ffffff",align:"center"});
+    B.text("NOT FOR CONSTRUCTION",x+w/2,by-dH+pt(13.6)/72,{size:pt(4.8),color:"#ffffff",align:"center"});
+    by-=dH;
+  }
   const fn=f.name||"Sireneum Designs";
   const cp=wrap(B,`© ${new Date().getFullYear()} ${fn}. All rights reserved. These drawings are instruments of service and remain the property of ${fn}. Reuse or reproduction without written permission is prohibited.`,pt(5),false,iw);
   const cpH=cp.length*pt(5)/72*1.3+pt(8)/72;
@@ -2059,6 +2101,7 @@ function openPrint(){
       <label class="chk"><input type="checkbox" id="pBlack" ${Pp.black?"checked":""}> Symbols in black</label>
       <label class="chk"><input type="checkbox" id="pFlags" ${Pp.flags?"checked":""}> Include comment flags (${visFlags().filter(f=>f.status!=="closed").length} open, ${visFlags().length} total)</label>
       <label class="chk" style="margin-left:24px"><input type="checkbox" id="pFlagsOpen" ${Pp.flagsOpenOnly!==false?"checked":""}> Open flags only</label>
+      ${ROLE==="admin"? `<label class="chk"><input type="checkbox" id="pDraft" ${printDraft?"checked":""}> Mark as UNAPPROVED DRAFT</label>` : `<p class="empty">Prints from this login are marked UNAPPROVED DRAFT.</p>`}
       <div class="warns" id="pWarn"></div>
       <div class="row" style="margin-top:12px"><button class="btn primary" id="pPdf">Download PDF</button><button class="btn" id="pPng">Download PNG</button></div>
       <p class="empty">The PDF prints at true scale when the print dialog is set to 100% / Actual size on the matching sheet.</p>
@@ -2084,6 +2127,7 @@ function openPrint(){
   m.querySelector("#pBlack").onchange=e=>upd("black",e.target.checked);
   m.querySelector("#pFlags").onchange=e=>upd("flags",e.target.checked);
   m.querySelector("#pFlagsOpen").onchange=e=>upd("flagsOpenOnly",e.target.checked);
+  const pd=m.querySelector("#pDraft"); if(pd) pd.onchange=e=>{ printDraft=e.target.checked; redraw(); };
   m.querySelector("#pPdf").onclick=e=>busy(e.currentTarget,exportPdf);
   m.querySelector("#pPng").onclick=e=>busy(e.currentTarget,exportPng);
   requestAnimationFrame(redraw);
