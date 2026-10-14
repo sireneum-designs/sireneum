@@ -117,6 +117,15 @@ label.f textarea,textarea.inp{resize:vertical;min-height:44px}
 .modal .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;width:min(1180px,100%);max-height:100%;overflow:auto;padding:16px;display:grid;gap:12px}
 .modal .card.narrow{width:min(500px,100%)}
 .modal .card.wide{width:min(1960px,100%)}
+.modal .card.mid{width:min(900px,100%)}
+.ledit{display:grid;gap:10px}
+.lrow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:start}
+.lrow .n{font-family:var(--mono);font-size:14px;color:var(--muted);padding-top:9px;text-align:right}
+.lrow .kbox{font-size:13px;min-width:26px;height:26px;line-height:23px;margin-top:6px;justify-self:end}
+.lrow textarea{width:100%;font-size:15px;line-height:1.45;padding:8px 10px;resize:vertical;min-height:44px;overflow:hidden}
+.lrow .acts{display:flex;gap:4px;padding-top:6px}
+.popbtn{justify-self:start;font-size:12px;margin-top:4px}
+.popta{width:100%;min-height:340px;font-size:15px;line-height:1.5;padding:10px 12px;resize:vertical}
 .tablewrap{scrollbar-width:auto}
 .modal h3{font-family:var(--display);font-size:19px;margin:0;text-transform:uppercase;letter-spacing:.04em}
 .modal img{max-width:100%;max-height:65vh;border:1px solid var(--line);background:#fff}
@@ -293,12 +302,12 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
     <details open id="dKeys"><summary>Key notes</summary>
       <p class="empty">Click “Key note” in the toolbar (or press K), click the drawing, and type the note: it gets the next number automatically. Use + to place another tag for an existing note. Reordering renumbers every tag.</p>
       <div class="nlist" id="keyList"></div>
-      <button class="btn sm" id="bAddKey">Add key note</button>
+      <div class="row"><button class="btn sm" id="bEditKeys">Edit key notes…</button><button class="btn sm" id="bAddKey">Add key note</button></div>
     </details>
     <details><summary>Sheet notes</summary>
       <p class="empty">Numbered general notes for this sheet.</p>
       <div class="nlist" id="notesList"></div>
-      <button class="btn sm" id="bAddNote">Add note</button>
+      <div class="row"><button class="btn sm" id="bEditNotes">Edit notes…</button><button class="btn sm" id="bAddNote">Add note</button></div>
     </details>
     <details open id="dComments"><summary>Comments</summary>
       <div class="row" style="justify-content:space-between"><select class="inp" id="flFilter" style="width:auto"><option value="open">Open flags</option><option value="all">All flags</option></select><span class="ct" id="flCount"></span></div>
@@ -1588,6 +1597,8 @@ function renderInspector(){
   } else b.innerHTML="";
 }
 
+{ const _ri=renderInspector; renderInspector=function(){ const r=_ri.apply(this,arguments); addPops($("inspBody")); return r; }; }
+
 /* ---------- legend ---------- */
 function usedTypes(){ const c={}; vis("items").forEach(i=>c[i.type]=(c[i.type]||0)+1); return SYMS.filter(s=>c[s.id]).map(s=>({s,n:c[s.id]})); }
 function usedWires(){ const c={}; vis("wires").forEach(w=>{ if(wireGeom(w)) c[w.kind]=(c[w.kind]||0)+1; }); return Object.keys(WIRES).filter(k=>c[k]).map(k=>({k,n:c[k]})); }
@@ -1612,6 +1623,59 @@ function bindMetaFields(){
   if(!$("revList").contains(ae)) renderRevs();
   syncDisplay();
 }
+/* ---------- pop-out editors ---------- */
+function deleteKeyNote(kid){ const sh=SH(); commit(); S.keys=S.keys.filter(t=>t.k!==kid); sh.keynotes=keyListW().filter(k=>k.id!==kid); changed(); metaTouch(); renderKeyList(); }
+function openListEditor(kind){
+  const sh=SH(); if(!sh) return;
+  const isKey= kind==="keys";
+  const m=modal(`<div class="row" style="justify-content:space-between"><h3>${isKey?"Key notes":"Sheet notes"} — ${esc(sh.no||"")} ${esc(sh.title||"")}</h3><div class="row"><button class="btn sm" data-add>${isKey?"Add key note":"Add note"}</button><button class="btn sm primary" data-x>Done</button></div></div>
+    <p class="empty">${isKey?"Each number matches its tags on the drawing. Reordering renumbers the tags. Use the + in the sidebar or the Key note tool to place tags.":"Numbered general notes printed on this sheet."} Changes save as you type.</p>
+    <div class="ledit" id="ledit"></div>`,"mid");
+  const close=()=>{ m.remove(); isKey? renderKeyList() : renderNotesList(); };
+  m.querySelector("[data-x]").onclick=close;
+  m.addEventListener("pointerdown",e=>{ if(e.target===m){ isKey? renderKeyList() : renderNotesList(); } });
+  const grow=ta=>{ ta.style.height="auto"; ta.style.height=(ta.scrollHeight+4)+"px"; };
+  const draw=(focusLast)=>{
+    const box=m.querySelector("#ledit");
+    const L= isKey? keyListW() : (sh.notes||(sh.notes=[]));
+    box.innerHTML= L.length? L.map((v,i)=>{ const txt= isKey? (v.text||"") : v; const n= isKey? S.keys.filter(t=>t.k===v.id).length : 0;
+      return `<div class="lrow">${isKey?`<span class="kbox" title="${n} tag${n===1?"":"s"}">${i+1}</span>`:`<span class="n">${i+1}.</span>`}<textarea class="inp" data-i="${i}" rows="2">${esc(txt)}</textarea><span class="acts"><button class="btn sm" data-up="${i}" title="Move up">↑</button><button class="btn sm" data-dn="${i}" title="Move down">↓</button><button class="btn sm warn" data-rm="${i}" title="Delete">✕</button></span></div>`; }).join("")
+      : `<p class="empty">No ${isKey?"key notes":"notes"} on this sheet yet.</p>`;
+    box.querySelectorAll("textarea").forEach(ta=>{ grow(ta); ta.addEventListener("input",()=>{ grow(ta); const i=+ta.dataset.i; if(isKey) L[i].text=ta.value; else L[i]=ta.value; metaTouch(); if(isKey) render(); }); });
+    const mv=(i,j)=>{ if(j<0||j>=L.length) return; [L[i],L[j]]=[L[j],L[i]]; metaTouch(); render(); draw(); isKey? renderKeyList() : renderNotesList(); };
+    box.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>mv(+b.dataset.up,+b.dataset.up-1));
+    box.querySelectorAll("[data-dn]").forEach(b=>b.onclick=()=>mv(+b.dataset.dn,+b.dataset.dn+1));
+    box.querySelectorAll("[data-rm]").forEach(b=>{ let armed=false; b.onclick=()=>{ const i=+b.dataset.rm;
+      if(isKey){ const kid=L[i].id, n=S.keys.filter(t=>t.k===kid).length;
+        if(n&&!armed){ armed=true; b.textContent="Delete + "+n+" tag"+(n===1?"":"s")+"?"; return; }
+        deleteKeyNote(kid); }
+      else { L.splice(i,1); metaTouch(); renderNotesList(); }
+      draw(); }; });
+    if(focusLast){ const ts=box.querySelectorAll("textarea"); if(ts.length) ts[ts.length-1].focus(); }
+  };
+  m.querySelector("[data-add]").onclick=()=>{ if(isKey) keyListW().push({id:uid(),text:""}); else (sh.notes=sh.notes||[]).push(""); metaTouch(); draw(true); isKey? renderKeyList() : renderNotesList(); };
+  draw();
+}
+/* a larger window for any single text box in the inspector */
+function popOut(orig,title){
+  const id=orig.id;
+  const m=modal(`<div class="row" style="justify-content:space-between"><h3>${esc(title)}</h3><button class="btn sm primary" data-x>Done</button></div><textarea class="inp popta" id="popTa" rows="14" style="height:min(60vh,520px)">${esc(orig.value)}</textarea><p class="empty">Changes save as you type. Ctrl+Enter or Esc to close.</p>`,"mid");
+  const ta=m.querySelector("#popTa"), cur=()=>(id&&document.getElementById(id))||orig;
+  ta.addEventListener("input",()=>{ const o=cur(); o.value=ta.value; o.dispatchEvent(new Event("input",{bubbles:true})); });
+  const close=()=>{ m.remove(); const o=cur(); if(o&&o.isConnected){ o.value=ta.value; } };
+  m.querySelector("[data-x]").onclick=close;
+  ta.addEventListener("keydown",e=>{ if(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey))){ e.preventDefault(); e.stopPropagation(); close(); } });
+  setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); },0);
+}
+function addPops(root){
+  root.querySelectorAll("label.f > textarea").forEach(ta=>{
+    if(ta.nextElementSibling&&ta.nextElementSibling.classList.contains("popbtn")) return;
+    const lbl=(ta.parentElement.firstChild&&ta.parentElement.firstChild.nodeType===3? ta.parentElement.firstChild.textContent.trim() : "")||"Edit text";
+    const b=document.createElement("button"); b.type="button"; b.className="btn sm popbtn"; b.textContent="⤢ Larger editor";
+    b.onclick=e=>{ e.preventDefault(); popOut(ta,lbl); };
+    ta.after(b);
+  });
+}
 function renderNotesList(){
   const sh=SH(); if(!sh){ $("notesList").innerHTML=""; return; }
   const L=sh.notes||(sh.notes=[]);
@@ -1621,6 +1685,8 @@ function renderNotesList(){
   $("notesList").querySelectorAll("[data-dn]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.dn; if(i<L.length-1){ [L[i+1],L[i]]=[L[i],L[i+1]]; renderNotesList(); metaTouch(); } });
   $("notesList").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ L.splice(+b.dataset.rm,1); renderNotesList(); metaTouch(); });
 }
+$("bEditNotes").onclick=()=>openListEditor("notes");
+$("bEditKeys").onclick=()=>openListEditor("keys");
 $("bAddNote").onclick=()=>{ const sh=SH(); if(!sh) return; (sh.notes=sh.notes||[]).push(""); renderNotesList(); metaTouch(); const t=$("notesList").querySelectorAll("textarea"); t[t.length-1].focus(); };
 function renderRevs(){
   const R=M().revisions||(M().revisions=[]);
