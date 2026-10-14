@@ -19,6 +19,8 @@ import type { Config, Context } from "@netlify/functions"
 const store = () => getStore({ name: "client-plans", consistency: "strong" })
 const SLUG = /^[a-z0-9][a-z0-9-]{1,40}$/
 const ID = /^[A-Za-z0-9_-]{1,40}$/
+// folders under /client/ that would hide a project with the same address
+const RESERVED = new Set(["client-guide", "vendor"])
 const COLLS = ["sheets", "items", "wires", "notes", "dims", "fixtures", "keys", "flags"]
 const MAX_ASSET = 4_200_000
 
@@ -122,6 +124,7 @@ export default async (req: Request, context: Context) => {
         const b = await req.json().catch(() => ({}))
         const slug = String(b.slug || "").toLowerCase()
         if (!SLUG.test(slug)) return err("Use 2–41 lowercase letters, numbers or hyphens for the project address.", 400)
+        if (RESERVED.has(slug)) return err("That address is used by the site itself. Choose another.", 400)
         if (String(b.passcode || "").length < 8) return err("The client passcode must be at least 8 characters.", 400)
         const created = await s.setJSON(`projects/${slug}.json`, emptyProject(slug, b), { onlyIfNew: true })
         if (!created.modified) return err("A project already uses that address.", 409)
