@@ -451,7 +451,7 @@ async function bootDash(){
   let key=lsGet("pos-admin","");
   const ask=(msg)=>{
     $("gate").hidden=false; $("dash").hidden=true;
-    $("gateTitle").textContent="Studio sign-in"; $("gateText").textContent="Enter the studio admin key to manage client projects."; $("gateMsg").textContent=msg||"";
+    $("gateTitle").textContent="Studio sign-in"; $("gateText").textContent="Enter the studio admin key to manage client projects."; $("gatePass").closest("label").firstChild.textContent="Admin key"; $("gateMsg").textContent=msg||"";
     $("gateForm").onsubmit=async e=>{ e.preventDefault(); key=$("gatePass").value.trim(); try{ await api("_projects",{key}); lsSet("pos-admin",key); show(); }catch(err){ $("gateMsg").textContent= err.status===401? "That key isn't right." : err.message; } };
     $("gatePass").focus();
   };
