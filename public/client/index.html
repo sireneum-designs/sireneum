@@ -103,6 +103,10 @@ label.f textarea,textarea.inp{resize:vertical;min-height:44px}
 .nrow .n{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:7px;text-align:right}
 .nrow .acts{display:flex;flex-direction:column;gap:2px}
 .nrow .acts button{border:1px solid var(--line);background:transparent;border-radius:3px;font-size:11px;width:24px;height:20px;padding:0;cursor:pointer;color:var(--muted)}
+.fxgrp{font-family:var(--display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:11px;color:var(--muted);margin:8px 0 2px}
+.fxgrp:first-child{margin-top:0}
+.schedtabs{display:flex;gap:4px;margin:4px 0 8px}
+.schedtabs .btn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .fxrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13px;padding:3px 0}
 .mark{font-family:var(--mono);font-weight:500;font-size:12px;border:1.5px solid #1d47b8;color:#1d47b8;background:#fff;border-radius:999px;padding:0 7px;min-width:26px;text-align:center}
 .fxrow .d{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -282,9 +286,9 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 
   <aside class="side">
     <details open><summary>Selection</summary><div id="inspBody"></div></details>
-    <details open><summary>Fixture schedule</summary>
+    <details open><summary>Schedules</summary>
       <div id="fxSummary"></div>
-      <div class="row"><button class="btn sm" id="bSched">Edit schedule…</button><button class="btn sm" id="bAddFx">Add type mark</button></div>
+      <div class="row"><button class="btn sm" id="bSched">Edit schedules…</button><button class="btn sm" id="bAddFx">Add type mark</button></div>
     </details>
     <details open id="dKeys"><summary>Key notes</summary>
       <p class="empty">Click “Key note” in the toolbar (or press K), click the drawing, and type the note: it gets the next number automatically. Use + to place another tag for an existing note. Reordering renumbers every tag.</p>
@@ -1432,29 +1436,37 @@ function nextMarkLetter(){
   for(let i=0;i<26*27;i++){ const m= i<26? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26); if(!used.has(m)) return m; }
   return "X"+S.fixtures.length;
 }
+const FX_GROUPS=[["light","Lighting fixture schedule","LIGHTING FIXTURE SCHEDULE","Lighting"],["mech","Mechanical equipment schedule","MECHANICAL EQUIPMENT SCHEDULE","Mechanical"]];
+const MECH_SYMS=new Set(["exhaust","fan"]);
+const fxGroup = f => f.group==="mech"||f.group==="light" ? f.group : (MECH_SYMS.has(f.sym)? "mech" : "light");
+const lampLabel = g => g==="mech"? "CFM / sones / duct" : "Lamp / lumens / CCT";
 const fxSort = () => [...S.fixtures].sort((a,b)=>String(a.mark).localeCompare(String(b.mark),undefined,{numeric:true}));
 const fxQty = id => S.items.filter(i=>i.fx===id).length;
-function addFixture(sym){
-  commit(); const f={id:uid(),mark:nextMarkLetter(),sym:sym||"",desc:"",mfr:"",cat:"",lamp:"",watts:"",volts:"120",mount:"",notes:""};
+function addFixture(sym,group){
+  commit(); const f={id:uid(),mark:nextMarkLetter(),sym:sym||"",group:group||(MECH_SYMS.has(sym)?"mech":"light"),desc:"",mfr:"",cat:"",lamp:"",watts:"",volts:"120",mount:"",notes:""};
   S.fixtures.push(f); changed(); return f;
 }
 function renderFxSummary(){
   const el=$("fxSummary");
   if(!S.fixtures.length){ el.innerHTML=`<p class="empty">No type marks yet. Add one here, or choose “New type mark” for a selected symbol. Quantities count themselves.</p>`; return; }
-  el.innerHTML=fxSort().map(f=>`<div class="fxrow"><span class="mark">${esc(f.mark)}</span><span class="d" title="${esc(f.desc)}">${esc(f.desc||"(no description)")}</span><span class="ct">${fxQty(f.id)}</span></div>`).join("");
+  const row=f=>`<div class="fxrow"><span class="mark">${esc(f.mark)}</span><span class="d" title="${esc(f.desc)}">${esc(f.desc||"(no description)")}</span><span class="ct">${fxQty(f.id)}</span></div>`;
+  el.innerHTML=FX_GROUPS.map(([g,,,short])=>{ const rs=fxSort().filter(f=>fxGroup(f)===g); return rs.length? `<div class="fxgrp">${short}</div>`+rs.map(row).join("") : ""; }).join("");
 }
-let schedOpen=null;
-function openSchedule(){
-  const m=modal(`<div class="row" style="justify-content:space-between"><h3>Lighting fixture schedule</h3><div class="row">
+let schedOpen=null, schedTab="light";
+function openSchedule(tab){
+  if(tab) schedTab=tab;
+  const m=modal(`<div class="row" style="justify-content:space-between"><h3 id="schedTitle"></h3><div class="row">
       <button class="btn sm" data-add>Add type mark</button>
       <button class="btn sm" data-renum title="Renumber tags top-to-bottom, left-to-right within each type">Renumber tags</button>
       <button class="btn sm" data-x>Done</button></div></div>
-    <p class="empty">Shared by every sheet. Quantity and tag range are counted from the drawings; fill in the rest and it prints on each sheet.</p>
-    <div class="tablewrap"><table class="sched"><thead><tr>${FX_FIELDS.map(f=>`<th style="width:${f[2]}px">${f[1]}</th>`).join("")}<th style="width:170px">Symbol</th><th style="width:56px">Qty</th><th style="width:104px">Tags</th><th style="width:48px"></th></tr></thead><tbody id="schedBody"></tbody></table></div>`,"wide");
+    <div class="schedtabs">${FX_GROUPS.map(([g,,,short])=>`<button class="btn sm" data-tab="${g}">${short}</button>`).join("")}</div>
+    <p class="empty">Shared by every sheet. Quantity and tag range are counted from the drawings; fill in the rest and it prints on each sheet. Use the Schedule column to move a type to the other schedule.</p>
+    <div class="tablewrap"><table class="sched"><thead><tr id="schedHead"></tr></thead><tbody id="schedBody"></tbody></table></div>`,"wide");
   schedOpen=m;
   m.querySelector("[data-x]").onclick=()=>{ schedOpen=null; m.remove(); };
   m.addEventListener("pointerdown",e=>{ if(e.target===m) schedOpen=null; });
-  m.querySelector("[data-add]").onclick=()=>addFixture();
+  m.querySelector("[data-add]").onclick=()=>{ addFixture("",schedTab); renderSchedRows(true); };
+  m.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{ schedTab=b.dataset.tab; renderSchedRows(true); });
   m.querySelector("[data-renum]").onclick=()=>{ renumberAll(); toast("Tags renumbered."); };
   renderSchedRows(true);
 }
@@ -1464,12 +1476,19 @@ function renderSchedRows(force){
     body.querySelectorAll("tr[data-id]").forEach(tr=>{ const id=tr.dataset.id; tr.querySelector("[data-qty]").textContent=fxQty(id); tr.querySelector("[data-tags]").textContent=tagRange(id); });
     return;
   }
-  const rows=fxSort();
+  const G=FX_GROUPS.find(g=>g[0]===schedTab)||FX_GROUPS[0];
+  const ttl=document.getElementById("schedTitle"); if(ttl) ttl.textContent=G[1];
+  document.querySelectorAll(".schedtabs [data-tab]").forEach(b=>{ const n=S.fixtures.filter(f=>fxGroup(f)===b.dataset.tab).length; b.classList.toggle("on",b.dataset.tab===schedTab); b.textContent=FX_GROUPS.find(g=>g[0]===b.dataset.tab)[3]+" ("+n+")"; });
+  const hd=document.getElementById("schedHead");
+  if(hd) hd.innerHTML=FX_FIELDS.map(f=>`<th style="width:${f[2]}px">${f[0]==="lamp"?lampLabel(schedTab):f[1]}</th>`).join("")+`<th style="width:170px">Symbol</th><th style="width:130px">Schedule</th><th style="width:56px">Qty</th><th style="width:104px">Tags</th><th style="width:48px"></th>`;
+  const rows=fxSort().filter(f=>fxGroup(f)===schedTab);
   body.innerHTML= rows.length? rows.map(f=>`<tr data-id="${f.id}">${FX_FIELDS.map(([k])=>`<td>${FX_SHORT.has(k)?`<input data-f="${k}" value="${esc(f[k]||"")}">`:`<textarea data-f="${k}" rows="1">${esc(f[k]||"")}</textarea>`}</td>`).join("")}
     <td><select data-f="sym"><option value="">—</option>${SYMS.map(s=>`<option value="${s.id}" ${s.id===f.sym?"selected":""}>${s.name}</option>`).join("")}</select></td>
+    <td><select data-grp>${FX_GROUPS.map(([g,,,short])=>`<option value="${g}" ${g===fxGroup(f)?"selected":""}>${short}</option>`).join("")}</select></td>
     <td class="num" data-qty>${fxQty(f.id)}</td><td class="num" data-tags>${tagRange(f.id)}</td>
     <td><button class="btn sm warn" data-del title="Delete type ${esc(f.mark)}">✕</button></td></tr>`).join("")
-    : `<tr><td colspan="13" class="empty" style="padding:14px">No fixture types yet. Add a type mark to start the schedule.</td></tr>`;
+    : `<tr><td colspan="14" class="empty" style="padding:14px">No ${schedTab==="mech"?"mechanical equipment":"lighting fixture"} types yet. Add a type mark to start this schedule.</td></tr>`;
+  body.querySelectorAll("[data-grp]").forEach(sel=>sel.addEventListener("change",()=>{ const f=fxById(sel.closest("tr").dataset.id); if(!f) return; commit(); f.group=sel.value; changed(); renderFxSummary(); renderSchedRows(true); toast(`Type ${f.mark} moved to the ${FX_GROUPS.find(g=>g[0]===sel.value)[3].toLowerCase()} schedule.`); }));
   body.querySelectorAll("[data-f]").forEach(inp=>{
     const ev= inp.tagName==="SELECT"? "change" : "input";
     if(inp.tagName==="TEXTAREA") inp.addEventListener("input",()=>autoGrow(inp));
@@ -1488,11 +1507,11 @@ function renumberAll(){
   for(const k in by) by[k].sort((a,b)=>(a.y-b.y)||(a.x-b.x)).forEach((it,i)=>it.num=i+1);
   changed();
 }
-$("bSched").onclick=openSchedule;
-$("bAddFx").onclick=()=>{ addFixture(); openSchedule(); };
+$("bSched").onclick=()=>openSchedule();
+$("bAddFx").onclick=()=>{ const f=addFixture(); openSchedule(fxGroup(f)); };
 
 /* ---------- inspector ---------- */
-function fxOptions(cur){ return `<option value="">— none —</option>`+fxSort().map(f=>`<option value="${f.id}" ${f.id===cur?"selected":""}>${esc(f.mark)}${f.desc?" — "+esc(f.desc.slice(0,28)):""}</option>`).join("")+`<option value="__new">+ New type mark…</option>`; }
+function fxOptions(cur){ return `<option value="">— none —</option>`+FX_GROUPS.map(([g,,,short])=>{ const rs=fxSort().filter(f=>fxGroup(f)===g); return rs.length? `<optgroup label="${short}">`+rs.map(f=>`<option value="${f.id}" ${f.id===cur?"selected":""}>${esc(f.mark)}${f.desc?" — "+esc(f.desc.slice(0,28)):""}</option>`).join("")+`</optgroup>` : ""; }).join("")+`<option value="__new">+ New type mark…</option>`; }
 function renderInspector(){
   const b=$("inspBody");
   if(b.contains(document.activeElement) && (document.activeElement.id==="inNote"||document.activeElement.id==="flReply"||document.activeElement.id==="inKeyText")) return;
@@ -1791,16 +1810,17 @@ function drawSheet(B, prep){
     rows.forEach((r,i)=>{ const c=i%cols, rr=Math.floor(i/cols), x=spX+c*cw, yy=y+rr*rh; if(r.ic) B.image(r.ic,x,yy-ic*.68,ic,ic,true); B.text(r.t,x+ic+fs/72*.8,yy,{size:fs}); });
     y+=Math.ceil(rows.length/cols)*rh+gap;
   }
-  if(S.fixtures.length){
-    head("LIGHTING FIXTURE SCHEDULE");
-    const cols=[["TYPE",.55,f=>f.mark],["DESCRIPTION",2.1,f=>f.desc],["MANUFACTURER / CATALOG",1.9,f=>[f.mfr,f.cat].filter(Boolean).join(" / ")],["LAMP / LUMENS / CCT",1.5,f=>f.lamp],["W",.45,f=>f.watts],["V",.45,f=>f.volts],["MOUNTING",1.1,f=>f.mount],["QTY",.45,f=>String(fxQty(f.id))],["REMARKS",1.5,f=>f.notes]];
+  for(const [g,,title] of FX_GROUPS){
+    const list=fxSort().filter(f=>fxGroup(f)===g); if(!list.length) continue;
+    head(title);
+    const cols=[["TYPE",.55,f=>f.mark],["DESCRIPTION",2.1,f=>f.desc],["MANUFACTURER / CATALOG",1.9,f=>[f.mfr,f.cat].filter(Boolean).join(" / ")],[lampLabel(g).toUpperCase(),1.5,f=>f.lamp],["W",.45,f=>f.watts],["V",.45,f=>f.volts],["MOUNTING",1.1,f=>f.mount],["QTY",.45,f=>String(fxQty(f.id))],["REMARKS",1.5,f=>f.notes]];
     const tot=cols.reduce((a,c)=>a+c[1],0), cs=fs*.88, cl=cs/72*1.25, cp=fs/72*.35;
     const widths=cols.map(c=>c[1]/tot*spW);
     let x=spX; const hh=cl*2.3;
     B.rect(spX,y-cl*1.0,spW,hh,.8,"#eeeeee");
     cols.forEach((c,i)=>{ const ls=wrap(B,c[0],cs*.85,true,widths[i]-cp*2); ls.slice(0,2).forEach((l,j)=>B.text(l,x+cp,y+cl*j*.95,{size:cs*.85,bold:true})); x+=widths[i]; });
     let ry=y-cl+hh;
-    for(const f of fxSort()){
+    for(const f of list){
       const cells=cols.map((c,i)=>wrap(B,c[2](f)||"",cs,i===0,widths[i]-cp*2));
       const n=Math.max(1,...cells.map(c=>c.length)), rh=n*cl+cp*2;
       x=spX;
@@ -1809,7 +1829,7 @@ function drawSheet(B, prep){
       ry+=rh;
     }
     x=spX; B.rect(spX,y-cl,spW,ry-(y-cl),.9); widths.slice(0,-1).forEach(w=>{ x+=w; B.line(x,y-cl,x,ry,.5); });
-    y=ry+gap;
+    y=ry+gap+lh;
   }
   const pfl=printFlags();
   if(pfl.length){
