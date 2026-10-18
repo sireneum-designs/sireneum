@@ -7,7 +7,7 @@
      assets/<slug>/<id>     uploaded base drawings (JPEG)
 
    Who can do what:
-     PLANS_ADMIN_KEY (env var)  → every project, create projects, reset passcodes
+     PLANS_ADMIN_KEY (env var)  → every project, create/delete projects, reset passcodes
      a project's passcode       → read and edit that one project
 
    Note: Blobs stores are shared across deploy contexts, so a Deploy
@@ -81,6 +81,22 @@ function flagCounts(doc: any) {
   return { openFlags: flags.filter(f => f.status !== "closed").length, newFlags: new Set(u.map(x => x.flag.id)).size, newEntries: u.length }
 }
 
+/* Project info (title block, firm, revisions, reference point) belongs to the studio.
+   A client passcode may only change meta.display (e.g. "Show tag numbers") and fill in
+   keys the stored copy doesn't have yet; every value already stored stays as it is. */
+function clientMeta(stored: any, sent: any) {
+  const out: any = JSON.parse(JSON.stringify(stored || {}))
+  for (const [k, v] of Object.entries(sent || {})) {
+    if (k === "display") continue
+    if (!(k in out)) out[k] = v
+    else if (out[k] && typeof out[k] === "object" && !Array.isArray(out[k]) && v && typeof v === "object" && !Array.isArray(v))
+      for (const [k2, v2] of Object.entries(v as any)) if (!(k2 in out[k])) out[k][k2] = v2
+  }
+  if (sent && sent.display && typeof sent.display === "object" && !Array.isArray(sent.display))
+    out.display = { ...(out.display || {}), ...sent.display }
+  return out
+}
+
 /* Apply a batch of edits to the newest stored copy. Each op names one object,
    so two people editing different symbols never overwrite each other. */
 async function applyOps(slug: string, ops: any[], role: "admin" | "editor" = "editor") {
@@ -89,8 +105,9 @@ async function applyOps(slug: string, ops: any[], role: "admin" | "editor" = "ed
     const cur = await s.getWithMetadata(key, { type: "json" })
     if (!cur) return null
     const doc: any = cur.data
+    const before = JSON.stringify(doc)
     for (const op of ops) {
-      if (op.c === "meta") { if (op.v && typeof op.v === "object") doc.meta = op.v; continue }
+      if (op.c === "meta") { if (op.v && typeof op.v === "object" && !Array.isArray(op.v)) doc.meta = role === "admin" ? op.v : clientMeta(doc.meta, op.v); continue }
       if (!COLLS.includes(op.c) || !ID.test(String(op.id || ""))) continue
       doc[op.c] = doc[op.c] || {}
       if (op.v === null) delete doc[op.c][op.id]
@@ -114,6 +131,7 @@ async function applyOps(slug: string, ops: any[], role: "admin" | "editor" = "ed
         doc[op.c][op.id] = next
       }
     }
+    if (JSON.stringify(doc) === before) return doc.rev     // nothing actually changed: no new revision
     doc.rev = (doc.rev || 0) + 1
     doc.updated = new Date().toISOString()
     const res = await s.setJSON(key, doc, { onlyIfMatch: cur.etag })
@@ -130,8 +148,23 @@ export default async (req: Request, context: Context) => {
   const s = store()
 
   try {
+    /* ── admin: delete a project (plan, passcode and drawings) ── */
+    if (parts[0] === "_projects" && parts[1] && req.method === "DELETE") {
+      if (!isAdmin(key)) return err("Admin key required.", 401)
+      const slug = String(parts[1]).toLowerCase()
+      if (!SLUG.test(slug)) return err("Not found.", 404)
+      const b = await req.json().catch(() => ({}))
+      if (String(b.confirm || "") !== slug) return err("Type the project address to confirm.", 400)
+      if (!(await s.getMetadata(`projects/${slug}.json`))) return err("No project at this address.", 404)
+      await s.delete(`projects/${slug}.json`)          // the project disappears first
+      await s.delete(`auth/${slug}.json`)              // then its passcode stops working
+      const { blobs } = await s.list({ prefix: `assets/${slug}/` })
+      for (const a of blobs) await s.delete(a.key)
+      return json({ ok: true, slug, drawings: blobs.length })
+    }
+
     /* ── admin: list and create projects ── */
-    if (parts[0] === "_projects") {
+    if (parts[0] === "_projects" && !parts[1]) {
       if (!isAdmin(key)) return err("Admin key required.", 401)
       if (req.method === "GET") {
         const { blobs } = await s.list({ prefix: "projects/" })

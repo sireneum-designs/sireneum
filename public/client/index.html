@@ -180,7 +180,7 @@ table.sched .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-
 .dash h1{font-family:var(--display);font-size:30px;margin:0;text-transform:uppercase;letter-spacing:.03em}
 .dash h2{font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
 .plist{display:grid;gap:0;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
-.prow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) repeat(5,auto);gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
 .prow:last-child{border-bottom:none}
 .prow .t{font-weight:600}
 .prow .newflags{display:inline-block;margin:3px 0 2px;font-size:12px;font-weight:600;color:#fff;background:#d4561a;border-radius:999px;padding:1px 9px}
@@ -521,11 +521,62 @@ async function bootDash(){
     $("gate").hidden=true; $("dash").hidden=false;
     try{
       const {projects}=await api("_projects",{key});
-      $("plist").innerHTML= projects.length? projects.map(p=>`<div class="prow"><div><div class="t">${esc(p.name)}${p.client?` · ${esc(p.client)}`:""}</div>${p.newFlags?`<div class="newflags">${p.newFlags} flag${p.newFlags===1?"":"s"} with new client comments</div>`:""}<div class="s">sireneum.com/client/${esc(p.slug)} · ${p.sheets} sheet${p.sheets===1?"":"s"}${p.openFlags?` · ${p.openFlags} open flag${p.openFlags===1?"":"s"}`:""} · updated ${esc(new Date(p.updated).toLocaleDateString())}</div></div><a class="btn sm" href="/client/${esc(p.slug)}">Open</a><button class="btn sm" data-copy="${esc(p.slug)}">Copy link</button><button class="btn sm" data-bak="${esc(p.slug)}" title="Save the whole project, drawings included, as one file">Download backup</button></div>`).join("")
+      $("plist").innerHTML= projects.length? projects.map(p=>`<div class="prow"><div><div class="t">${esc(p.name)}${p.client?` · ${esc(p.client)}`:""}</div>${p.newFlags?`<div class="newflags">${p.newFlags} flag${p.newFlags===1?"":"s"} with new client comments</div>`:""}<div class="s">sireneum.com/client/${esc(p.slug)} · ${p.sheets} sheet${p.sheets===1?"":"s"}${p.openFlags?` · ${p.openFlags} open flag${p.openFlags===1?"":"s"}`:""} · updated ${esc(new Date(p.updated).toLocaleDateString())}</div></div><a class="btn sm" href="/client/${esc(p.slug)}">Open</a><button class="btn sm" data-copy="${esc(p.slug)}">Copy link</button><button class="btn sm" data-bak="${esc(p.slug)}" title="Save the whole project, drawings included, as one file">Download backup</button><button class="btn sm" data-edit="${esc(p.slug)}" title="Project name, client, site address, project no.">Edit details…</button><button class="btn sm warn" data-del="${esc(p.slug)}" title="Remove this project from sireneum.com">Delete…</button></div>`).join("")
         : `<p class="empty" style="padding:12px 14px">No projects yet. Create the first one below.</p>`;
       $("plist").querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyText("https://sireneum.com/client/"+b.dataset.copy));
       $("plist").querySelectorAll("[data-bak]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ await exportProject(b.dataset.bak,key); }catch(err){ toast("Backup failed: "+err.message); } b.disabled=false; });
+      $("plist").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editProject(b.dataset.edit));
+      $("plist").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>deleteProject(projects.find(p=>p.slug===b.dataset.del)));
     }catch(err){ if(err.status===401){ lsSet("pos-admin",null); ask("Sign in again."); } else $("plist").innerHTML=`<p class="empty" style="padding:12px 14px">${esc(err.message)}</p>`; }
+  };
+  /* edit the basics shown on the dashboard and in the title block */
+  const editProject=async slug=>{
+    let doc; try{ ({doc}=await api(slug,{key})); }catch(err){ toast(err.message); return; }
+    const tb=(doc.meta&&doc.meta.tb)||{};
+    const m=modal(`<h3>Edit project details</h3><p class="empty">These also fill the title block on every sheet. The project address (sireneum.com/client/${esc(slug)}) stays the same.</p>
+      <label class="f">Project name<input class="inp" data-k="project" value="${esc(tb.project||"")}"></label>
+      <label class="f">Client<input class="inp" data-k="client" value="${esc(tb.client||"")}"></label>
+      <label class="f">Site address<input class="inp" data-k="addr" value="${esc(tb.addr||"")}"></label>
+      <label class="f">Project no.<input class="inp" data-k="projno" value="${esc(tb.projno||"")}"></label>
+      <p class="msg" data-msg style="color:var(--warn);font-size:13px;margin:0"></p>
+      <div class="row"><button class="btn primary" data-ok>Save</button><button class="btn" data-x>Cancel</button></div>`,true);
+    m.querySelector("[data-k]").focus();
+    m.querySelector("[data-x]").onclick=()=>m.remove();
+    m.querySelector("[data-ok]").onclick=async e=>{
+      e.target.disabled=true;
+      try{
+        const {doc:fresh}=await api(slug,{key});        // newest copy, so other title-block edits are kept
+        const meta=fresh.meta||{}; meta.tb=meta.tb||{};
+        m.querySelectorAll("[data-k]").forEach(i=>meta.tb[i.dataset.k]=i.value.trim());
+        await api(slug+"/ops",{method:"POST",key,body:{ops:[{c:"meta",v:meta}]}});
+        m.remove(); toast("Project details saved."); show();
+      }catch(err){ m.querySelector("[data-msg]").textContent=err.message; e.target.disabled=false; }
+    };
+  };
+  /* delete: type the address to confirm; a backup downloads first unless unticked */
+  const deleteProject=p=>{
+    if(!p) return;
+    const m=modal(`<h3>Delete ${esc(p.name)}?</h3><p class="empty">This removes the plan, its drawings, every comment flag and the client passcode from sireneum.com. Anyone with the link will see “No project at this address.” It can't be undone.</p>
+      <label class="chk"><input type="checkbox" data-bk checked> Download a backup first</label>
+      <label class="f"><span>Type <b>${esc(p.slug)}</b> to confirm</span><input class="inp" data-cf autocomplete="off" spellcheck="false"></label>
+      <p class="msg" data-msg style="color:var(--warn);font-size:13px;margin:0"></p>
+      <div class="row"><button class="btn warn" data-ok disabled>Delete project</button><button class="btn" data-x>Cancel</button></div>`,true);
+    const cf=m.querySelector("[data-cf]"), ok=m.querySelector("[data-ok]"), msg=m.querySelector("[data-msg]");
+    cf.focus();
+    cf.oninput=()=>{ ok.disabled=cf.value.trim().toLowerCase()!==p.slug; };
+    m.querySelector("[data-x]").onclick=()=>m.remove();
+    ok.onclick=async()=>{
+      ok.disabled=true; msg.textContent="";
+      try{
+        if(m.querySelector("[data-bk]").checked){ msg.textContent="Saving backup…"; await exportProject(p.slug,key); }
+      }catch(err){ msg.textContent="Backup failed, so nothing was deleted: "+err.message; ok.disabled=false; return; }
+      try{
+        msg.textContent="Deleting…";
+        await api("_projects/"+encodeURIComponent(p.slug),{method:"DELETE",key,body:{confirm:p.slug}});
+        lsSet("pos-key-"+p.slug,null); lsSet("pos-sheet-"+p.slug,null);
+        m.remove(); toast(`Deleted ${p.slug}.`); show();
+      }catch(err){ msg.textContent=err.message; ok.disabled=false; }
+    };
   };
   $("np_pass").value=genPass();
   $("np_slug").oninput=()=>{ const v=$("np_slug").value.toLowerCase().replace(/[^a-z0-9-]+/g,"-"); $("np_slug").value=v; $("np_url").textContent="sireneum.com/client/"+(v||"…"); };
