@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sireneum — Practice management dashboard</title>
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+html,body{margin:0;background:#141518;}
+.deck{max-width:1600px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:20px;}
+.frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:6px;}
+.frame>section{position:absolute;left:0;top:0;width:1920px;height:1080px;box-sizing:border-box;transform-origin:0 0;transform:scale(var(--s,0.5));}
+.scr-img{cursor:zoom-in;}
+h1,h2,h3,p{margin:0;}
+a{color:inherit;}
+:root{--paper:#d6d2ca;--sheet:#ffffff;--ink:#102542;--graphite:#4a4c52;--faint:#75767b;--rule:#e3e1dc;--rule-strong:#c9c5bd;--signal:#a94c35;--signal-fill:#e07a5f;--sand:#b3a394;--highlight:#f2cc8f;--hero-bg:#102542;--hero-ink:#ffffff;--hero-muted:#cdd7d6;--hero-track:#2a3d5a;--chip:#f4f3f0;}
+section{padding:128px;background:var(--chip);color:var(--ink);font-family:"Inter",sans-serif;display:flex;flex-direction:column;}
+section.dark{background:var(--hero-bg);color:var(--hero-ink);}
+section.paper{background:var(--paper);}
+h1,h2,h3{font-family:"Inter Tight",sans-serif;margin:0;}
+h1{font-size:120px;font-weight:600;line-height:1.0;letter-spacing:-0.02em;}
+h2{font-size:64px;font-weight:600;line-height:1.08;letter-spacing:-0.01em;}
+h3{font-size:36px;font-weight:600;line-height:1.15;}
+p{margin:0;font-size:30px;line-height:1.4;}
+.kicker{font-family:"Inter Tight",sans-serif;font-size:24px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--signal);margin-bottom:28px;}
+section.dark .kicker{color:var(--signal-fill);}
+.sub{font-size:36px;line-height:1.35;color:var(--hero-muted);margin-top:40px;width:1300px;}
+.byline{position:absolute;left:128px;bottom:112px;width:1200px;font-size:28px;color:var(--hero-muted);}
+.lead{font-size:40px;line-height:1.35;margin-top:40px;width:1400px;}
+.shot{display:flex;flex-direction:row;gap:56px;margin-top:32px;}
+.shot img{width:1024px;height:640px;object-fit:contain;background:var(--paper);border-radius:12px;}
+.notes{width:584px;display:flex;flex-direction:column;gap:32px;}
+.notes p{font-size:28px;line-height:1.4;color:var(--graphite);}
+.notes .pt{border-top:3px solid var(--ink);padding-top:16px;}
+.notes .pt b{color:var(--ink);}
+.pair{display:flex;flex-direction:row;gap:40px;margin-top:40px;}
+.pair img{width:812px;height:508px;object-fit:contain;background:var(--paper);border-radius:12px;}
+.caps{display:flex;flex-direction:row;gap:40px;margin-top:28px;}
+.caps p{width:812px;font-size:28px;color:var(--graphite);}
+.cols{display:flex;flex-direction:row;gap:40px;margin-top:56px;}
+.col{flex:1;background:var(--sheet);border:2px solid var(--rule);border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:20px;}
+.col p{font-size:28px;color:var(--graphite);}
+.col .tag{font-family:"Inter Tight",sans-serif;font-size:24px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--signal);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px 40px;margin-top:48px;}
+.rule{border-top:3px solid var(--ink);padding-top:20px;}
+.rule h3{font-size:34px;}
+.rule p{font-size:28px;color:var(--graphite);margin-top:8px;}
+.map{display:flex;flex-direction:row;gap:28px;margin-top:56px;}
+.node{flex:1;background:var(--sheet);border:2px solid var(--rule-strong);border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:14px;}
+.node.hot{background:var(--hero-bg);border-color:var(--hero-bg);}
+.node.hot h3{color:var(--hero-ink);}
+.node.hot p{color:var(--hero-muted);}
+.node p{font-size:26px;color:var(--graphite);}
+.node .tag{font-family:"Inter Tight",sans-serif;font-size:22px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--signal);}
+.node.hot .tag{color:var(--signal-fill);}
+.band{margin-top:28px;background:var(--paper);border-radius:16px;padding:28px 36px;}
+.band p{font-size:26px;color:var(--ink);}
+.pending{width:1664px;height:620px;margin-top:48px;border:4px dashed var(--rule-strong);border-radius:16px;display:flex;align-items:center;justify-content:center;}
+.pending p{font-size:36px;color:var(--faint);}
+.qs{display:flex;flex-direction:column;gap:30px;margin-top:48px;}
+.q{display:flex;flex-direction:row;gap:40px;border-top:2px solid var(--rule-strong);padding-top:22px;}
+.q h3{width:520px;font-size:32px;}
+.q p{width:1100px;font-size:28px;color:var(--graphite);}
+.appx-img{width:1664px;height:780px;object-fit:contain;background:var(--paper);border-radius:12px;margin-top:24px;}
+.appx-h{font-size:44px;}
+section.appx{padding:96px 128px 64px;}
+section.scr{padding:88px 128px 64px;background:var(--chip);}
+.scr-head{display:flex;flex-direction:row;align-items:baseline;gap:32px;}
+.scr-head h2{font-size:48px;white-space:nowrap;}
+.scr-head .grp{font-family:"Inter Tight",sans-serif;font-size:22px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--signal);}
+.cap{font-size:28px;color:var(--graphite);margin-top:10px;width:1664px;}
+.scr-img{width:1664px;height:760px;object-fit:contain;background:var(--paper);border-radius:12px;margin-top:28px;}
+
+</style>
+</head>
+<body>
+<main class="deck">
+<div class="frame"><section id="cover" class="dark">
+<div style="position:absolute;left:1574px;top:731px;width:250px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+<img src="img/logo.png" alt="Sireneum logo" style="object-fit:contain;width:189px;height:189px;">
+<p style="font-family:'Inter Tight', sans-serif;font-weight:600;line-height:1;letter-spacing:-0.7px;font-size:56px;color:#b3a394;text-align:center;width:250px;"><a href="https://sireneum.com" style="color:#b3a394;text-decoration:none;">sireneum</a></p>
+</div>
+<h1 style="width:1203px;transform:translate(-32px, -32px);box-sizing:border-box">practice management dashboard</h1>
+</section>
+</div><div class="frame"><section id="practice" class="scr">
+<div class="scr-head"><p class="grp">Practice</p><h2>Overview</h2></div>
+<p class="cap">Open items, next 90 days, project budgets, practice time, and fees from contract to cash.</p>
+<img loading="lazy" src="img/01_practice.jpg" alt="Overview screen" class="scr-img">
+</section></div><div class="frame"><section id="a-clients" class="scr">
+<div class="scr-head"><p class="grp">Practice</p><h2>Clients</h2></div>
+<p class="cap">Billing terms, contacts, hours and fees by client.</p>
+<img loading="lazy" src="img/14_clients.jpg" alt="Clients screen" class="scr-img">
+</section></div><div class="frame"><section id="project" class="scr">
+<div class="scr-head"><p class="grp">Project</p><h2>Project landing</h2></div>
+<p class="cap">Hours against the not-to-exceed cap, hours by phase, fees, effective rate.</p>
+<img loading="lazy" src="img/07_project.jpg" alt="Project landing screen" class="scr-img">
+</section></div><div class="frame"><section id="a-people" class="scr">
+<div class="scr-head"><p class="grp">Practice</p><h2>People</h2></div>
+<p class="cap">Everyone who logs time: type, role, hours, utilization.</p>
+<img loading="lazy" src="img/04_people.jpg" alt="People screen" class="scr-img">
+</section></div><div class="frame"><section id="log" class="scr">
+<div class="scr-head"><p class="grp">Time</p><h2>Log</h2></div>
+<p class="cap">Weekly grid in quarter hours.</p>
+<img loading="lazy" src="img/10_mytime_log.jpg" alt="Log screen" class="scr-img">
+</section></div><div class="frame"><section id="sheet" class="scr">
+<div class="scr-head"><p class="grp">Time</p><h2>Timesheet</h2></div>
+<p class="cap">Sign and submit each week.</p>
+<img loading="lazy" src="img/11_mytime_sheet.jpg" alt="Timesheet screen" class="scr-img">
+</section></div><div class="frame"><section id="a-summary" class="scr">
+<div class="scr-head"><p class="grp">Time</p><h2>Summary</h2></div>
+<p class="cap">Hours by day and month, time off, hours by project.</p>
+<img loading="lazy" src="img/12_mytime_summary.jpg" alt="Summary screen" class="scr-img">
+</section></div><div class="frame"><section id="a-approvals" class="scr">
+<div class="scr-head"><p class="grp">Time</p><h2>Approvals</h2></div>
+<p class="cap">Approve or return each employee week; late weeks flagged.</p>
+<img loading="lazy" src="img/05_time_practice.jpg" alt="Approvals screen" class="scr-img">
+</section></div><div class="frame"><section id="a-reports" class="scr">
+<div class="scr-head"><p class="grp">Time</p><h2>Reports</h2></div>
+<p class="cap">Hours and fees by phase and activity.</p>
+<img loading="lazy" src="img/13_time_reports.jpg" alt="Reports screen" class="scr-img">
+</section></div><div class="frame"><section id="invoice" class="scr">
+<div class="scr-head"><p class="grp">Billing</p><h2>Invoices</h2></div>
+<p class="cap">Built from approved time; hours past the cap written off; timesheet detail attached.</p>
+<img loading="lazy" src="img/03_invoices.jpg" alt="Invoices screen" class="scr-img">
+</section></div><div class="frame"><section id="finance" class="scr">
+<div class="scr-head"><p class="grp">Finance</p><h2>Schedule C</h2></div>
+<p class="cap">Expenses mapped to tax form lines; review flags and missing receipts before filing.</p>
+<img loading="lazy" src="img/02_finance.jpg" alt="Schedule C screen" class="scr-img">
+</section></div><div class="frame"><section id="a-reminders" class="scr">
+<div class="scr-head"><p class="grp">Practice</p><h2>Reminders</h2></div>
+<p class="cap">Renewals, licenses and recurring costs.</p>
+<img loading="lazy" src="img/06_reminders.jpg" alt="Reminders screen" class="scr-img">
+</section></div><div class="frame"><section id="person" class="scr">
+<div class="scr-head"><p class="grp">Development</p><h2>Person landing</h2></div>
+<p class="cap">AXP by area, ARE exams, continuing education.</p>
+<img loading="lazy" src="img/08_person.jpg" alt="Person landing screen" class="scr-img">
+</section></div><div class="frame"><section id="a-axp" class="scr">
+<div class="scr-head"><p class="grp">Development</p><h2>AXP report</h2></div>
+<p class="cap">AXP hours in NCARB’s weekly format.</p>
+<img loading="lazy" src="img/09_dev_axp.jpg" alt="AXP report screen" class="scr-img">
+</section></div><div class="frame"><section id="a-settings" class="scr">
+<div class="scr-head"><p class="grp">Practice</p><h2>Settings</h2></div>
+<p class="cap">Business details, rates, signature, leave rules.</p>
+<img loading="lazy" src="img/15_settings.jpg" alt="Settings screen" class="scr-img">
+</section></div><div class="frame"><section id="portal" class="scr">
+<div class="scr-head"><p class="grp">Portal</p><h2>Time · Log</h2></div>
+<p class="cap">Employees and contractors log time on a weekly grid.</p>
+<img loading="lazy" src="img/p1_log.jpg" alt="Time · Log screen" class="scr-img">
+</section></div><div class="frame"><section id="p-sheet" class="scr">
+<div class="scr-head"><p class="grp">Portal</p><h2>Time · Timesheet</h2></div>
+<p class="cap">Weekly timesheets with status: draft, signed, returned, approved.</p>
+<img loading="lazy" src="img/p2_sheet.jpg" alt="Time · Timesheet screen" class="scr-img">
+</section></div><div class="frame"><section id="p-sign" class="scr">
+<div class="scr-head"><p class="grp">Portal</p><h2>Sign and submit</h2></div>
+<p class="cap">Saved signature and initials, plus a certification for each week.</p>
+<img loading="lazy" src="img/p3_sign.jpg" alt="Sign and submit screen" class="scr-img">
+</section></div><div class="frame"><section id="p-summary" class="scr">
+<div class="scr-head"><p class="grp">Portal</p><h2>Time · Summary</h2></div>
+<p class="cap">Hours by day and month, sick-time balance, hours by project.</p>
+<img loading="lazy" src="img/p4_summary.jpg" alt="Time · Summary screen" class="scr-img">
+</section></div><div class="frame"><section id="p-contractor" class="scr">
+<div class="scr-head"><p class="grp">Portal</p><h2>Contractor summary</h2></div>
+<p class="cap">Hours against each contract cap and period of performance; invoiced and tracked.</p>
+<img loading="lazy" src="img/p5_contractor.jpg" alt="Contractor summary screen" class="scr-img">
+</section></div><div class="frame"><section id="p-phone" class="scr">
+<div class="scr-head"><p class="grp">Portal</p><h2>Phone</h2></div>
+<p class="cap">Day view with steppers in quarter hours.</p>
+<img loading="lazy" src="img/p6_phone.jpg" alt="Portal time log on a phone" class="scr-img">
+</section></div>
+</main>
+<script>
+function fit(){document.querySelectorAll('.frame').forEach(f=>f.style.setProperty('--s',f.clientWidth/1920));}
+addEventListener('resize',fit);fit();
+document.querySelectorAll('.scr-img').forEach(i=>i.addEventListener('click',()=>window.open(i.src,'_blank')));
+</script>
+</body>
+</html>
