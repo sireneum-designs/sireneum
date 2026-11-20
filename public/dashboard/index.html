@@ -17,6 +17,21 @@ html,body{margin:0;background:#141518;}
 .scr-img{cursor:zoom-in;}
 h1,h2,h3,p{margin:0;}
 a{color:inherit;}
+
+.bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#141518;color:#cdd7d6;font:500 14px/1 "Inter",system-ui,sans-serif;}
+.bar .ttl{opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.seg{display:flex;border:1px solid #44474e;border-radius:99px;overflow:hidden;flex:0 0 auto;}
+.seg button{all:unset;cursor:pointer;padding:7px 14px;color:#b9b6af;}
+.seg button[aria-pressed="true"]{background:#f2f0ec;color:#102542;}
+.nav{display:none;align-items:center;gap:10px;flex:0 0 auto;}
+.nav button{all:unset;cursor:pointer;width:34px;height:34px;border-radius:50%;border:1px solid #44474e;display:grid;place-items:center;color:#f2f0ec;}
+.nav button:disabled{opacity:.3;cursor:default;}
+.count{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;}
+body.single{overflow:hidden;}
+body.single .nav{display:flex;}
+body.single .deck{max-width:none;height:calc(100vh - 56px);padding:0;justify-content:center;align-items:center;gap:0;}
+body.single .frame{display:none;flex:0 0 auto;}
+body.single .frame.cur{display:block;}
 :root{--paper:#d6d2ca;--sheet:#ffffff;--ink:#102542;--graphite:#4a4c52;--faint:#75767b;--rule:#e3e1dc;--rule-strong:#c9c5bd;--signal:#a94c35;--signal-fill:#e07a5f;--sand:#b3a394;--highlight:#f2cc8f;--hero-bg:#102542;--hero-ink:#ffffff;--hero-muted:#cdd7d6;--hero-track:#2a3d5a;--chip:#f4f3f0;}
 section{padding:128px;background:var(--chip);color:var(--ink);font-family:"Inter",sans-serif;display:flex;flex-direction:column;}
 section.dark{background:var(--hero-bg);color:var(--hero-ink);}
@@ -78,6 +93,11 @@ section.scr{padding:88px 128px 64px;background:var(--chip);}
 </style>
 </head>
 <body>
+<header class="bar">
+<span class="ttl">Sireneum · Practice management dashboard</span>
+<div class="nav"><button id="prev" aria-label="Previous slide">&#8249;</button><span class="count" id="count"></span><button id="next" aria-label="Next slide">&#8250;</button></div>
+<div class="seg" role="group" aria-label="View"><button id="vSlides" aria-pressed="true">One slide</button><button id="vScroll" aria-pressed="false">All slides</button></div>
+</header>
 <main class="deck">
 <div class="frame"><section id="cover" class="dark">
 <div style="position:absolute;left:1574px;top:731px;width:250px;display:flex;flex-direction:column;align-items:center;gap:8px;">
@@ -173,9 +193,33 @@ section.scr{padding:88px 128px 64px;background:var(--chip);}
 </section></div>
 </main>
 <script>
-function fit(){document.querySelectorAll('.frame').forEach(f=>f.style.setProperty('--s',f.clientWidth/1920));}
-addEventListener('resize',fit);fit();
-document.querySelectorAll('.scr-img').forEach(i=>i.addEventListener('click',()=>window.open(i.src,'_blank')));
+const frames=[...document.querySelectorAll('.frame')];let i=0,single=true;
+function size(){
+  if(single){const W=innerWidth-24,H=innerHeight-56-24,sc=Math.min(W/1920,H/1080);
+    frames.forEach(f=>{f.style.width=(1920*sc)+'px';f.style.setProperty('--s',sc);});}
+  else frames.forEach(f=>{f.style.width='';f.style.setProperty('--s',f.clientWidth/1920);});
+}
+function show(n,push){i=Math.max(0,Math.min(frames.length-1,n));
+  frames.forEach((f,k)=>f.classList.toggle('cur',k===i));
+  document.getElementById('count').textContent=(i+1)+' / '+frames.length;
+  document.getElementById('prev').disabled=i===0;document.getElementById('next').disabled=i===frames.length-1;
+  if(push!==false)history.replaceState(null,'',single?'#'+(i+1):'#all');}
+function mode(sg){single=sg;document.body.classList.toggle('single',sg);
+  document.getElementById('vSlides').setAttribute('aria-pressed',sg);document.getElementById('vScroll').setAttribute('aria-pressed',!sg);
+  size();show(i);if(!sg)frames[i].scrollIntoView({block:'start'});}
+document.getElementById('prev').onclick=()=>show(i-1);
+document.getElementById('next').onclick=()=>show(i+1);
+document.getElementById('vSlides').onclick=()=>mode(true);
+document.getElementById('vScroll').onclick=()=>mode(false);
+addEventListener('keydown',e=>{if(!single)return;
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(i+1);}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();show(i-1);}
+  if(e.key==='Home')show(0);if(e.key==='End')show(frames.length-1);});
+let tx=null;addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+addEventListener('touchend',e=>{if(!single||tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)show(i+(d<0?1:-1));tx=null;});
+addEventListener('resize',size);
+document.querySelectorAll('.scr-img').forEach(im=>im.addEventListener('click',()=>window.open(im.src,'_blank')));
+const h=location.hash.slice(1);if(h==='all'){mode(false);}else{i=(parseInt(h)||1)-1;mode(true);}
 </script>
 </body>
 </html>
