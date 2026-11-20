@@ -15,6 +15,8 @@ html,body{margin:0;background:#141518;}
 .frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:6px;}
 .frame>section{position:absolute;left:0;top:0;width:1920px;height:1080px;box-sizing:border-box;transform-origin:0 0;transform:scale(var(--s,0.5));}
 .scr-img{cursor:zoom-in;}
+body.single .frame{cursor:pointer;}
+body.single .scr-img{cursor:pointer;}
 h1,h2,h3,p{margin:0;}
 a{color:inherit;}
 
@@ -218,7 +220,8 @@ addEventListener('keydown',e=>{if(!single)return;
 let tx=null;addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
 addEventListener('touchend',e=>{if(!single||tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)show(i+(d<0?1:-1));tx=null;});
 addEventListener('resize',size);
-document.querySelectorAll('.scr-img').forEach(im=>im.addEventListener('click',()=>window.open(im.src,'_blank')));
+document.querySelectorAll('.scr-img').forEach(im=>im.addEventListener('click',e=>{if(!single)window.open(im.src,'_blank');}));
+frames.forEach(f=>f.addEventListener('click',e=>{if(!single||e.target.closest('a'))return;const r=f.getBoundingClientRect();show(i+(e.clientX-r.left<r.width/2?-1:1));}));
 const h=location.hash.slice(1);if(h==='all'){mode(false);}else{i=(parseInt(h)||1)-1;mode(true);}
 </script>
 </body>
